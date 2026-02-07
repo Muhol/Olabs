@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export async function fetchBooks(token?: string | null, skip: number = 0, limit: number = 100, search: string = '') {
   const headers: HeadersInit = {};

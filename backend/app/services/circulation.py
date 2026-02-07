@@ -1,11 +1,16 @@
 from sqlalchemy.orm import Session
 from .. import models, schemas
 from fastapi import HTTPException
+from ..services.logs import log_action
 import datetime
 from typing import Optional
 
-def get_borrow_history(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None):
+def get_borrow_history(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None, student_id: Optional[str] = None):
     query = db.query(models.BorrowRecord)
+    
+    if student_id:
+        query = query.filter(models.BorrowRecord.student_id == student_id)
+        
     if search:
         search_f = f"%{search}%"
         query = query.join(models.Book).join(models.Student).filter(
@@ -32,7 +37,7 @@ def get_borrow_history(db: Session, skip: int = 0, limit: int = 100, search: Opt
     ]
     return {"total": total, "items": items}
 
-def borrow_book(db: Session, book_id: str, student_id: str):
+def borrow_book(db: Session, book_id: str, student_id: str, performer_email: str):
     # Verify book existence and availability
     book = db.query(models.Book).filter(models.Book.id == book_id).first()
     if not book:
@@ -62,12 +67,13 @@ def borrow_book(db: Session, book_id: str, student_id: str):
         
         db.add(new_record)
         db.commit()
+        log_action(db, "info", "book borrow", performer_email, f"Issued '{book.title}' to {student.full_name}", target_user=student.admission_number)
         return {"message": "Circulation protocol executed successfully"}
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Transaction failure: {str(e)}")
 
-def return_book(db: Session, transaction_uuid: str):
+def return_book(db: Session, transaction_uuid: str, performer_email: str):
     record = db.query(models.BorrowRecord).filter(models.BorrowRecord.id == transaction_uuid).first()
     if not record:
         raise HTTPException(status_code=404, detail="Transaction not found")
@@ -85,6 +91,7 @@ def return_book(db: Session, transaction_uuid: str):
             book.borrowed_copies = max(0, book.borrowed_copies - 1)
         
         db.commit()
+        log_action(db, "info", "book return", performer_email, f"Returned '{book.title}' from {record.student.full_name}", target_user=record.student.admission_number)
         return {"message": "Book returned successfully"}
     except Exception as e:
         db.rollback()

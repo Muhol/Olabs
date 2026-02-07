@@ -21,7 +21,8 @@ import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', href: '/', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
+    { icon: LayoutDashboard, label: 'Dashboard', href: '/', roles: ['librarian', 'admin', 'SUPER_ADMIN', 'teacher'] },
+    { icon: Users, label: 'My Class', href: '/teachers/my-class', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
     { icon: BookOpen, label: 'Library Books', href: '/inventory', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: Users, label: 'Students', href: '/students', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: Briefcase, label: 'Staff', href: '/staff', roles: ['admin', 'SUPER_ADMIN'] },
@@ -212,7 +213,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <Menu size={24} />
                         </button>
                         <h2 className="text-xl font-black tracking-wide hidden sm:block">
-                            DASHBOARD
+                            {sidebarItems.find(item => item.href === pathname)?.label.toUpperCase() || 'DASHBOARD'}
                         </h2>
                     </div>
 

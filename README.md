@@ -114,3 +114,19 @@ Olabs/
 ## 📄 License
 This project is open-source and available under the [MIT License](LICENSE).
 # Olabs
+
+
+
+Tasks to be done (remaining tasks)
+
+1. impementing system logs functionality in the backend 
+2. implementing settings in the backend 
+3. button to add a stream to a class in the stats card in the students page (done)
+4. clicking on a student in the students page should open a modal to view the student's details and borrowing history (done)
+5. clearance functionality for clearing students (done)
+6. the option to delete a stream in the students page but it should only be available if the stream is empty and can only be done by admin and super admin (done)
+7. add an option to delete a class in the students page but it should only be available if the class is empty and can only be done by admin and super admin (done)
+8. in the staff page separate the verified and unapproved users into two tabs and also add a search functionality to search for users (done)
+9. adding the return function directly in the studantdetails modal (done)
+10. promotion of students to the next level
+11. updating or assigning a stream to a student should also update the stream column in the students table not just the stream_id column (done)

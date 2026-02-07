@@ -5,12 +5,16 @@ from ..services import users as service
 
 router = APIRouter()
 
+from typing import Optional
+
 @router.get("/staff")
 def get_staff(
+    search: Optional[str] = None,
+    role_filter: Optional[str] = None,
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
-    return service.get_staff(db)
+    return service.get_staff(db, search, role_filter)
 
 @router.patch("/users/{user_uuid}/role")
 def update_user_role(

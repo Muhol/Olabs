@@ -30,14 +30,17 @@ import {
     deleteStudent,
     fetchClasses,
     createClass,
+    deleteClass,
     fetchStreams,
     createStream,
     updateStream,
-    deleteStream
+    deleteStream,
+    promoteStudents
 } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
 import { useScrollLock } from '@/hooks/useScrollLock';
 import { motion, AnimatePresence } from 'framer-motion';
+import StudentDetailsModal from '@/components/modals/StudentDetailsModal';
 
 export default function StudentsPage() {
     const { getToken } = useAuth();
@@ -52,6 +55,7 @@ export default function StudentsPage() {
     // Modals
     const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
     const [isClassModalOpen, setIsClassModalOpen] = useState(false);
+    const [viewingStudent, setViewingStudent] = useState<any>(null);
     const [editingStudent, setEditingStudent] = useState<any>(null);
     const [actionLoading, setActionLoading] = useState(false);
 
@@ -82,7 +86,7 @@ export default function StudentsPage() {
     const canManage = ['admin', 'SUPER_ADMIN'].includes(userRole);
 
     // Scroll Lock when any modal is open
-    useScrollLock(isStudentModalOpen || isClassModalOpen || isStreamsModalOpen);
+    useScrollLock(isStudentModalOpen || isClassModalOpen || isStreamsModalOpen || !!viewingStudent);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -188,15 +192,39 @@ const handleDeleteStudent = async (id: string) => {
     if (!confirm('Are you sure you want to delete this student?')) return;
     try {
         const token = await getToken();
-        if (!token) {
-            setError('Authentication required. Please refresh the page.');
-            setActionLoading(false);
-            return;
-        }
+        if (!token) return;
         await deleteStudent(token, id);
         loadData();
-    } catch (err) {
-        setError('Delete failed.');
+    } catch (err: any) {
+        setError(err.message || 'Delete failed.');
+    }
+};
+
+const handleDeleteClass = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this class? All streams must be deleted first, and it must have no students.')) return;
+    try {
+        const token = await getToken();
+        if (!token) return;
+        await deleteClass(token, id);
+        loadData();
+    } catch (err: any) {
+        setError(err.message || 'Delete failed.');
+    }
+};
+
+const handlePromote = async () => {
+    if (!confirm('BEWARE: This will promote ALL students in "Form X" classes to the next level. Form 4 students will be cleared/graduated. This action is irreversible. Proceed?')) return;
+    setActionLoading(true);
+    try {
+        const token = await getToken();
+        if (!token) return;
+        const result = await promoteStudents(token);
+        alert(`Promotion Complete!\nPromoted: ${result.promoted}\nGraduated: ${result.graduated}\nErrors/Skipped: ${result.skipped_or_error}`);
+        loadData();
+    } catch (err: any) {
+        setError(err.message || 'Promotion failed.');
+    } finally {
+        setActionLoading(false);
     }
 };
 
@@ -315,8 +343,17 @@ return (
 
                     <div className="space-y-4">
                         <div>
-                            <h3 className="text-lg font-black text-foreground uppercase tracking-tight flex items-center gap-2">
-                                {cls.name} <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">Enrollment</span>
+                            <h3 className="text-lg font-black text-foreground uppercase tracking-tight flex items-center justify-between gap-2">
+                                <span>{cls.name} <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">Enrollment</span></span>
+                                {canManage && (
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setManagingClass(cls); setIsStreamsModalOpen(true); }}
+                                        className="p-1.5 bg-secondary/10 text-secondary hover:bg-secondary hover:text-white rounded-lg border border-secondary/20 transition-all active:scale-95"
+                                        title="Add Stream"
+                                    >
+                                        <Plus size={14} />
+                                    </button>
+                                )}
                             </h3>
                             <div className="w-full h-1 bg-muted rounded-full mt-2 overflow-hidden">
                                 <div className="h-full bg-secondary shadow-[0_0_10px_rgba(251,191,36,0.5)]" style={{ width: `${Math.min(100, (cls.student_count / 100) * 100)}%` }} />
@@ -358,6 +395,17 @@ return (
                     Classes
                 </button>
             </div>
+
+            {activeTab === 'classes' && canManage && (
+                <button 
+                    disabled={actionLoading}
+                    onClick={handlePromote}
+                    className="flex items-center gap-2 px-6 py-3 bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 disabled:opacity-50"
+                >
+                    {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpRight size={14} />}
+                    Promote All To Next Level
+                </button>
+            )}
 
             <div className="relative flex-1 group">
                 <button onClick={loadData} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-secondary hover:text-secondary transition-colors z-10">
@@ -406,7 +454,11 @@ return (
                                         </tr>
                                     ) : (
                                         filteredStudents.map((student) => (
-                                            <tr key={student.id} className="hover:bg-muted/30 transition-colors group border-b border-border/50">
+                                            <tr 
+                                                key={student.id} 
+                                                onClick={() => setViewingStudent(student)}
+                                                className="hover:bg-muted/30 transition-colors group border-b border-border/50 cursor-pointer"
+                                            >
                                                 <td className="px-8 py-4"><span className="font-black text-xs text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg border border-secondary/20">{student.admission_number}</span></td>
                                                 <td className="px-8 py-4">
                                                     <div className="flex items-center gap-3">
@@ -424,14 +476,18 @@ return (
                                                     <div className="flex items-center gap-2 text-primary font-black text-xs"><Layers size={14} />{student.full_class || student.stream || 'N/A'}</div>
                                                 </td>
                                                 <td className="px-8 py-4 text-right">
-                                                    <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Active</span>
+                                                    {student.is_cleared ? (
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">Cleared</span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Active</span>
+                                                    )}
                                                 </td>
                                                 <td className="px-8 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         {canManage && (
                                                             <>
-                                                                <button onClick={() => { setEditingStudent(student); setStudentFormData(student); handleClassChange(student.class_id); setIsStudentModalOpen(true); }} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all active:scale-90"><Edit size={16} /></button>
-                                                                <button onClick={() => handleDeleteStudent(student.id)} className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all active:scale-90"><Trash2 size={16} /></button>
+                                                                <button onClick={(e) => { e.stopPropagation(); setEditingStudent(student); setStudentFormData(student); handleClassChange(student.class_id); setIsStudentModalOpen(true); }} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all active:scale-90"><Edit size={16} /></button>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteStudent(student.id); }} className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all active:scale-90"><Trash2 size={16} /></button>
                                                             </>
                                                         )}
                                                     </div>
@@ -463,10 +519,19 @@ return (
                                     <div className="text-2xl font-black text-foreground">{cls.student_count}</div>
                                 </div>
                             </div>
-                            <div>
+                            <div className="flex items-center justify-between">
                                 <h4 className="text-2xl font-black text-foreground uppercase tracking-tight">{cls.name}</h4>
-                                <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest mt-1">Class</p>
+                                {canManage && (
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleDeleteClass(cls.id); }}
+                                        className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all active:scale-90"
+                                        title="Delete Class"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+                                )}
                             </div>
+                            <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest mt-1">Class</p>
                             <div className="space-y-3 pt-4 border-t border-border">
                                 <div className="flex items-center justify-between">
                                     <div className="text-[10px] font-black text-primary uppercase tracking-[0.2em]">Streams</div>
@@ -555,6 +620,17 @@ return (
         <StreamsModal className_={managingClass.name} classId={managingClass.id} onClose={() => { setIsStreamsModalOpen(false); setManagingClass(null); loadData(); }} tokenGetter={getToken} />
     )
 }
+
+<AnimatePresence>
+    {viewingStudent && (
+        <StudentDetailsModal 
+            student={viewingStudent} 
+            onClose={() => setViewingStudent(null)} 
+            tokenGetter={getToken}
+            onUpdate={loadData}
+        />
+    )}
+</AnimatePresence>
         </div >
     );
 }
@@ -591,13 +667,15 @@ function StreamsModal({ className_, classId, onClose, tokenGetter }: any) {
     };
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Delete this stream?')) return;
+        if (!confirm('Delete this stream? It must have no students.')) return;
         setStreamError('');
         try {
             const token = await tokenGetter();
             await deleteStream(token, id);
             loadStreams();
-        } catch (err) { setStreamError('Delete failed.'); }
+        } catch (err: any) { 
+            setStreamError(err.message || 'Delete failed.'); 
+        }
     };
 
     return (

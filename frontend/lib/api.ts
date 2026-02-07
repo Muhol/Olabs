@@ -113,6 +113,30 @@ export async function deleteStudent(token: string, studentUuid: string) {
   return response.json();
 }
 
+export async function clearStudent(token: string, studentId: string) {
+  const response = await fetch(`${API_BASE_URL}/students/${studentId}/clear`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Clearance failed');
+  }
+  return response.json();
+}
+
+export async function promoteStudents(token: string) {
+  const response = await fetch(`${API_BASE_URL}/students/promote`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Promotion failed');
+  }
+  return response.json();
+}
+
 export async function fetchClasses(token: string) {
   const response = await fetch(`${API_BASE_URL}/classes`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -131,6 +155,18 @@ export async function createClass(token: string, name: string) {
     body: JSON.stringify({ name })
   });
   if (!response.ok) throw new Error('Failed to create class');
+  return response.json();
+}
+
+export async function deleteClass(token: string, classUuid: string) {
+  const response = await fetch(`${API_BASE_URL}/classes/${classUuid}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to delete class');
+  }
   return response.json();
 }
 
@@ -204,9 +240,10 @@ export async function returnBook(token: string, transactionUuid: string) {
   return response.json();
 }
 
-export async function fetchBorrowHistory(token: string, skip: number = 0, limit: number = 100, search: string = '') {
+export async function fetchBorrowHistory(token: string, skip: number = 0, limit: number = 100, search: string = '', studentId?: string) {
   const params: any = { skip: skip.toString(), limit: limit.toString() };
   if (search) params.search = search;
+  if (studentId) params.student_id = studentId;
 
   const query = new URLSearchParams(params);
   const response = await fetch(`${API_BASE_URL}/history?${query}`, {
@@ -239,39 +276,30 @@ export async function fetchConfig(token: string) {
   return response.json();
 }
 
-export async function updateConfig(token: string, updates: { allow_public_signup?: boolean, require_whitelist?: boolean }) {
-  const query = new URLSearchParams();
-  if (updates.allow_public_signup !== undefined) query.append('allow_public_signup', updates.allow_public_signup.toString());
-  if (updates.require_whitelist !== undefined) query.append('require_whitelist', updates.require_whitelist.toString());
-
-  const response = await fetch(`${API_BASE_URL}/config?${query}`, {
+export async function updateConfig(token: string, updates: { allow_public_signup?: boolean }) {
+  const response = await fetch(`${API_BASE_URL}/config`, {
     method: 'PATCH',
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers: { 
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(updates)
   });
   if (!response.ok) throw new Error('Failed to update config');
   return response.json();
 }
 
-export async function fetchWhitelist(token: string) {
-  const response = await fetch(`${API_BASE_URL}/whitelist`, {
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
-  return response.json();
-}
 
-export async function addToWhitelist(token: string, email: string) {
-  const response = await fetch(`${API_BASE_URL}/whitelist?email=${encodeURIComponent(email)}`, {
-    method: 'POST',
+export async function fetchLogs(token: string, level?: string, search?: string) {
+  const params: any = {};
+  if (level) params.level = level;
+  if (search) params.search = search;
+  
+  const query = new URLSearchParams(params).toString();
+  const response = await fetch(`${API_BASE_URL}/logs${query ? `?${query}` : ''}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
-  return response.json();
-}
-
-export async function removeFromWhitelist(token: string, email: string) {
-  const response = await fetch(`${API_BASE_URL}/whitelist/${encodeURIComponent(email)}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${token}` }
-  });
+  if (!response.ok) throw new Error('Failed to fetch system logs');
   return response.json();
 }
 
@@ -288,22 +316,27 @@ export async function fetchHealth() {
   return response.json();
 }
 
-export async function fetchStaff(token: string) {
-  const response = await fetch(`${API_BASE_URL}/staff`, {
+export async function fetchStaff(token: string, search?: string, roleFilter?: string) {
+  const params: any = {};
+  if (search) params.search = search;
+  if (roleFilter) params.role_filter = roleFilter;
+  
+  const query = new URLSearchParams(params).toString();
+  const response = await fetch(`${API_BASE_URL}/staff${query ? `?${query}` : ''}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   if (!response.ok) throw new Error('Failed to fetch staff');
   return response.json();
 }
 
-export async function updateUserRole(token: string, userId: string, role: string) {
+export async function updateUserRole(token: string, userId: string, role: string, class_id?: string, stream_id?: string) {
   const response = await fetch(`${API_BASE_URL}/users/${userId}/role`, {
     method: 'PATCH',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ role })
+    body: JSON.stringify({ role, class_id, stream_id })
   });
   if (!response.ok) {
     const data = await response.json();

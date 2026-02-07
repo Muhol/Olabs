@@ -46,3 +46,20 @@ class StreamUpdate(BaseModel):
 
 class UserRoleUpdate(BaseModel):
     role: str
+    class_id: Optional[str] = None
+    stream_id: Optional[str] = None
+
+class ConfigUpdate(BaseModel):
+    allow_public_signup: Optional[bool] = None
+
+
+
+class SystemLogbase(BaseModel):
+    level: str
+    action: str
+    user_email: str
+    details: str
+
+class BorrowCreate(BaseModel):
+    book_id: str
+    student_id: str

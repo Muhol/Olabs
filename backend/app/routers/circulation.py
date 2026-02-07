@@ -12,18 +12,18 @@ def get_borrow_history(
     current_user: dict = Depends(auth.get_current_user),
     skip: int = 0,
     limit: int = 100,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    student_id: Optional[str] = None
 ):
-    return service.get_borrow_history(db, skip, limit, search)
+    return service.get_borrow_history(db, skip, limit, search, student_id)
 
 @router.post("/borrow")
 def borrow_book(
-    book_id: str,
-    student_id: str,
+    borrow_in: schemas.BorrowCreate,
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["librarian", "admin", "SUPER_ADMIN"]))
 ):
-    return service.borrow_book(db, book_id, student_id)
+    return service.borrow_book(db, borrow_in.book_id, borrow_in.student_id, current_user["email"])
 
 @router.post("/return/{transaction_uuid}")
 def return_book(
@@ -31,4 +31,4 @@ def return_book(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["librarian", "admin", "SUPER_ADMIN"]))
 ):
-    return service.return_book(db, transaction_uuid)
+    return service.return_book(db, transaction_uuid, current_user["email"])

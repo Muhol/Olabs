@@ -41,4 +41,19 @@ def delete_student(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
-    return service.delete_student(db, student_uuid)
+    return service.delete_student(db, student_uuid, current_user["email"])
+
+@router.post("/students/{student_uuid}/clear")
+def clear_student(
+    student_uuid: str,
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.require_role(["librarian", "admin", "SUPER_ADMIN"]))
+):
+    return service.clear_student(db, student_uuid, current_user["email"])
+
+@router.post("/students/promote")
+def promote_students(
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
+):
+    return service.promote_students(db, current_user["email"])

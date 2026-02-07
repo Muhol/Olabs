@@ -14,5 +14,7 @@ def get_me(current_user: dict = Depends(auth.get_current_user)):
         "clerk_id": current_user.get("clerk_id") or current_user.get("id_"), # Compatibility
         "full_name": current_user.get("full_name"),
         "email": current_user.get("email"),
-        "role": current_user.get("role")
+        "role": current_user.get("role"),
+        "assigned_class_id": current_user.get("assigned_class_id"),
+        "assigned_stream_id": current_user.get("assigned_stream_id")
     }

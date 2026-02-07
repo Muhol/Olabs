@@ -28,7 +28,7 @@ async def get_current_user(
         # For development without Clerk keys, we can allow a 'mock' token
         if os.getenv("ENV") == "dev" and token == "dev_token_admin":
             print("[AUTH] Mock token detected. Returning dev admin.")
-            return {"role": "SUPER_ADMIN", "id": "dev_admin"}
+            return {"role": "SUPER_ADMIN", "id": "dev_admin", "email": "dev@admin.com", "full_name": "Dev Admin"}
             
         # Verify the token locally (or via JWKS)
         print("[AUTH] Verifying token...")
@@ -129,18 +129,18 @@ async def get_current_user(
                 print(f"[AUTH] Profile metadata synced for {email}")
 
             # --- Access Control Policy Check ---
-            if role == "librarian":
+            if role == "none" or role == "librarian":
                 config = db.query(models.GlobalConfig).first()
-                if config:
-                    if not config.allow_public_signup and not config.require_whitelist:
-                        print(f"[AUTH] Access blocked: Registration disabled.")
-                        raise HTTPException(status_code=403, detail="Registration is currently disabled.")
-                    
-                    if config.require_whitelist:
-                        whitelisted = db.query(models.WhitelistedEmail).filter(models.WhitelistedEmail.email == email).first()
-                        if not whitelisted:
-                            print(f"[AUTH] Access blocked: {email} not in whitelist.")
-                            raise HTTPException(status_code=403, detail="Email not authorized for this system.")
+                if config and not config.allow_public_signup:
+                    # If the user is already in the database with a role other than 'none', they are fine.
+                    # But if they are brand new (just created above) or their role is 'none', block them if registration is disabled.
+                    # Wait, if they are already in DB, maybe they should be allowed even if registration is disabled?
+                    # The requirement says "allow_public_signup". Usually this means new signups.
+                    # Let's check if they were JUST created.
+                    # Actually, if db_user exists and role != 'none', it's an existing verified user.
+                    if db_user.role == "none":
+                         print(f"[AUTH] Access blocked for {email}: Public registration disabled.")
+                         raise HTTPException(status_code=403, detail="Registration is currently disabled.")
         except HTTPException:
             raise
         except Exception as db_err:
@@ -148,7 +148,15 @@ async def get_current_user(
             raise
 
         print(f"[AUTH] get_current_user COMPLETED for {email} ({role})")
-        return {**user, "role": role, "id": str(db_user.id)}
+        return {
+            **user, 
+            "role": role, 
+            "id": str(db_user.id), 
+            "email": email, 
+            "full_name": full_name,
+            "assigned_class_id": str(db_user.assigned_class_id) if db_user.assigned_class_id else None,
+            "assigned_stream_id": str(db_user.assigned_stream_id) if db_user.assigned_stream_id else None
+        }
         
     except HTTPException:
         raise

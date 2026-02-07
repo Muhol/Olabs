@@ -33,11 +33,13 @@ class User(Base):
     clerk_id = Column(String, unique=True, index=True, nullable=True)
     full_name = Column(String)
     email = Column(String, unique=True, index=True)
-    role = Column(String)  # librarian | admin | SUPER_ADMIN
-    # Note: Students are managed in the separate Student table and do not have authenticated 'User' accounts.
-    # BorrowRecord now points to Student, but if a librarian borrows (rare), we keep it simple for now.
-    # Actually, the user says borrows are linked to "relevant users", and students are not part of the users table.
-    # So borrows MUST point to Students.
+    role = Column(String)  # librarian | admin | SUPER_ADMIN | teacher
+    
+    assigned_class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id"), nullable=True)
+    assigned_stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id"), nullable=True)
+
+    assigned_class = relationship("Class")
+    assigned_stream = relationship("Stream")
 
 class Student(Base):
     __tablename__ = "students"
@@ -48,6 +50,8 @@ class Student(Base):
     class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id"), nullable=True)
     stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id"), nullable=True)
     stream = Column(String, nullable=True) # Keep legacy for now or migrate
+    is_cleared = Column(Boolean, default=False)
+    cleared_at = Column(DateTime, nullable=True)
     
     student_class = relationship("Class", back_populates="students")
     assigned_stream = relationship("Stream", back_populates="students")
@@ -104,17 +108,21 @@ class MissingReport(Base):
     book = relationship("Book", back_populates="missing_reports")
 
 class GlobalConfig(Base):
-    __tablename__ = "global_configs"
+    __tablename__ = "global_config"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(Integer, primary_key=True)
     allow_public_signup = Column(Boolean, default=True)
-    require_whitelist = Column(Boolean, default=False)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-class WhitelistedEmail(Base):
-    __tablename__ = "whitelisted_emails"
+
+
+class SystemLog(Base):
+    __tablename__ = "system_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    email = Column(String, unique=True, index=True)
-    added_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    level = Column(String) # info | warning | error | critical
+    action = Column(String)
+    user_email = Column(String)
+    target_user = Column(String, nullable=True)
+    details = Column(Text)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)

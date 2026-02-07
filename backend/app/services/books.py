@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from .. import models, schemas
 from fastapi import HTTPException
+from ..services.logs import log_action
 from typing import Optional
 
 def get_books(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None):
@@ -34,7 +35,7 @@ def get_books(db: Session, skip: int = 0, limit: int = 100, search: Optional[str
     ]
     return {"total": total, "items": serialized_items}
 
-def create_book(db: Session, book_in: schemas.BookCreate):
+def create_book(db: Session, book_in: schemas.BookCreate, performer_email: str):
     existing = db.query(models.Book).filter(models.Book.book_id == book_in.book_id).first()
     if existing:
         raise HTTPException(status_code=400, detail="Book ID already exists")
@@ -43,9 +44,10 @@ def create_book(db: Session, book_in: schemas.BookCreate):
     db.add(db_book)
     db.commit()
     db.refresh(db_book)
+    log_action(db, "info", "book creation", performer_email, f"Added new book: {db_book.title}", target_user=db_book.book_id)
     return db_book
 
-def update_book(db: Session, book_uuid: str, book_in: schemas.BookUpdate):
+def update_book(db: Session, book_uuid: str, book_in: schemas.BookUpdate, performer_email: str):
     db_book = db.query(models.Book).filter(models.Book.id == book_uuid).first()
     if not db_book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -56,13 +58,17 @@ def update_book(db: Session, book_uuid: str, book_in: schemas.BookUpdate):
     
     db.commit()
     db.refresh(db_book)
+    log_action(db, "info", "book update", performer_email, f"Updated book: {db_book.title}", target_user=db_book.book_id)
     return db_book
 
-def delete_book(db: Session, book_uuid: str):
+def delete_book(db: Session, book_uuid: str, performer_email: str):
     db_book = db.query(models.Book).filter(models.Book.id == book_uuid).first()
     if not db_book:
         raise HTTPException(status_code=404, detail="Book not found")
     
+    title = db_book.title
+    bid = db_book.book_id
     db.delete(db_book)
     db.commit()
+    log_action(db, "warning", "book deletion", performer_email, f"Deleted book: {title}", target_user=bid)
     return {"message": "Book deleted successfully"}

@@ -14,7 +14,7 @@ import {
     Briefcase,
     Check
 } from 'lucide-react';
-import { fetchStaff, updateUserRole } from '@/lib/api';
+import { fetchStaff, updateUserRole, fetchClasses, fetchStreams } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -25,6 +25,7 @@ export default function StaffPage() {
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [error, setError] = useState('');
+    const [activeTab, setActiveTab] = useState<'verified' | 'unapproved'>('verified');
 
     // Modal Error States
     const [roleError, setRoleError] = useState('');
@@ -35,19 +36,49 @@ export default function StaffPage() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
 
+    // Class/Stream Data
+    const [classes, setClasses] = useState<any[]>([]);
+    const [streams, setStreams] = useState<any[]>([]);
+    const [selectedClassId, setSelectedClassId] = useState('');
+    const [selectedStreamId, setSelectedStreamId] = useState('');
+
     const isSuperAdmin = userRole === 'SUPER_ADMIN';
     const isAdmin = userRole === 'admin';
 
     useEffect(() => {
-        loadData();
-    }, []);
+        const timer = setTimeout(() => {
+            loadData();
+        }, search ? 500 : 0);
+        
+        // Initial load of classes for the modal
+        if (isSuperAdmin || isAdmin) {
+            loadMetaData();
+        }
+
+        return () => clearTimeout(timer);
+    }, [activeTab, search]);
+
+    const loadMetaData = async () => {
+        try {
+            const token = await getToken();
+            if (!token) return;
+            const [classesData, streamsData] = await Promise.all([
+                fetchClasses(token),
+                fetchStreams(token)
+            ]);
+            setClasses(classesData);
+            setStreams(streamsData);
+        } catch (err) {
+            console.error("Failed to load metadata", err);
+        }
+    };
 
     const loadData = async () => {
         setLoading(true);
         try {
             const token = await getToken();
             if (!token) return;
-            const data = await fetchStaff(token);
+            const data = await fetchStaff(token, search, activeTab);
             setUsers(data);
         } catch (err) {
             setError('Failed to load staff data.');
@@ -66,7 +97,13 @@ export default function StaffPage() {
             const token = await getToken();
             if (!token) throw new Error("Authentication failed");
 
-            await updateUserRole(token, editingUser.id, selectedRole);
+            await updateUserRole(
+                token, 
+                editingUser.id, 
+                selectedRole, 
+                selectedRole === 'teacher' ? selectedClassId : undefined, 
+                selectedRole === 'teacher' ? selectedStreamId : undefined
+            );
 
             setIsEditModalOpen(false);
             setEditingUser(null);
@@ -81,6 +118,8 @@ export default function StaffPage() {
     const openEditModal = (user: any) => {
         setEditingUser(user);
         setSelectedRole(user.role);
+        setSelectedClassId(user.assigned_class_id || '');
+        setSelectedStreamId(user.assigned_stream_id || '');
         setIsEditModalOpen(true);
         setRoleError('');
     };
@@ -95,10 +134,7 @@ export default function StaffPage() {
         ] : [])
     ];
 
-    const filteredUsers = users.filter(u =>
-        u.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-        u.email?.toLowerCase().includes(search.toLowerCase())
-    );
+    const filteredUsers = users;
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -119,12 +155,23 @@ export default function StaffPage() {
                 </div>
             </div>
 
-            {/* Search */}
-            <div className="relative group max-w-xl">
-                <button onClick={loadData} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary hover:text-primary transition-colors z-10">
-                    <Search size={20} />
-                </button>
-                <input type="text" placeholder="Search staff via name or email..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && loadData()} className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50" />
+            {/* Tabs & Search */}
+            <div className="flex flex-col xl:flex-row gap-6">
+                <div className="flex bg-muted p-1.5 rounded-[1.4rem] border border-border self-start">
+                    <button onClick={() => setActiveTab('verified')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'verified' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                        Verified Staff
+                    </button>
+                    <button onClick={() => setActiveTab('unapproved')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'unapproved' ? 'bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                        Unapproved Access
+                    </button>
+                </div>
+
+                <div className="relative flex-1 group">
+                    <button onClick={loadData} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary hover:text-primary transition-colors z-10">
+                        <Search size={20} />
+                    </button>
+                    <input type="text" placeholder="Search staff via name or email..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && loadData()} className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50" />
+                </div>
             </div>
 
             {error && (
@@ -239,6 +286,45 @@ export default function StaffPage() {
                                             </label>
                                         ))}
                                     </div>
+
+                                    {/* Teacher Specific Fields */}
+                                    {selectedRole === 'teacher' && (
+                                        <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-4 animate-in slide-in-from-top-2">
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Assigned Class</label>
+                                                <select
+                                                    value={selectedClassId}
+                                                    onChange={(e) => {
+                                                        setSelectedClassId(e.target.value);
+                                                        setSelectedStreamId('');
+                                                    }}
+                                                    className="w-full p-3 rounded-xl bg-card border border-border text-foreground font-bold text-sm"
+                                                    required
+                                                >
+                                                    <option value="">Select Class</option>
+                                                    {classes.map(c => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Assigned Stream</label>
+                                                <select
+                                                    value={selectedStreamId}
+                                                    onChange={(e) => setSelectedStreamId(e.target.value)}
+                                                    className="w-full p-3 rounded-xl bg-card border border-border text-foreground font-bold text-sm"
+                                                    disabled={!selectedClassId}
+                                                    required
+                                                >
+                                                    <option value="">Select Stream</option>
+                                                    {streams.filter(s => s.class_id === selectedClassId).map(s => (
+                                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="flex gap-3 pt-2">

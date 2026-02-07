@@ -22,7 +22,7 @@ def create_book(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["librarian", "admin", "SUPER_ADMIN"]))
 ):
-    return service.create_book(db, book_in)
+    return service.create_book(db, book_in, current_user["email"])
 
 @router.patch("/books/{book_uuid}")
 def update_book(
@@ -31,7 +31,7 @@ def update_book(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["librarian", "admin", "SUPER_ADMIN"]))
 ):
-    return service.update_book(db, book_uuid, book_in)
+    return service.update_book(db, book_uuid, book_in, current_user["email"])
 
 @router.delete("/books/{book_uuid}")
 def delete_book(
@@ -39,4 +39,4 @@ def delete_book(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
-    return service.delete_book(db, book_uuid)
+    return service.delete_book(db, book_uuid, current_user["email"])

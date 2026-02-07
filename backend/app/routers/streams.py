@@ -20,7 +20,7 @@ def create_stream(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
-    return service.create_stream(db, stream_in)
+    return service.create_stream(db, stream_in, current_user["email"])
 
 @router.patch("/streams/{stream_uuid}")
 def update_stream(
@@ -29,7 +29,7 @@ def update_stream(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
-    return service.update_stream(db, stream_uuid, stream_in)
+    return service.update_stream(db, stream_uuid, stream_in, current_user["email"])
 
 @router.delete("/streams/{stream_uuid}")
 def delete_stream(
@@ -37,4 +37,4 @@ def delete_stream(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
-    return service.delete_stream(db, stream_uuid)
+    return service.delete_stream(db, stream_uuid, current_user["email"])

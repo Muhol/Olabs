@@ -18,4 +18,12 @@ def create_class(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
-    return service.create_class(db, class_in)
+    return service.create_class(db, class_in, current_user["email"])
+
+@router.delete("/classes/{class_uuid}")
+def delete_class(
+    class_uuid: str,
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
+):
+    return service.delete_class(db, class_uuid, current_user["email"])

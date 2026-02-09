@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
     FileText,
@@ -33,6 +33,7 @@ export default function TeacherAssignmentsPage() {
     const [assignments, setAssignments] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+    const dateInputRef = useRef<HTMLInputElement>(null);
 
     // Modal State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -346,15 +347,27 @@ export default function TeacherAssignmentsPage() {
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="space-y-2">
-                                            <label className="text-xs font-black uppercase text-slate-500 tracking-widest ml-1">Due Date</label>
+                                            <label
+                                                onClick={() => dateInputRef.current?.showPicker()}
+                                                className="text-xs font-black uppercase text-slate-500 tracking-widest ml-1 cursor-pointer hover:text-primary transition-colors"
+                                            >
+                                                Due Date
+                                            </label>
                                             <div className="relative">
-                                                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                                                <input
-                                                    type="datetime-local"
-                                                    value={newAssignment.due_date}
-                                                    onChange={(e) => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
-                                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-card border border-border text-foreground font-bold focus:border-primary outline-none transition-all"
+                                                <Calendar
+                                                    onClick={() => dateInputRef.current?.showPicker()}
+                                                    className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground cursor-pointer hover:text-primary transition-colors"
+                                                    size={18}
                                                 />
+                                                <input
+                                                ref={dateInputRef}
+                                                type="datetime-local"
+                                                onClick={() => dateInputRef.current?.showPicker()}
+                                                value={newAssignment.due_date}
+                                                onChange={(e) => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
+                                                onKeyDown={(e) => e.preventDefault()}
+                                                className="w-full pl-12 pr-6 py-4 rounded-2xl bg-card border border-border text-foreground font-bold focus:border-primary outline-none transition-all cursor-pointer caret-transparent"
+                                            />
                                             </div>
                                         </div>
 

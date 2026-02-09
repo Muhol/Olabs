@@ -12,7 +12,8 @@ import {
     Layers,
     BarChart3,
     BookOpen,
-    CheckCircle2
+    CheckCircle2,
+    Search
 } from 'lucide-react';
 import { fetchStudents, fetchClasses, fetchStreams, getTeacherSubjectAssignments } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
@@ -33,6 +34,15 @@ export default function MyClassPage() {
     const [teacherSubjects, setTeacherSubjects] = useState<any[]>([]);
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [subjectsLoading, setSubjectsLoading] = useState(false);
+
+    // Pagination & Search State
+    const [search, setSearch] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const [subjectSearch, setSubjectSearch] = useState('');
+    const [subjectSearchInput, setSubjectSearchInput] = useState('');
+    const [skip, setSkip] = useState(0);
+    const [limit] = useState(10);
+    const [totalStudents, setTotalStudents] = useState(0);
 
     const classId = systemUser?.assigned_class_id;
     const streamId = systemUser?.assigned_stream_id;
@@ -55,7 +65,7 @@ export default function MyClassPage() {
                     (systemUser.subroles.includes('all') || systemUser.subroles.includes('teacher')));
 
             if (hasAccess) {
-                loadData();
+                // loadData is now handled by the dependency effect below
                 loadTeacherSubjects();
                 if (classId) {
                     loadAssignmentInfo();
@@ -66,6 +76,8 @@ export default function MyClassPage() {
             }
         }
     }, [systemUser, classId, streamId]);
+
+
 
 
     const loadAssignmentInfo = async () => {
@@ -99,15 +111,17 @@ export default function MyClassPage() {
             if (!token) return;
 
             // Fetch students filtered by the teacher's class and stream
+            // Fetch students filtered by the teacher's class and stream
             const data = await fetchStudents(
                 token,
-                0,
-                100,
-                '',
+                skip,
+                limit,
+                search,
                 classId,
                 streamId || undefined
             );
             setStudents(data.items);
+            setTotalStudents(data.total);
         } catch (err) {
             setError('Failed to load your class students.');
         } finally {
@@ -134,6 +148,13 @@ export default function MyClassPage() {
             setSubjectsLoading(false);
         }
     };
+
+    // Trigger loadData when parameters change
+    useEffect(() => {
+        if (classId) {
+            loadData();
+        }
+    }, [classId, streamId, search, skip, limit]);
 
     if (loading && !students.length) {
         return (
@@ -285,88 +306,142 @@ export default function MyClassPage() {
 
             {/* Student Table */}
             {activeTab === 'students' && (
-                <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card relative">
-                    {loading && (
-                        <div className="absolute inset-0 bg-card/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center animate-in fade-in duration-300">
-                            <Loader2 className="animate-spin text-primary mb-4" size={40} />
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Updating Records...</p>
+                <div className="space-y-4">
+                    <div className="flex gap-4">
+                        <div className="relative flex-1 group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
+                                <Search size={20} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search students..."
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        setSearch(searchInput);
+                                        setSkip(0);
+                                    }
+                                }}
+                                className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50 shadow-sm"
+                            />
+                            <button
+                                onClick={() => {
+                                    setSearch(searchInput);
+                                    setSkip(0);
+                                }}
+                                className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                            >
+                                <Search size={14} /> Search
+                            </button>
                         </div>
-                    )}
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left min-w-[800px]">
-                            <thead>
-                                <tr className="bg-white/5">
-                                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Admission No.</th>
-                                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Student Name</th>
-                                    <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Stream</th>
-                                    <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                                {students
-                                    .filter(student => {
-                                        // Filter by selected subject if one is selected
-                                        if (!selectedSubject) return true;
+                    </div>
 
-                                        // Find the selected subject object to check if it's compulsory
-                                        const subject = teacherSubjects.find(s => s.subject_id === selectedSubject);
-
-                                        // If subject is compulsory, show all students (assuming all in class take it)
-                                        if (subject?.is_compulsory) return true;
-
-                                        // Otherwise, check for explicit assignment
-                                        return student.subjects?.some((s: any) => s.id === selectedSubject);
-                                    })
-                                    .length === 0 ? (
-                                    <tr>
-                                        <td colSpan={4} className="py-20 text-center text-muted-foreground font-black uppercase tracking-widest text-xs">
-                                            {selectedSubject ? 'No students taking this subject' : 'No students found in this stream'}
-                                        </td>
+                    <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card relative">
+                        {loading && (
+                            <div className="absolute inset-0 bg-card/60 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center animate-in fade-in duration-300">
+                                <Loader2 className="animate-spin text-primary mb-4" size={40} />
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Updating Records...</p>
+                            </div>
+                        )}
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left min-w-[800px]">
+                                <thead>
+                                    <tr className="bg-white/5">
+                                        <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Admission No.</th>
+                                        <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Student Name</th>
+                                        <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Stream</th>
+                                        <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
                                     </tr>
-                                ) : (
-                                    students
+                                </thead>
+                                <tbody className="divide-y divide-white/5">
+                                    {students
                                         .filter(student => {
+                                            // Filter by selected subject if one is selected
                                             if (!selectedSubject) return true;
+
+                                            // Find the selected subject object to check if it's compulsory
                                             const subject = teacherSubjects.find(s => s.subject_id === selectedSubject);
+
+                                            // If subject is compulsory, show all students (assuming all in class take it)
                                             if (subject?.is_compulsory) return true;
+
+                                            // Otherwise, check for explicit assignment
                                             return student.subjects?.some((s: any) => s.id === selectedSubject);
                                         })
-                                        .map((student) => (
-                                            <tr
-                                                key={student.id}
-                                                onClick={() => setViewingStudent(student)}
-                                                className="hover:bg-muted/30 transition-colors group border-b border-border/50 cursor-pointer"
-                                            >
-                                                <td className="px-8 py-4">
-                                                    <span className="font-black text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
-                                                        {student.admission_number}
-                                                    </span>
-                                                </td>
-                                                <td className="px-8 py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-all">
-                                                            <UserCircle2 size={24} />
+                                        .length === 0 ? (
+                                        <tr>
+                                            <td colSpan={4} className="py-20 text-center text-muted-foreground font-black uppercase tracking-widest text-xs">
+                                                {selectedSubject ? 'No students taking this subject' : 'No students found in this stream'}
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        students
+                                            .filter(student => {
+                                                if (!selectedSubject) return true;
+                                                const subject = teacherSubjects.find(s => s.subject_id === selectedSubject);
+                                                if (subject?.is_compulsory) return true;
+                                                return student.subjects?.some((s: any) => s.id === selectedSubject);
+                                            })
+                                            .map((student) => (
+                                                <tr
+                                                    key={student.id}
+                                                    onClick={() => setViewingStudent(student)}
+                                                    className="hover:bg-muted/30 transition-colors group border-b border-border/50 cursor-pointer"
+                                                >
+                                                    <td className="px-8 py-4">
+                                                        <span className="font-black text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
+                                                            {student.admission_number}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-8 py-4">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-all">
+                                                                <UserCircle2 size={24} />
+                                                            </div>
+                                                            <div className="font-black text-foreground text-base leading-none">{student.full_name}</div>
                                                         </div>
-                                                        <div className="font-black text-foreground text-base leading-none">{student.full_name}</div>
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-4">
-                                                    <div className="flex items-center gap-2 text-primary font-black text-xs">
-                                                        <Layers size={14} /> {student.stream || 'N/A'}
-                                                    </div>
-                                                </td>
-                                                <td className="px-8 py-4 text-right">
-                                                    {student.is_cleared ? (
-                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">Cleared</span>
-                                                    ) : (
-                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Active</span>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))
-                                )}
-                            </tbody>
-                        </table>
+                                                    </td>
+                                                    <td className="px-8 py-4">
+                                                        <div className="flex items-center gap-2 text-primary font-black text-xs">
+                                                            <Layers size={14} /> {student.stream || 'N/A'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-4 text-right">
+                                                        {student.is_cleared ? (
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">Cleared</span>
+                                                        ) : (
+                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Active</span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        {/* Pagination Controls */}
+                        <div className="bg-muted/30 border-t border-border p-4 flex items-center justify-between">
+                            <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                Showing {Math.min(skip + 1, totalStudents)} - {Math.min(skip + limit, totalStudents)} of {totalStudents}
+                            </div>
+                            <div className="flex gap-2">
+                                <button
+                                    disabled={skip === 0 || loading}
+                                    onClick={() => setSkip(Math.max(0, skip - limit))}
+                                    className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-border disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+                                >
+                                    Previous
+                                </button>
+                                <button
+                                    disabled={skip + limit >= totalStudents || loading}
+                                    onClick={() => setSkip(skip + limit)}
+                                    className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-border disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
+                                >
+                                    Next
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
@@ -393,20 +468,44 @@ export default function MyClassPage() {
                         </div>
                     ) : (
                         <>
-                            <div className="flex items-center justify-between">
-                                <p className="text-sm text-muted-foreground font-medium">
+                            <div className="flex items-center justify-between gap-4">
+                                <p className="text-sm text-muted-foreground font-medium hidden md:block">
                                     You teach <span className="font-black text-primary">{teacherSubjects.length}</span> subject{teacherSubjects.length !== 1 ? 's' : ''} in this class
                                 </p>
+                                <div className="relative group flex-1 md:max-w-md">
+                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
+                                        <Search size={20} />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Search subjects..."
+                                        value={subjectSearchInput}
+                                        onChange={(e) => setSubjectSearchInput(e.target.value)}
+                                        onKeyDown={(e) => e.key === 'Enter' && setSubjectSearch(subjectSearchInput)}
+                                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50 shadow-sm"
+                                    />
+                                    <button
+                                        onClick={() => setSubjectSearch(subjectSearchInput)}
+                                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                                    >
+                                        <Search size={14} /> Search
+                                    </button>
+                                </div>
                             </div>
 
                             <div className="space-y-12">
                                 {Object.entries(
-                                    teacherSubjects.reduce((acc: any, subject) => {
-                                        const key = `${subject.class_name}${subject.stream_name ? ` / ${subject.stream_name}` : ' / All Streams'}`;
-                                        if (!acc[key]) acc[key] = [];
-                                        acc[key].push(subject);
-                                        return acc;
-                                    }, {})
+                                    teacherSubjects
+                                        .filter(s =>
+                                            s.subject_name.toLowerCase().includes(subjectSearch.toLowerCase()) ||
+                                            s.class_name.toLowerCase().includes(subjectSearch.toLowerCase())
+                                        )
+                                        .reduce((acc: any, subject) => {
+                                            const key = `${subject.class_name}${subject.stream_name ? ` / ${subject.stream_name}` : ' / All Streams'}`;
+                                            if (!acc[key]) acc[key] = [];
+                                            acc[key].push(subject);
+                                            return acc;
+                                        }, {})
                                 ).map(([category, subjects]: [string, any]) => (
                                     <div key={category} className="space-y-6">
                                         <div className="flex items-center gap-4">
@@ -433,8 +532,8 @@ export default function MyClassPage() {
                                                             setSelectedSubject(subject.subject_id);
 
                                                             // Check if we are currently displaying the class and stream this subject belongs to
-                                                            const isCorrectContext = students.length > 0 && 
-                                                                students[0].class_id === subject.class_id && 
+                                                            const isCorrectContext = students.length > 0 &&
+                                                                students[0].class_id === subject.class_id &&
                                                                 (subject.stream_id ? students[0].stream_id === subject.stream_id : !students[0].stream_id);
 
                                                             if (!isCorrectContext) {
@@ -446,6 +545,7 @@ export default function MyClassPage() {
                                                                             token, 0, 100, '', subject.class_id, subject.stream_id || undefined
                                                                         );
                                                                         setStudents(data.items);
+                                                                        setTotalStudents(data.total);
                                                                     }
                                                                 } catch (err) {
                                                                     console.error("Failed to switch class context", err);

@@ -33,7 +33,8 @@ def get_students(db: Session, skip: int = 0, limit: int = 100, search: Optional[
             "class_name": s.student_class.name if s.student_class else "N/A",
             "full_class": f"{s.student_class.name}{s.assigned_stream.name}" if s.student_class and s.assigned_stream else "N/A",
             "is_cleared": s.is_cleared,
-            "cleared_at": s.cleared_at
+            "cleared_at": s.cleared_at,
+            "subjects": [{"id": str(sb.id), "name": sb.name} for sb in s.subjects]
         } for s in items
     ]
     return {"total": total, "items": serialized_items}

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from . import models, database
-from .routers import books, students, classes, streams, circulation, analytics, users, auth, config, logs
+from .routers import books, students, classes, streams, circulation, analytics, users, auth, config, logs, subjects, assignments
 
 load_dotenv()
 
@@ -32,10 +32,13 @@ app.include_router(users.router, tags=["Users"])
 app.include_router(analytics.router, tags=["Analytics"])
 app.include_router(config.router, prefix="/config", tags=["Config"])
 app.include_router(logs.router, prefix="/logs", tags=["Logs"])
+app.include_router(subjects.router, tags=["Subjects"])
+app.include_router(assignments.router, tags=["Assignments"])
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to Library Star Pro API", "version": "1.0.0"}
+
 
 @app.get("/health")
 async def health_check():

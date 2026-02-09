@@ -18,7 +18,11 @@ def get_staff(db: Session, search: Optional[str] = None, role_filter: Optional[s
         if role_filter == "unapproved":
             query = query.filter(models.User.role == "none")
         elif role_filter == "verified":
-            query = query.filter(models.User.role != "none")
+            # Verified staff must have a role other than 'none' and cannot be NULL
+            query = query.filter(
+                models.User.role.is_not(None),
+                models.User.role != "none"
+            )
         else:
             query = query.filter(models.User.role == role_filter)
 
@@ -31,7 +35,9 @@ def get_staff(db: Session, search: Optional[str] = None, role_filter: Optional[s
             "role": u.role,
             "clerk_id": u.clerk_id,
             "assigned_class_id": str(u.assigned_class_id) if u.assigned_class_id else None,
-            "assigned_stream_id": str(u.assigned_stream_id) if u.assigned_stream_id else None
+            "assigned_stream_id": str(u.assigned_stream_id) if u.assigned_stream_id else None,
+            "subroles": [sr.subrole_name for sr in u.subroles],
+            "assigned_subjects": [{"id": str(sb.id), "name": sb.name} for sb in u.assigned_subjects]
         } for u in users
     ]
 
@@ -50,7 +56,6 @@ def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleU
             raise HTTPException(status_code=403, detail="The SUPER_ADMIN role cannot be modified by anyone.")
             
         allowed_roles.append("admin")
-        # allowed_roles.append("SUPER_ADMIN") # Optional: Allow transfer of super admin? Removed based on request "super admin role should not be updated by any one"
     
     # Prevent Admins from creating other Admins or Super Admins
     if current_user["role"] == "admin":
@@ -59,21 +64,33 @@ def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleU
              raise HTTPException(status_code=403, detail="Insufficient permissions to modify this user's role.")
              
         if new_role not in allowed_roles:
-             raise HTTPException(status_code=403, detail="Admins can only assign 'librarian', 'teacher', or 'none' roles.")
+            raise HTTPException(status_code=403, detail="Admins can only assign 'librarian', 'teacher', or 'none' roles.")
     
     if new_role not in ["admin", "librarian", "teacher", "SUPER_ADMIN", "none"]:
         raise HTTPException(status_code=400, detail="Invalid role specified")
 
     target_user.role = new_role
     
-    # Assign class/stream if it's a teacher
-    if new_role == "teacher":
+    # Assign class/stream if it's a teacher or admin
+    if new_role in ["teacher", "admin"]:
         target_user.assigned_class_id = role_update.class_id
         target_user.assigned_stream_id = role_update.stream_id
     else:
-        # Clear assignments if role changes from teacher to something else
+        # Clear assignments if role changes to librarian or none
         target_user.assigned_class_id = None
         target_user.assigned_stream_id = None
+
+    # Handle Subroles (Only Super Admins can assign subroles to Admins)
+    if current_user["role"] == "SUPER_ADMIN" and new_role == "admin" and role_update.subroles is not None:
+        # Clear existing subroles
+        db.query(models.UserSubrole).filter(models.UserSubrole.user_id == target_user.id).delete()
+        # Add new subroles
+        for sr_name in role_update.subroles:
+            db_subrole = models.UserSubrole(user_id=target_user.id, subrole_name=sr_name)
+            db.add(db_subrole)
+    elif new_role != "admin":
+        # Clear subroles if no longer an admin
+        db.query(models.UserSubrole).filter(models.UserSubrole.user_id == target_user.id).delete()
 
     db.commit()
     db.refresh(target_user)
@@ -93,5 +110,7 @@ def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleU
         "email": target_user.email,
         "role": target_user.role,
         "assigned_class_id": str(target_user.assigned_class_id) if target_user.assigned_class_id else None,
-        "assigned_stream_id": str(target_user.assigned_stream_id) if target_user.assigned_stream_id else None
+        "assigned_stream_id": str(target_user.assigned_stream_id) if target_user.assigned_stream_id else None,
+        "subroles": [sr.subrole_name for sr in target_user.subroles],
+        "assigned_subjects": [{"id": str(sb.id), "name": sb.name} for sb in target_user.assigned_subjects]
     }

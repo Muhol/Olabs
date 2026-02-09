@@ -119,14 +119,12 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 Tasks to be done (remaining tasks)
 
-1. impementing system logs functionality in the backend 
-2. implementing settings in the backend 
-3. button to add a stream to a class in the stats card in the students page (done)
-4. clicking on a student in the students page should open a modal to view the student's details and borrowing history (done)
-5. clearance functionality for clearing students (done)
-6. the option to delete a stream in the students page but it should only be available if the stream is empty and can only be done by admin and super admin (done)
-7. add an option to delete a class in the students page but it should only be available if the class is empty and can only be done by admin and super admin (done)
-8. in the staff page separate the verified and unapproved users into two tabs and also add a search functionality to search for users (done)
-9. adding the return function directly in the studantdetails modal (done)
-10. promotion of students to the next level
-11. updating or assigning a stream to a student should also update the stream column in the students table not just the stream_id column (done)
+<!-- 2. implementing settings in the backend  -->
+<!-- 10. promotion of students to the next level -->
+1. unapproved users should not be visible in the verified tab in the staff page
+2. admins can be assigned specific subroles ie timetable manager, finance, teacher, all(ie can do everything an admin can do, but cannot delete other admins),and etc, these roles are assigned by the super admin alone .An admin can be assigned multiple subroles
+2. add a model for subjects, migrate the database and create a page to manage subjects which is only accessible to admins (ie creating and deleting subjects and assigning them to students and the teachers who teach the subject)
+3. a subject can be compulsory or optional(if optional, students can choose the subjects they want to take)
+4. all classes have all the subjects and students can choose the optional subjects they want to take
+4. my class should have a tab for subjects and a tab for student of the class if the teacher is assigned to a CLASS/stream eg F1/A and the subjects tab should show the subjects the current user is teaching and clicking on the subject should show the students taking the subject
+5. 

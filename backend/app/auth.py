@@ -155,7 +155,8 @@ async def get_current_user(
             "email": email, 
             "full_name": full_name,
             "assigned_class_id": str(db_user.assigned_class_id) if db_user.assigned_class_id else None,
-            "assigned_stream_id": str(db_user.assigned_stream_id) if db_user.assigned_stream_id else None
+            "assigned_stream_id": str(db_user.assigned_stream_id) if db_user.assigned_stream_id else None,
+            "subroles": [sr.subrole_name for sr in db_user.subroles]
         }
         
     except HTTPException:

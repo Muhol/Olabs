@@ -16,5 +16,6 @@ def get_me(current_user: dict = Depends(auth.get_current_user)):
         "email": current_user.get("email"),
         "role": current_user.get("role"),
         "assigned_class_id": current_user.get("assigned_class_id"),
-        "assigned_stream_id": current_user.get("assigned_stream_id")
+        "assigned_stream_id": current_user.get("assigned_stream_id"),
+        "subroles": current_user.get("subroles", [])
     }

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, ForeignKey, Text, Table, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -14,6 +14,68 @@ class Class(Base):
     students = relationship("Student", back_populates="student_class")
     streams = relationship("Stream", back_populates="parent_class")
     borrows = relationship("BorrowRecord", back_populates="associated_class")
+
+# Association tables for Subject many-to-many relationships
+student_subjects = Table(
+    "student_subjects",
+    Base.metadata,
+    Column("student_id", UUID(as_uuid=True), ForeignKey("students.id"), primary_key=True),
+    Column("subject_id", UUID(as_uuid=True), ForeignKey("subjects.id"), primary_key=True),
+)
+
+teacher_subjects = Table(
+    "teacher_subjects",
+    Base.metadata,
+    Column("user_id", UUID(as_uuid=True), ForeignKey("users.id"), primary_key=True),
+    Column("subject_id", UUID(as_uuid=True), ForeignKey("subjects.id"), primary_key=True),
+)
+
+class Subject(Base):
+    __tablename__ = "subjects"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, index=True) # Mathematics, English, etc.
+    class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id"), nullable=False)
+    stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id"), nullable=True) # Nullable for class-wide subjects
+    is_compulsory = Column(Boolean, default=True)
+
+    # Relationships
+    assigned_class = relationship("Class")
+    assigned_stream = relationship("Stream")
+    assigned_students = relationship("Student", secondary=student_subjects, back_populates="subjects")
+    assigned_teachers = relationship("User", secondary=teacher_subjects, back_populates="assigned_subjects")
+    teacher_assignments = relationship("TeacherSubjectAssignment", back_populates="subject", cascade="all, delete-orphan")
+    assignments = relationship("Assignment", back_populates="subject", cascade="all, delete-orphan")
+
+    @property
+    def student_count(self):
+        return len(self.assigned_students)
+
+    __table_args__ = (
+        UniqueConstraint('name', 'class_id', 'stream_id', name='unique_subject_class_stream'),
+    )
+
+class TeacherSubjectAssignment(Base):
+    """Tracks which teacher teaches which subject in which class/stream"""
+    __tablename__ = "teacher_subject_assignments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    teacher_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id", ondelete="CASCADE"), nullable=False)
+    stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    teacher = relationship("User", back_populates="subject_assignments")
+    subject = relationship("Subject", back_populates="teacher_assignments")
+    assigned_class = relationship("Class")
+    assigned_stream = relationship("Stream")
+
+    # Unique constraint to prevent duplicate assignments
+    __table_args__ = (
+        UniqueConstraint('teacher_id', 'subject_id', 'class_id', 'stream_id', name='unique_teacher_subject_class_stream'),
+    )
 
 class Stream(Base):
     __tablename__ = "streams"
@@ -40,6 +102,19 @@ class User(Base):
 
     assigned_class = relationship("Class")
     assigned_stream = relationship("Stream")
+    subroles = relationship("UserSubrole", back_populates="user", cascade="all, delete-orphan")
+    assigned_subjects = relationship("Subject", secondary="teacher_subjects", back_populates="assigned_teachers")
+    subject_assignments = relationship("TeacherSubjectAssignment", back_populates="teacher", cascade="all, delete-orphan")
+    created_assignments = relationship("Assignment", back_populates="teacher", cascade="all, delete-orphan")
+
+class UserSubrole(Base):
+    __tablename__ = "user_subroles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), index=True)
+    subrole_name = Column(String, index=True) # timetable, finance, teacher, all, etc.
+
+    user = relationship("User", back_populates="subroles")
 
 class Student(Base):
     __tablename__ = "students"
@@ -56,6 +131,7 @@ class Student(Base):
     student_class = relationship("Class", back_populates="students")
     assigned_stream = relationship("Stream", back_populates="students")
     borrows = relationship("BorrowRecord", back_populates="student")
+    subjects = relationship("Subject", secondary="student_subjects", back_populates="assigned_students")
 
 class Book(Base):
     __tablename__ = "books"
@@ -126,3 +202,23 @@ class SystemLog(Base):
     target_user = Column(String, nullable=True)
     details = Column(Text)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
+
+class Assignment(Base):
+    """Stores curriculum assignments (homework, tasks) for subjects"""
+    __tablename__ = "assignments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String, index=True)
+    description = Column(Text, nullable=True)
+    file_url = Column(String, nullable=True)
+    file_public_id = Column(String, nullable=True)
+    file_name = Column(String, nullable=True)
+    due_date = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    teacher_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    # Relationships
+    subject = relationship("Subject", back_populates="assignments")
+    teacher = relationship("User", back_populates="created_assignments")

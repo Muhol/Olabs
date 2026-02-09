@@ -12,7 +12,10 @@ import {
     LogOut,
     Menu,
     X,
-    Briefcase
+    Briefcase,
+    GraduationCap,
+    Library,
+    CheckCircle2
 } from 'lucide-react';
 import { UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { usePathname } from 'next/navigation';
@@ -22,10 +25,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/', roles: ['librarian', 'admin', 'SUPER_ADMIN', 'teacher'] },
-    { icon: Users, label: 'My Class', href: '/teachers/my-class', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
-    { icon: BookOpen, label: 'Library Books', href: '/inventory', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
+    { icon: GraduationCap, label: 'My Class', href: '/teachers/my-class', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
+    { icon: CheckCircle2, label: 'Subject Enrollment', href: '/teachers/enrollment', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
+    { icon: FileText, label: 'Assignments', href: '/teachers/assignments', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
+    { icon: Library, label: 'Library Books', href: '/inventory', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: Users, label: 'Students', href: '/students', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: Briefcase, label: 'Staff', href: '/staff', roles: ['admin', 'SUPER_ADMIN'] },
+    { icon: BookOpen, label: 'Subjects', href: '/subjects', roles: ['admin', 'SUPER_ADMIN'] },
     { icon: History, label: 'History', href: '/history', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: FileText, label: 'Reports', href: '/reports', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: ShieldAlert, label: 'System Logs', href: '/logs', roles: ['SUPER_ADMIN'] },
@@ -34,7 +40,7 @@ const sidebarItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default closed for mobile-first approach
-    
+
     // Set initial state based on screen size - COLLAPSED BY DEFAULT AS REQUESTED
     /* React.useEffect(() => {
         if (window.innerWidth >= 1024) {
@@ -51,21 +57,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setIsNavigating(false);
         setTargetHref(null);
     }, [pathname]);
-    
+
     // Consume Global User Context
     const { systemUser, userRole, loadingSystemUser } = useUserContext();
 
     // Automatically sync with system theme preference
     React.useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-        
+
         // Set initial theme based on system preference
         if (mediaQuery.matches) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
-        
+
         // Listen for system theme changes
         const handleChange = (e: MediaQueryListEvent) => {
             if (e.matches) {
@@ -74,7 +80,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 document.documentElement.classList.remove('dark');
             }
         };
-        
+
         mediaQuery.addEventListener('change', handleChange);
         return () => mediaQuery.removeEventListener('change', handleChange);
     }, []);
@@ -126,7 +132,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Top Navigation Progress Bar */}
             <AnimatePresence>
                 {isNavigating && (
-                    <motion.div 
+                    <motion.div
                         initial={{ scaleX: 0, opacity: 0 }}
                         animate={{ scaleX: 1, opacity: 1 }}
                         exit={{ opacity: 0 }}
@@ -176,16 +182,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         setTargetHref(item.href);
                                     }
                                 }}
-                                className={`flex items-center gap-4 p-3 rounded-xl transition-all group relative ${
-                                    pathname === item.href 
-                                        ? 'bg-primary/10 text-primary shadow-lg shadow-primary/5' 
-                                        : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500'
-                                }`}
+                                className={`flex items-center gap-4 p-3 rounded-xl transition-all group relative ${pathname === item.href
+                                    ? 'bg-primary/10 text-primary shadow-lg shadow-primary/5'
+                                    : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500'
+                                    }`}
                             >
                                 <div className="relative">
                                     <item.icon size={22} className={`${pathname === item.href ? 'text-primary' : 'text-slate-400 group-hover:text-primary'} transition-colors`} />
                                     {isNavigating && targetHref === item.href && (
-                                        <motion.div 
+                                        <motion.div
                                             layoutId="nav-loader"
                                             className="absolute -inset-1 border-2 border-primary border-t-transparent rounded-full animate-spin"
                                         />

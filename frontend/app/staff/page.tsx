@@ -41,6 +41,14 @@ export default function StaffPage() {
     const [streams, setStreams] = useState<any[]>([]);
     const [selectedClassId, setSelectedClassId] = useState('');
     const [selectedStreamId, setSelectedStreamId] = useState('');
+    const [selectedSubroles, setSelectedSubroles] = useState<string[]>([]);
+
+    const adminSubroleOptions = [
+        { value: 'timetable_manager', label: 'Timetable Manager' },
+        { value: 'finance', label: 'Finance' },
+        { value: 'teacher', label: 'Teacher' },
+        { value: 'all', label: 'All (Full Admin)' }
+    ];
 
     const isSuperAdmin = userRole === 'SUPER_ADMIN';
     const isAdmin = userRole === 'admin';
@@ -49,7 +57,7 @@ export default function StaffPage() {
         const timer = setTimeout(() => {
             loadData();
         }, search ? 500 : 0);
-        
+
         // Initial load of classes for the modal
         if (isSuperAdmin || isAdmin) {
             loadMetaData();
@@ -75,15 +83,22 @@ export default function StaffPage() {
 
     const loadData = async () => {
         setLoading(true);
+        const currentTab = activeTab;
         try {
             const token = await getToken();
             if (!token) return;
             const data = await fetchStaff(token, search, activeTab);
-            setUsers(data);
+
+            // Race condition guard: only update if the tab hasn't changed
+            if (currentTab === activeTab) {
+                setUsers(data);
+            }
         } catch (err) {
             setError('Failed to load staff data.');
         } finally {
-            setLoading(false);
+            if (currentTab === activeTab) {
+                setLoading(false);
+            }
         }
     };
 
@@ -98,11 +113,12 @@ export default function StaffPage() {
             if (!token) throw new Error("Authentication failed");
 
             await updateUserRole(
-                token, 
-                editingUser.id, 
-                selectedRole, 
-                selectedRole === 'teacher' ? selectedClassId : undefined, 
-                selectedRole === 'teacher' ? selectedStreamId : undefined
+                token,
+                editingUser.id,
+                selectedRole,
+                selectedRole === 'teacher' ? selectedClassId : undefined,
+                selectedRole === 'teacher' ? selectedStreamId : undefined,
+                selectedRole === 'admin' ? selectedSubroles : undefined
             );
 
             setIsEditModalOpen(false);
@@ -120,6 +136,7 @@ export default function StaffPage() {
         setSelectedRole(user.role);
         setSelectedClassId(user.assigned_class_id || '');
         setSelectedStreamId(user.assigned_stream_id || '');
+        setSelectedSubroles(user.subroles || []);
         setIsEditModalOpen(true);
         setRoleError('');
     };
@@ -217,14 +234,23 @@ export default function StaffPage() {
                                         <td className="px-8 py-4 text-sm font-bold text-muted-foreground">{user.email}</td>
                                         <td className="px-8 py-4">
                                             <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${user.role === 'SUPER_ADMIN' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-                                                    user.role === 'admin' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
-                                                        user.role === 'teacher' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
-                                                            user.role === 'none' ? 'bg-slate-500/10 text-slate-500 border-slate-500/20' :
-                                                                'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                                                user.role === 'admin' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
+                                                    user.role === 'teacher' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
+                                                        user.role === 'none' ? 'bg-slate-500/10 text-slate-500 border-slate-500/20' :
+                                                            'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                                                 }`}>
                                                 {user.role === 'SUPER_ADMIN' && <ShieldCheck size={10} className="mr-1" />}
                                                 {user.role.replace('_', ' ')}
                                             </span>
+                                            {user.role === 'admin' && user.subroles && user.subroles.length > 0 && (
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {user.subroles.map((sr: string) => (
+                                                        <span key={sr} className="px-2 py-0.5 rounded-md bg-muted text-[8px] font-black uppercase tracking-tighter text-slate-500 border border-border">
+                                                            {sr.replace('_', ' ')}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-8 py-4 text-right">
                                             {/* Logic: 
@@ -268,27 +294,29 @@ export default function StaffPage() {
                             </div>
 
                             <form onSubmit={handleUpdateRole} className="space-y-6">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Select New Role</label>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {availableRoles.map((role) => (
-                                            <label key={role.value} className={`relative flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${selectedRole === role.value ? 'bg-primary/10 border-primary text-primary' : 'bg-input border-border text-muted-foreground hover:border-primary/30'}`}>
-                                                <input
-                                                    type="radio"
-                                                    name="role"
-                                                    value={role.value}
-                                                    checked={selectedRole === role.value}
-                                                    onChange={(e) => setSelectedRole(e.target.value)}
-                                                    className="w-4 h-4 text-primary bg-transparent border-primary focus:ring-offset-0 focus:ring-0 mr-2 accent-primary"
-                                                />
-                                                <span className="font-bold text-sm uppercase tracking-wide">{role.label}</span>
-                                                {selectedRole === role.value && <Check size={16} className="ml-auto" />}
-                                            </label>
-                                        ))}
+                                <div className="space-y-6">
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Select New Role</label>
+                                        <div className="grid grid-cols-1 gap-2">
+                                            {availableRoles.map((role) => (
+                                                <label key={role.value} className={`relative flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all ${selectedRole === role.value ? 'bg-primary/10 border-primary text-primary' : 'bg-input border-border text-muted-foreground hover:border-primary/30'}`}>
+                                                    <input
+                                                        type="radio"
+                                                        name="role"
+                                                        value={role.value}
+                                                        checked={selectedRole === role.value}
+                                                        onChange={(e) => setSelectedRole(e.target.value)}
+                                                        className="w-4 h-4 text-primary bg-transparent border-primary focus:ring-offset-0 focus:ring-0 mr-2 accent-primary"
+                                                    />
+                                                    <span className="font-bold text-sm uppercase tracking-wide">{role.label}</span>
+                                                    {selectedRole === role.value && <Check size={16} className="ml-auto" />}
+                                                </label>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     {/* Teacher Specific Fields */}
-                                    {selectedRole === 'teacher' && (
+                                    {(selectedRole === 'teacher' || selectedRole === 'admin') && (
                                         <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-4 animate-in slide-in-from-top-2">
                                             <div className="space-y-2">
                                                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Assigned Class</label>
@@ -323,6 +351,37 @@ export default function StaffPage() {
                                                     ))}
                                                 </select>
                                             </div>
+                                        </div>
+                                    )}
+
+                                    {/* Admin Subroles (Only for Super Admin) */}
+                                    {selectedRole === 'admin' && isSuperAdmin && (
+                                        <div className="p-4 bg-amber-500/5 border border-amber-500/10 rounded-2xl space-y-3 animate-in slide-in-from-top-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-amber-600 ml-1 flex items-center gap-2">
+                                                <ShieldCheck size={12} /> Assign Admin Subroles
+                                            </label>
+                                            <div className="grid grid-cols-2 gap-2">
+                                                {adminSubroleOptions.map((subrole) => (
+                                                    <label key={subrole.value} className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer transition-all ${selectedSubroles.includes(subrole.value) ? 'bg-amber-500/10 border-amber-500/30 text-amber-700' : 'bg-card border-border text-slate-500 hover:border-amber-500/20'}`}>
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedSubroles.includes(subrole.value)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedSubroles([...selectedSubroles, subrole.value]);
+                                                                } else {
+                                                                    setSelectedSubroles(selectedSubroles.filter(s => s !== subrole.value));
+                                                                }
+                                                            }}
+                                                            className="w-3.5 h-3.5 rounded bg-transparent border-amber-500 focus:ring-0 accent-amber-500"
+                                                        />
+                                                        <span className="text-[9px] font-black uppercase tracking-tight">{subrole.label}</span>
+                                                    </label>
+                                                ))}
+                                            </div>
+                                            <p className="text-[8px] font-medium text-amber-600/60 leading-tight px-1">
+                                                Note: "All" allows everything except management of other admins.
+                                            </p>
                                         </div>
                                     )}
                                 </div>

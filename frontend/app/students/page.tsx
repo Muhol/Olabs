@@ -89,11 +89,8 @@ export default function StudentsPage() {
     useScrollLock(isStudentModalOpen || isClassModalOpen || isStreamsModalOpen || !!viewingStudent);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            loadData();
-        }, search ? 500 : 0);
-        return () => clearTimeout(timer);
-    }, [skip, search, selectedClassFilter, selectedStreamFilter]);
+        loadData();
+    }, [skip, selectedClassFilter, selectedStreamFilter]);
 
     // Reset page on search
     useEffect(() => {
@@ -408,10 +405,23 @@ return (
             )}
 
             <div className="relative flex-1 group">
-                <button onClick={loadData} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-secondary hover:text-secondary transition-colors z-10">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-secondary transition-colors z-10">
                     <Search size={20} />
+                </div>
+                <input 
+                    type="text" 
+                    placeholder="Search students by name or admission number..." 
+                    value={search} 
+                    onChange={(e: any) => setSearch(e.target.value)} 
+                    onKeyDown={(e) => e.key === 'Enter' && loadData()} 
+                    className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none transition-all placeholder:text-muted-foreground/50" 
+                />
+                <button 
+                    onClick={loadData}
+                    className="absolute right-2 top-2 bottom-2 px-6 bg-secondary text-secondary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-secondary/20 flex items-center gap-2"
+                >
+                    <Search size={14} /> Search
                 </button>
-                <input type="text" placeholder="Search students by name or admission number..." value={search} onChange={(e: any) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && loadData()} className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none transition-all placeholder:text-muted-foreground/50" />
             </div>
         </div>
 

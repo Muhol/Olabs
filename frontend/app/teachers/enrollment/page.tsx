@@ -86,8 +86,8 @@ export default function ClassEnrollmentPage() {
         setEnrollingSubject(subject);
         setIsEnrollModalOpen(true);
         setEnrollModalPage(0);
-        setEnrolledStudentIds([]); 
-        
+        setEnrolledStudentIds([]);
+
         setIsEnrollDataLoading(true);
         try {
             const token = await getToken();
@@ -178,15 +178,20 @@ export default function ClassEnrollmentPage() {
                     </p>
                 </div>
 
-                <div className="relative w-full md:w-80">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <div className="relative w-full md:w-96 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10" size={18} />
                     <input
                         type="text"
                         placeholder="Search subjects..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-foreground font-bold focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50 shadow-sm"
+                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50 shadow-sm"
                     />
+                    <button
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                    >
+                        <Search size={14} /> Search
+                    </button>
                 </div>
             </div>
 

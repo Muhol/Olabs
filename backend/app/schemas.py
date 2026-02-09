@@ -66,6 +66,10 @@ class SystemLogbase(BaseModel):
 class BorrowCreate(BaseModel):
     book_id: str
     student_id: str
+    book_number: Optional[str] = None
+
+class ReturnBookRequest(BaseModel):
+    book_number: Optional[str] = None
 
 from uuid import UUID
 
@@ -87,6 +91,10 @@ class SubjectResponse(SubjectBase):
     
     class Config:
         from_attributes = True
+
+class PaginatedSubjectResponse(BaseModel):
+    total: int
+    items: List[SubjectResponse]
 
 class SubjectUpdate(BaseModel):
     name: Optional[str] = None

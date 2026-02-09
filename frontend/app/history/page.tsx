@@ -32,12 +32,15 @@ export default function HistoryPage() {
     const [limit] = useState(15);
     const [totalRecords, setTotalRecords] = useState(0);
 
+    // Return Verification State
+    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
+    const [selectedRecord, setSelectedRecord] = useState<any>(null);
+    const [bookNumberInput, setBookNumberInput] = useState('');
+    const [returnError, setReturnError] = useState('');
+
     useEffect(() => {
-        const timer = setTimeout(() => {
-            loadHistory();
-        }, search ? 500 : 0);
-        return () => clearTimeout(timer);
-    }, [skip, search, filter]);
+        loadHistory();
+    }, [skip, filter]);
 
     // Reset page on search or filter change
     useEffect(() => {
@@ -64,19 +67,31 @@ export default function HistoryPage() {
         }
     };
 
-    const handleReturn = async (id: string) => {
-        setActionLoading(id);
+
+    const initiateReturn = (record: any) => {
+        setSelectedRecord(record);
+        setBookNumberInput('');
+        setReturnError('');
+        setIsReturnModalOpen(true);
+    };
+
+    const handleExecuteReturn = async () => {
+        if (!selectedRecord) return;
+        setActionLoading(selectedRecord.id);
+        setReturnError('');
         try {
             const token = await getToken();
             if (!token) {
-                setError('Authentication required. Please refresh the page.');
+                setReturnError('Authentication required. Please refresh the page.');
                 setActionLoading(null);
                 return;
             }
-            await returnBook(token, id);
+            await returnBook(token, selectedRecord.id, bookNumberInput);
+            setIsReturnModalOpen(false);
+            setSelectedRecord(null);
             loadHistory();
         } catch (err: any) {
-            setError(err.message || 'Return protocol execution failed.');
+            setReturnError(err.message || 'Return protocol execution failed.');
         } finally {
             setActionLoading(null);
         }
@@ -109,14 +124,14 @@ export default function HistoryPage() {
                 Records: {Math.min(skip + 1, totalRecords)} - {Math.min(skip + limit, totalRecords)} of {totalRecords}
             </div>
             <div className="flex gap-2">
-                <button 
+                <button
                     disabled={skip === 0 || loading}
                     onClick={() => setSkip(Math.max(0, skip - limit))}
                     className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-border disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
                 >
                     {loading && skip > 0 ? <Loader2 size={12} className="animate-spin" /> : null} Previous
                 </button>
-                <button 
+                <button
                     disabled={skip + limit >= totalRecords || loading}
                     onClick={() => setSkip(skip + limit)}
                     className="flex items-center gap-2 px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-border disabled:opacity-30 disabled:cursor-not-allowed transition-all active:scale-95"
@@ -147,10 +162,23 @@ export default function HistoryPage() {
             {/* Controls */}
             <div className="flex flex-col xl:flex-row gap-4">
                 <div className="relative flex-1 group">
-                    <button onClick={loadHistory} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-amber-500 hover:text-amber-500 transition-colors z-10">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-amber-500 transition-colors z-10">
                         <Search size={20} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search records by book title or student name..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && loadHistory()}
+                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-amber-500 outline-none transition-all placeholder:text-muted-foreground/50 shadow-sm"
+                    />
+                    <button
+                        onClick={loadHistory}
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-amber-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-amber-500/20 flex items-center gap-2"
+                    >
+                        <Search size={14} /> Search
                     </button>
-                    <input type="text" placeholder="Search records by book title or student name..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && loadHistory()} className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-amber-500 outline-none transition-all placeholder:text-muted-foreground/50" />
                 </div>
                 <div className="flex bg-muted p-1.5 rounded-2xl border border-border transition-colors">
                     {['all', 'borrowed', 'returned', 'overdue'].map((f) => (
@@ -210,7 +238,7 @@ export default function HistoryPage() {
                                             </td>
                                             <td className="px-8 py-6 text-right">
                                                 {item.status !== 'returned' && (
-                                                    <button onClick={() => handleReturn(item.id)} disabled={actionLoading === item.id} className="flex items-center gap-2 ml-auto px-4 py-2 bg-muted hover:bg-emerald-500 text-muted-foreground hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-border hover:border-emerald-500 transition-all active:scale-95 disabled:opacity-50">{actionLoading === item.id ? <Loader2 className="animate-spin" size={14} /> : <><RotateCcw size={14} /> Execute Return</>}</button>
+                                                    <button onClick={() => initiateReturn(item)} disabled={actionLoading === item.id} className="flex items-center gap-2 ml-auto px-4 py-2 bg-muted hover:bg-emerald-500 text-muted-foreground hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-border hover:border-emerald-500 transition-all active:scale-95 disabled:opacity-50">{actionLoading === item.id ? <Loader2 className="animate-spin" size={14} /> : <><RotateCcw size={14} /> Return</>}</button>
                                                 )}
                                                 {item.status === 'returned' && <div className="text-[10px] font-bold text-slate-600 uppercase italic">Closed: {new Date(item.return_date).toLocaleDateString()}</div>}
                                             </td>
@@ -225,6 +253,73 @@ export default function HistoryPage() {
                     </div>
                 </div>
             </div>
+
+            <AnimatePresence>
+                {isReturnModalOpen && selectedRecord && (
+                    <div className="fixed inset-0 h-screen z-[110] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsReturnModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2rem] border border-border bg-card p-6 md:p-10 shadow-2xl">
+                            <div className="text-center mb-8">
+                                <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 mx-auto mb-4"><CheckCircle2 size={32} /></div>
+                                <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Confirm Return</h3>
+                                <p className="text-xs font-bold text-muted-foreground mt-2">Verify book details before processing return.</p>
+                            </div>
+
+                            {returnError && (
+                                <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-500 text-[10px] font-black uppercase tracking-wider">
+                                    <AlertCircle size={14} /> {returnError}
+                                </div>
+                            )}
+
+                            <div className="space-y-6">
+                                <div className="p-4 rounded-xl bg-muted border border-border space-y-2">
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Book</span>
+                                        <span className="text-xs font-bold text-foreground">{selectedRecord.book}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Student</span>
+                                        <span className="text-xs font-bold text-foreground">{selectedRecord.student}</span>
+                                    </div>
+                                    {selectedRecord.book_number && (
+                                         <div className="flex justify-between items-center pt-2 border-t border-border">
+                                            <span className="text-[10px] font-black text-primary uppercase tracking-widest">Expected ID</span>
+                                            <span className="text-xs font-black text-primary bg-primary/10 px-2 py-0.5 rounded">{selectedRecord.book_number}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Scan Book Barcode / Enter ID</label>
+                                    <input 
+                                        autoFocus
+                                        value={bookNumberInput} 
+                                        onChange={(e) => setBookNumberInput(e.target.value)} 
+                                        placeholder={selectedRecord.book_number ? "Required for verification..." : "Optional..."}
+                                        className={`w-full px-4 py-3.5 rounded-xl bg-input border text-foreground font-bold text-sm focus:border-emerald-500 outline-none transition-all placeholder:text-muted-foreground/50 ${selectedRecord.book_number && bookNumberInput !== selectedRecord.book_number ? 'border-rose-500/50' : 'border-border'}`}
+                                        onKeyDown={(e) => e.key === 'Enter' && handleExecuteReturn()}
+                                    />
+                                    {selectedRecord.book_number && bookNumberInput && bookNumberInput !== selectedRecord.book_number && (
+                                        <p className="text-[10px] font-bold text-rose-500 ml-1">ID mismatch. Return cannot be processed.</p>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-4 pt-2">
+                                    <button onClick={() => setIsReturnModalOpen(false)} className="flex-1 py-3 bg-muted text-foreground font-black uppercase text-xs tracking-widest rounded-xl transition-all active:scale-95 border border-border">Cancel</button>
+                                    <button 
+                                        onClick={handleExecuteReturn} 
+                                        disabled={!!actionLoading || (!!selectedRecord.book_number && bookNumberInput !== selectedRecord.book_number)} 
+                                        className="flex-2 py-3 bg-emerald-500 text-white font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 disabled:opacity-50 disabled:grayscale"
+                                    >
+                                        {actionLoading ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
+                                        Process Return
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

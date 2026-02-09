@@ -54,17 +54,13 @@ export default function StaffPage() {
     const isAdmin = userRole === 'admin';
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            loadData();
-        }, search ? 500 : 0);
+        loadData();
 
         // Initial load of classes for the modal
         if (isSuperAdmin || isAdmin) {
             loadMetaData();
         }
-
-        return () => clearTimeout(timer);
-    }, [activeTab, search]);
+    }, [activeTab]);
 
     const loadMetaData = async () => {
         try {
@@ -184,10 +180,23 @@ export default function StaffPage() {
                 </div>
 
                 <div className="relative flex-1 group">
-                    <button onClick={loadData} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary hover:text-primary transition-colors z-10">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
                         <Search size={20} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search staff via name or email..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && loadData()}
+                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50"
+                    />
+                    <button
+                        onClick={loadData}
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-primary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                    >
+                        <Search size={14} /> Search
                     </button>
-                    <input type="text" placeholder="Search staff via name or email..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && loadData()} className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50" />
                 </div>
             </div>
 

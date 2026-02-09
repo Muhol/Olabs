@@ -32,12 +32,13 @@ def get_borrow_history(db: Session, skip: int = 0, limit: int = 100, search: Opt
             "borrow_date": r.borrow_date,
             "due_date": r.due_date,
             "return_date": r.return_date,
-            "status": r.status
+            "status": r.status,
+            "book_number": r.book_number
         } for r in records
     ]
     return {"total": total, "items": items}
 
-def borrow_book(db: Session, book_id: str, student_id: str, performer_email: str):
+def borrow_book(db: Session, book_id: str, student_id: str, performer_email: str, book_number: Optional[str] = None):
     # Verify book existence and availability
     book = db.query(models.Book).filter(models.Book.id == book_id).first()
     if not book:
@@ -60,7 +61,8 @@ def borrow_book(db: Session, book_id: str, student_id: str, performer_email: str
             stream_id=student.stream_id,
             borrow_date=datetime.datetime.utcnow(),
             due_date=datetime.datetime.utcnow() + datetime.timedelta(days=14),
-            status="borrowed"
+            status="borrowed",
+            book_number=book_number
         )
         # Update book availability
         book.borrowed_copies += 1
@@ -73,13 +75,20 @@ def borrow_book(db: Session, book_id: str, student_id: str, performer_email: str
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Transaction failure: {str(e)}")
 
-def return_book(db: Session, transaction_uuid: str, performer_email: str):
+def return_book(db: Session, transaction_uuid: str, performer_email: str, book_number: Optional[str] = None):
     record = db.query(models.BorrowRecord).filter(models.BorrowRecord.id == transaction_uuid).first()
     if not record:
         raise HTTPException(status_code=404, detail="Transaction not found")
     
     if record.status == "returned":
         raise HTTPException(status_code=400, detail="Book already returned")
+    
+    # Verification Logic
+    if record.book_number:
+        if not book_number:
+             raise HTTPException(status_code=400, detail="Book verification failed: Missing Book Number/ID. Please scan the book.")
+        if book_number.strip().lower() != record.book_number.strip().lower():
+             raise HTTPException(status_code=400, detail=f"Book verification failed: ID mismatch. Expected '{record.book_number}', got '{book_number}'.")
     
     try:
         record.status = "returned"

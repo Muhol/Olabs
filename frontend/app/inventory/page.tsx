@@ -50,6 +50,7 @@ export default function InventoryPage() {
     const [isBorrowModalOpen, setIsBorrowModalOpen] = useState(false);
     const [selectedBookForBorrow, setSelectedBookForBorrow] = useState<any>(null);
     const [admissionNumberSearch, setAdmissionNumberSearch] = useState('');
+    const [bookNumberInput, setBookNumberInput] = useState('');
     const [foundStudent, setFoundStudent] = useState<any>(null);
     const [borrowLoading, setBorrowLoading] = useState(false);
 
@@ -64,11 +65,8 @@ export default function InventoryPage() {
     useScrollLock(isModalOpen || isBorrowModalOpen);
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            loadBooks();
-        }, search ? 500 : 0);
-        return () => clearTimeout(timer);
-    }, [skip, search]);
+        loadBooks();
+    }, [skip]); // Only re-load on skip (pagination)
 
     // Reset page on search
     useEffect(() => {
@@ -157,10 +155,10 @@ export default function InventoryPage() {
             // Use the search parameter to find the student on the server
             // Fetch with limit 1, as we expect a unique admission number or just need the first match
             const studentsData = await fetchStudents(token, 0, 5, admissionNumberSearch);
-            
+
             // The search on the backend likely searches name and admission number.
             // We can double check if we got a match.
-            const student = studentsData.items.find((s: any) => 
+            const student = studentsData.items.find((s: any) =>
                 s.admission_number.toLowerCase() === admissionNumberSearch.toLowerCase()
             );
 
@@ -192,10 +190,11 @@ export default function InventoryPage() {
                 setBorrowLoading(false);
                 return;
             }
-            await borrowBook(token, selectedBookForBorrow.id, foundStudent.id);
+            await borrowBook(token, selectedBookForBorrow.id, foundStudent.id, bookNumberInput);
             setIsBorrowModalOpen(false);
             setFoundStudent(null);
             setAdmissionNumberSearch('');
+            setBookNumberInput('');
             loadBooks();
             loadBooks();
         } catch (err: any) {
@@ -268,10 +267,23 @@ export default function InventoryPage() {
             {/* Filter & Search Bar */}
             <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1 group">
-                    <button onClick={loadBooks} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary hover:text-primary transition-colors z-10">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
                         <Search size={20} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search by title, ID, or author..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && loadBooks()}
+                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50"
+                    />
+                    <button
+                        onClick={loadBooks}
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                    >
+                        <Search size={14} /> Search
                     </button>
-                    <input type="text" placeholder="Search by title, ID, or author..." value={search} onChange={(e) => setSearch(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && loadBooks()} className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50" />
                 </div>
                 <button className="flex items-center gap-3 px-6 py-4 bg-muted border border-border text-muted-foreground font-black uppercase text-[10px] tracking-widest rounded-2xl hover:text-foreground hover:bg-muted/80 transition-all">
                     <Filter size={18} /> Advanced Filters
@@ -342,7 +354,7 @@ export default function InventoryPage() {
                                                 <td className="px-8 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-2">
                                                         {book.available && (
-                                                            <button onClick={() => { setSelectedBookForBorrow(book); setIsBorrowModalOpen(true); setBorrowError(''); setFoundStudent(null); setAdmissionNumberSearch(''); }} className="px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-primary/20 transition-all active:scale-95">Borrow</button>
+                                                            <button onClick={() => { setSelectedBookForBorrow(book); setIsBorrowModalOpen(true); setBorrowError(''); setFoundStudent(null); setAdmissionNumberSearch(''); setBookNumberInput(''); }} className="px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-primary/20 transition-all active:scale-95">Borrow</button>
                                                         )}
                                                         <div className="flex items-center gap-2">
                                                             <button onClick={() => { setEditingBook(book); setFormData(book); setIsModalOpen(true); setModalError(''); }} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"><Edit size={16} /></button>
@@ -382,6 +394,7 @@ export default function InventoryPage() {
                                     <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Selected Book</div>
                                     <div className="text-lg font-black text-foreground">{selectedBookForBorrow?.title}</div>
                                 </div>
+                                <Input label="Book Copy Number / Barcode (Optional)" value={bookNumberInput} onChange={(e: any) => setBookNumberInput(e.target.value)} placeholder="Scan barcode or enter copy ID..." />
                                 <Input label="Admission Number" value={admissionNumberSearch} onChange={(e: any) => setAdmissionNumberSearch(e.target.value)} placeholder="ADM/2024/..." />
                                 <button onClick={handleSearchStudent} disabled={borrowLoading} className="w-full py-4 bg-muted border border-border text-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-30">
                                     {borrowLoading && !foundStudent ? <Loader2 size={16} className="animate-spin" /> : null}

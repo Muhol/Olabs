@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/nextjs';
-import { 
-    ShieldAlert, 
-    Terminal, 
-    Search, 
-    Filter, 
-    Download, 
-    RefreshCw, 
-    Clock, 
-    User, 
+import {
+    ShieldAlert,
+    Terminal,
+    Search,
+    Filter,
+    Download,
+    RefreshCw,
+    Clock,
+    User,
     Activity,
     Info,
     AlertTriangle,
@@ -62,12 +62,9 @@ export default function LogsPage() {
 
     useEffect(() => {
         if (isLoaded && isSuperAdmin) {
-            const delayDebounceFn = setTimeout(() => {
-                loadData();
-            }, 500);
-            return () => clearTimeout(delayDebounceFn);
+            loadData();
         }
-    }, [search, filter]);
+    }, [filter]);
 
     if (!isSuperAdmin) {
         return (
@@ -107,8 +104,8 @@ export default function LogsPage() {
                     <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all">
                         <Download size={14} /> Export Logs
                     </button>
-                    <button 
-                        onClick={loadData} 
+                    <button
+                        onClick={loadData}
                         className="p-3 bg-primary/10 text-primary border border-primary/20 rounded-xl hover:bg-primary/20 transition-all"
                     >
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
@@ -149,24 +146,30 @@ export default function LogsPage() {
 
             {/* Controls */}
             <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={18} />
-                    <input 
-                        type="text" 
+                <div className="relative flex-1 group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors z-10" size={18} />
+                    <input
+                        type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && loadData()}
                         placeholder="Search logs by action, user, or details..."
-                        className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm focus:border-primary outline-none transition-all shadow-inner"
+                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm focus:border-primary outline-none transition-all shadow-inner"
                     />
+                    <button
+                        onClick={loadData}
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                    >
+                        <Search size={14} /> Search
+                    </button>
                 </div>
                 <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
                     {['ALL', 'INFO', 'WARNING', 'ERROR'].map((l) => (
                         <button
                             key={l}
                             onClick={() => setFilter(l)}
-                            className={`px-6 py-2 rounded-xl font-black text-[10px] tracking-widest transition-all ${
-                                filter === l ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'
-                            }`}
+                            className={`px-6 py-2 rounded-xl font-black text-[10px] tracking-widest transition-all ${filter === l ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'
+                                }`}
                         >
                             {l}
                         </button>
@@ -192,11 +195,10 @@ export default function LogsPage() {
                             {logs.map((log: any) => (
                                 <tr key={log.id} className="hover:bg-white/[0.02] transition-colors group">
                                     <td className="px-6 py-4">
-                                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${
-                                            log.level === 'INFO' ? 'bg-blue-500/10 text-blue-500' :
-                                            log.level === 'WARNING' ? 'bg-amber-500/10 text-amber-500' :
-                                            'bg-rose-500/10 text-rose-500'
-                                        }`}>
+                                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${log.level === 'INFO' ? 'bg-blue-500/10 text-blue-500' :
+                                                log.level === 'WARNING' ? 'bg-amber-500/10 text-amber-500' :
+                                                    'bg-rose-500/10 text-rose-500'
+                                            }`}>
                                             {log.level === 'INFO' && <Info size={12} />}
                                             {log.level === 'WARNING' && <AlertTriangle size={12} />}
                                             {log.level === 'ERROR' && <XCircle size={12} />}

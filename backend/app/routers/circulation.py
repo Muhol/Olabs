@@ -23,12 +23,14 @@ def borrow_book(
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["librarian", "admin", "SUPER_ADMIN"]))
 ):
-    return service.borrow_book(db, borrow_in.book_id, borrow_in.student_id, current_user["email"])
+    return service.borrow_book(db, borrow_in.book_id, borrow_in.student_id, current_user["email"], borrow_in.book_number)
 
 @router.post("/return/{transaction_uuid}")
 def return_book(
     transaction_uuid: str,
+    return_request: Optional[schemas.ReturnBookRequest] = None,
     db: Session = Depends(database.get_db),
     current_user: dict = Depends(auth.require_role(["librarian", "admin", "SUPER_ADMIN"]))
 ):
-    return service.return_book(db, transaction_uuid, current_user["email"])
+    book_number = return_request.book_number if return_request else None
+    return service.return_book(db, transaction_uuid, current_user["email"], book_number)

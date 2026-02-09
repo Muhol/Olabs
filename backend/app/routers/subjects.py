@@ -25,13 +25,16 @@ def check_subject_management_access(current_user: dict = Depends(auth.get_curren
         detail="Access denied. Requires Super Admin or Admin with Timetable permissions."
     )
 
-@router.get("/", response_model=List[schemas.SubjectResponse])
+@router.get("/", response_model=schemas.PaginatedSubjectResponse)
 def list_subjects(
+    skip: int = 0,
+    limit: int = 100,
+    search: Optional[str] = None,
     available_for_teacher: Optional[str] = None,
     db: Session = Depends(get_db), 
     current_user: dict = Depends(auth.get_current_user)
 ):
-    return service.get_subjects(db, available_for_teacher_id=available_for_teacher)
+    return service.get_subjects(db, skip=skip, limit=limit, search=search, available_for_teacher_id=available_for_teacher)
 
 @router.post("/", response_model=schemas.SubjectResponse)
 def create_subject(

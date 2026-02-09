@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
-from typing import List
+from typing import List, Optional
 from .. import models, schemas
 import uuid
 
@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 from sqlalchemy import and_, or_, not_
 
-def get_subjects(db: Session, available_for_teacher_id: str = None):
+def get_subjects(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None, available_for_teacher_id: str = None):
     query = db.query(models.Subject)
     
     if available_for_teacher_id:
@@ -18,8 +18,24 @@ def get_subjects(db: Session, available_for_teacher_id: str = None):
                 models.Subject.teacher_assignments.any(models.TeacherSubjectAssignment.teacher_id == available_for_teacher_id)
             )
         )
+
+    if search:
+        search_f = f"%{search}%"
+        # Join with classes and streams for multi-field search
+        query = query.join(models.Class, models.Subject.class_id == models.Class.id, isouter=True) \
+                     .join(models.Stream, models.Subject.stream_id == models.Stream.id, isouter=True)
         
-    subjects = query.all()
+        query = query.filter(
+            or_(
+                models.Subject.name.ilike(search_f),
+                models.Class.name.ilike(search_f),
+                models.Stream.name.ilike(search_f)
+            )
+        )
+        
+    total = query.count()
+    subjects = query.offset(skip).limit(limit).all()
+    
     res = []
     for subj in subjects:
         res.append({
@@ -33,7 +49,7 @@ def get_subjects(db: Session, available_for_teacher_id: str = None):
             "student_count": subj.student_count,
             "assigned_teacher_id": str(subj.teacher_assignments[0].teacher_id) if subj.teacher_assignments else None
         })
-    return res
+    return {"total": total, "items": res}
 
 def create_subject(db: Session, subject: schemas.SubjectCreate):
     db_subject = models.Subject(

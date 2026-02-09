@@ -165,6 +165,7 @@ class BorrowRecord(Base):
     due_date = Column(DateTime)
     return_date = Column(DateTime, nullable=True)
     status = Column(String)  # borrowed | returned | overdue | missing
+    book_number = Column(String, nullable=True) # Unique identifier for the specific copy (e.g. Barcode)
 
     book = relationship("Book", back_populates="borrows")
     student = relationship("Student", back_populates="borrows")

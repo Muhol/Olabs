@@ -214,12 +214,17 @@ export async function deleteStream(token: string, streamUuid: string) {
   return response.json();
 }
 
-export async function borrowBook(token: string, bookId: string, studentId: string) {
-  const response = await fetch(`${API_BASE_URL}/borrow?book_id=${bookId}&student_id=${studentId}`, {
+export async function borrowBook(token: string, bookId: string, studentId: string, bookNumber?: string) {
+  const body: any = { book_id: bookId, student_id: studentId };
+  if (bookNumber) body.book_number = bookNumber;
+
+  const response = await fetch(`${API_BASE_URL}/borrow`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`
-    }
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(body)
   });
   if (!response.ok) {
     const data = await response.json();
@@ -228,10 +233,19 @@ export async function borrowBook(token: string, bookId: string, studentId: strin
   return response.json();
 }
 
-export async function returnBook(token: string, transactionUuid: string) {
+export async function returnBook(token: string, transactionUuid: string, bookNumber?: string) {
+  const headers: any = { 'Authorization': `Bearer ${token}` };
+  let body = undefined;
+
+  if (bookNumber) {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify({ book_number: bookNumber });
+  }
+
   const response = await fetch(`${API_BASE_URL}/return/${transactionUuid}`, {
     method: 'POST',
-    headers: { 'Authorization': `Bearer ${token}` }
+    headers,
+    body
   });
   if (!response.ok) {
     const data = await response.json();
@@ -345,9 +359,15 @@ export async function updateUserRole(token: string, userId: string, role: string
   return response.json();
 }
 
-export async function fetchSubjects(token: string, availableForTeacher?: string) {
-  const query = availableForTeacher ? `?available_for_teacher=${availableForTeacher}` : '';
-  const response = await fetch(`${API_BASE_URL}/subjects${query}`, {
+export async function fetchSubjects(token: string, availableForTeacher?: string, skip: number = 0, limit: number = 100, search?: string) {
+  const params = new URLSearchParams({
+    skip: skip.toString(),
+    limit: limit.toString()
+  });
+  if (availableForTeacher) params.append('available_for_teacher', availableForTeacher);
+  if (search) params.append('search', search);
+
+  const response = await fetch(`${API_BASE_URL}/subjects?${params.toString()}`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
   if (!response.ok) throw new Error('Failed to fetch subjects');

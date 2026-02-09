@@ -30,6 +30,12 @@ export default function SubjectManagementPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
+    // Pagination and Search for Subject List
+    const [listCurrentPage, setListCurrentPage] = useState(0);
+    const [listTotalItems, setListTotalItems] = useState(0);
+    const [listLimit] = useState(10);
+    const [listSearch, setListSearch] = useState('');
+
     // Create Subject Modal
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newSubjectName, setNewSubjectName] = useState('');
@@ -89,8 +95,14 @@ export default function SubjectManagementPage() {
     }, []);
 
     useEffect(() => {
+        if (activeTab === 'subjects' || activeTab === 'students') {
+            loadData();
+        }
+    }, [activeTab, listCurrentPage]);
+
+    useEffect(() => {
         if (activeTab === 'teachers') loadStaff();
-    }, [activeTab, search]);
+    }, [activeTab]);
 
     useEffect(() => {
         if (!isCreateModalOpen) {
@@ -105,13 +117,15 @@ export default function SubjectManagementPage() {
         if (!isEditModalOpen) setEditError(null);
     }, [isEditModalOpen]);
 
-    const loadData = async () => {
+    const loadData = async (searchOverride?: string) => {
         setLoading(true);
         try {
             const token = await getToken();
             if (!token) return;
-            const data = await fetchSubjects(token);
-            setSubjects(data);
+            const searchTerm = searchOverride !== undefined ? searchOverride : listSearch;
+            const data = await fetchSubjects(token, undefined, listCurrentPage * listLimit, listLimit, searchTerm);
+            setSubjects(data.items);
+            setListTotalItems(data.total);
         } catch (err) {
             setError('Failed to load subjects.');
         } finally {
@@ -141,6 +155,30 @@ export default function SubjectManagementPage() {
         }
     };
 
+    const triggerSearch = () => {
+        if (listCurrentPage === 0) {
+            loadData();
+        } else {
+            setListCurrentPage(0);
+        }
+    };
+
+    const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            triggerSearch();
+        }
+    };
+
+    const triggerStaffSearch = () => {
+        loadStaff();
+    };
+
+    const handleStaffSearchKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            triggerStaffSearch();
+        }
+    };
+
     const loadClassesAndStreams = async () => {
         try {
             const token = await getToken();
@@ -157,7 +195,7 @@ export default function SubjectManagementPage() {
         setIsEnrollModalOpen(true);
         setEnrollModalPage(0);
         setEnrolledStudentIds([]); // Clear while loading
-        
+
         try {
             const token = await getToken();
             if (!token) return;
@@ -429,9 +467,32 @@ export default function SubjectManagementPage() {
             {/* Main Content Grid */}
             <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card transition-colors">
                 {activeTab === 'subjects' ? (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left min-w-[600px]">
-                            <thead>
+                    <div className="flex flex-col h-full">
+                        <div className="p-8 border-b border-border bg-muted/20">
+                            <div className="flex items-center gap-4 max-w-2xl">
+                                <div className="relative group flex-1">
+                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by name, class, or stream..."
+                                        value={listSearch}
+                                        onChange={(e) => setListSearch(e.target.value)}
+                                        onKeyDown={handleSearchKeyDown}
+                                        className="w-full pl-12 pr-4 py-4 rounded-2xl bg-background border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all"
+                                    />
+                                </div>
+                                <button
+                                    onClick={triggerSearch}
+                                    className="px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                >
+                                    <Search size={18} /> Search
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto flex-1">
+                            <table className="w-full text-left min-w-[600px]">
+                                <thead>
                                 <tr className="text-left border-b border-border">
                                     <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Name</th>
                                     <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Class</th>
@@ -509,18 +570,54 @@ export default function SubjectManagementPage() {
                                 ))}
                             </tbody>
                         </table>
+                        </div>
+
+                        {/* Pagination Footer */}
+                        <div className="p-6 border-t border-border flex items-center justify-between bg-muted/10">
+                            <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                                showing <span className="text-foreground">{listCurrentPage * listLimit + 1}</span> to <span className="text-foreground">{Math.min((listCurrentPage + 1) * listLimit, listTotalItems)}</span> of <span className="text-foreground">{listTotalItems}</span> subjects
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    disabled={listCurrentPage === 0 || loading}
+                                    onClick={() => setListCurrentPage(prev => prev - 1)}
+                                    className="p-3 bg-card border border-border text-foreground rounded-xl hover:bg-muted disabled:opacity-50 transition-all"
+                                >
+                                    <ChevronLeft size={18} />
+                                </button>
+                                <div className="px-4 text-xs font-black uppercase tracking-widest text-primary">
+                                    Page {listCurrentPage + 1}
+                                </div>
+                                <button
+                                    disabled={(listCurrentPage + 1) * listLimit >= listTotalItems || loading}
+                                    onClick={() => setListCurrentPage(prev => prev + 1)}
+                                    className="p-3 bg-card border border-border text-foreground rounded-xl hover:bg-muted disabled:opacity-50 transition-all"
+                                >
+                                    <ChevronRight size={18} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 ) : activeTab === 'teachers' ? (
                     <div className="p-8 space-y-6">
-                        <div className="relative group max-w-xl">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
-                            <input
-                                type="text"
-                                placeholder={`Search teachers...`}
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                className="w-full pl-12 pr-4 py-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all"
-                            />
+                        <div className="flex items-center gap-4 max-w-2xl">
+                            <div className="relative group flex-1">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
+                                <input
+                                    type="text"
+                                    placeholder={`Search teachers...`}
+                                    value={search}
+                                    onChange={(e) => setSearch(e.target.value)}
+                                    onKeyDown={handleStaffSearchKeyDown}
+                                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all"
+                                />
+                            </div>
+                            <button
+                                onClick={triggerStaffSearch}
+                                className="px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            >
+                                <Search size={18} /> Search
+                            </button>
                         </div>
 
                         {staffLoading ? (
@@ -573,21 +670,29 @@ export default function SubjectManagementPage() {
                             </div>
                         ) : (
                             <div className="space-y-8">
-                                <div className="relative group max-w-xl">
-                                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search subjects..."
-                                        value={search}
-                                        onChange={(e) => setSearch(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all"
-                                    />
+                                <div className="flex items-center gap-4 max-w-2xl">
+                                    <div className="relative group flex-1">
+                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
+                                        <input
+                                            type="text"
+                                            placeholder="Search subjects..."
+                                            value={listSearch}
+                                            onChange={(e) => setListSearch(e.target.value)}
+                                            onKeyDown={handleSearchKeyDown}
+                                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={triggerSearch}
+                                        className="px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                    >
+                                        <Search size={18} /> Search
+                                    </button>
                                 </div>
 
                                 <div className="space-y-12">
                                     {(() => {
-                                        const filtered = subjects.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
-                                        const grouped = filtered.reduce((acc: any, subj) => {
+                                        const grouped = subjects.reduce((acc: any, subj) => {
                                             const className = subj.class_name || 'All Classes';
                                             const streamName = subj.stream_name || 'Common / All Streams';
                                             if (!acc[className]) acc[className] = {};
@@ -596,7 +701,7 @@ export default function SubjectManagementPage() {
                                             return acc;
                                         }, {});
 
-                                        if (filtered.length === 0) return <div className="py-20 text-center text-muted-foreground italic">No subjects found</div>;
+                                        if (subjects.length === 0) return <div className="py-20 text-center text-muted-foreground italic">No subjects found</div>;
 
                                         return Object.entries(grouped).map(([className, streams]: [string, any]) => (
                                             <div key={className} className="space-y-6">
@@ -625,16 +730,16 @@ export default function SubjectManagementPage() {
                                                                         </div>
                                                                         <div>
                                                                             <h4 className="font-bold text-foreground text-sm">{subj.name}</h4>
-                                                                        <div className="flex items-center gap-2 mt-1">
-                                                                            <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{subj.is_compulsory ? 'Compulsory' : 'Optional'}</p>
-                                                                            <span className="text-muted-foreground/30">•</span>
-                                                                            <div className="flex items-center gap-1 text-[10px] text-primary font-black">
-                                                                                <Users size={10} />
-                                                                                {subj.student_count} Enrolled
+                                                                            <div className="flex items-center gap-2 mt-1">
+                                                                                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">{subj.is_compulsory ? 'Compulsory' : 'Optional'}</p>
+                                                                                <span className="text-muted-foreground/30">•</span>
+                                                                                <div className="flex items-center gap-1 text-[10px] text-primary font-black">
+                                                                                    <Users size={10} />
+                                                                                    {subj.student_count} Enrolled
+                                                                                </div>
                                                                             </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
                                                                     <div className="opacity-0 group-hover:opacity-100 transition-all bg-primary/10 p-2 rounded-lg">
                                                                         <Plus className="text-primary" size={16} />
                                                                     </div>
@@ -823,32 +928,30 @@ export default function SubjectManagementPage() {
                                         <div className="flex bg-muted/50 p-1 rounded-2xl mb-6 border border-border">
                                             <button
                                                 onClick={() => setAssignmentTab('available')}
-                                                className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                    assignmentTab === 'available' 
-                                                        ? 'bg-card text-primary shadow-sm ring-1 ring-border' 
+                                                className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${assignmentTab === 'available'
+                                                        ? 'bg-card text-primary shadow-sm ring-1 ring-border'
                                                         : 'text-muted-foreground hover:text-foreground'
-                                                }`}
+                                                    }`}
                                             >
                                                 Unassigned ({modalSubjects.filter(s => !s.assigned_teacher_id).length})
                                             </button>
                                             <button
                                                 onClick={() => setAssignmentTab('assigned')}
-                                                className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                                    assignmentTab === 'assigned' 
-                                                        ? 'bg-card text-primary shadow-sm ring-1 ring-border' 
+                                                className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${assignmentTab === 'assigned'
+                                                        ? 'bg-card text-primary shadow-sm ring-1 ring-border'
                                                         : 'text-muted-foreground hover:text-foreground'
-                                                }`}
+                                                    }`}
                                             >
                                                 Assigned ({modalSubjects.filter(s => s.assigned_teacher_id === selectedUser?.id).length})
                                             </button>
                                         </div>
                                     )}
-                                   
+
                                     <div className="relative mb-4">
                                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-                                        <input 
-                                            type="text" 
-                                            placeholder="Search subjects..." 
+                                        <input
+                                            type="text"
+                                            placeholder="Search subjects..."
                                             value={assignmentSearch}
                                             onChange={(e) => setAssignmentSearch(e.target.value)}
                                             className="w-full pl-10 pr-4 py-3 bg-muted/50 border border-border rounded-xl text-sm font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all text-foreground"
@@ -876,10 +979,10 @@ export default function SubjectManagementPage() {
                                                     const className = subj.class_name || 'No Class';
                                                     // For sorting/display, we might want to handle 'Common' differently, but user asked for Stream grouping.
                                                     const streamName = subj.stream_name || 'Common / All Streams';
-                                                    
+
                                                     if (!acc[className]) acc[className] = {};
                                                     if (!acc[className][streamName]) acc[className][streamName] = [];
-                                                    
+
                                                     acc[className][streamName].push(subj);
                                                     return acc;
                                                 }, {});
@@ -890,7 +993,7 @@ export default function SubjectManagementPage() {
                                                             <div className="h-4 w-1 bg-primary rounded-full"></div>
                                                             <h4 className="text-xs font-black uppercase tracking-widest text-foreground">{className}</h4>
                                                         </div>
-                                                        
+
                                                         <div className="pl-3 space-y-4 border-l-2 border-border ml-1.5">
                                                             {Object.entries(streams).map(([streamName, streamSubjects]: [string, any]) => (
                                                                 <div key={streamName} className="space-y-2">
@@ -933,9 +1036,9 @@ export default function SubjectManagementPage() {
                                             {(() => {
                                                 // Group subjects
                                                 const grouped = modalSubjects
-                                                    .filter(subj => 
-                                                        assignmentTab === 'available' 
-                                                            ? !subj.assigned_teacher_id 
+                                                    .filter(subj =>
+                                                        assignmentTab === 'available'
+                                                            ? !subj.assigned_teacher_id
                                                             : subj.assigned_teacher_id === selectedUser.id
                                                     )
                                                     .reduce((acc: any, subj) => {
@@ -946,7 +1049,7 @@ export default function SubjectManagementPage() {
                                                     }, {});
 
                                                 // Filter groups
-                                                const filteredGroups = Object.entries(grouped).filter(([name]) => 
+                                                const filteredGroups = Object.entries(grouped).filter(([name]) =>
                                                     (name as string).toLowerCase().includes(assignmentSearch.toLowerCase())
                                                 );
 
@@ -964,7 +1067,7 @@ export default function SubjectManagementPage() {
                                                         <div className="grid grid-cols-1 gap-2">
                                                             {groupSubjects.map((subj: any) => {
                                                                 const isSelected = subjectAssignments.some(a => a.subject_id === subj.id);
-                                                                
+
                                                                 return (
                                                                     <div key={subj.id} className={`border transition-all rounded-xl p-3 flex items-center justify-between group ${isSelected ? 'bg-primary/5 border-primary/20' : 'bg-muted/30 border-border hover:border-primary/20'}`}>
                                                                         <div className="flex items-center gap-3">
@@ -978,7 +1081,7 @@ export default function SubjectManagementPage() {
                                                                                 </div>
                                                                             </div>
                                                                         </div>
-                                                                        
+
                                                                         <button
                                                                             type="button"
                                                                             onClick={() => {
@@ -992,11 +1095,10 @@ export default function SubjectManagementPage() {
                                                                                     }]);
                                                                                 }
                                                                             }}
-                                                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                                                                                isSelected 
-                                                                                    ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20' 
+                                                                            className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${isSelected
+                                                                                    ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
                                                                                     : 'bg-primary/10 text-primary hover:bg-primary/20'
-                                                                            }`}
+                                                                                }`}
                                                                         >
                                                                             {isSelected ? 'Remove' : 'Assign'}
                                                                         </button>
@@ -1146,7 +1248,7 @@ export default function SubjectManagementPage() {
                     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEnrollModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
                         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-2xl glass-card rounded-[2.5rem] border border-border bg-card p-0 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
-                            
+
                             {/* Modal Header */}
                             <div className="p-8 pb-4 border-b border-border bg-muted/20">
                                 <div className="flex items-center justify-between">
@@ -1171,27 +1273,27 @@ export default function SubjectManagementPage() {
                             <div className="flex-1 overflow-y-auto p-8 space-y-6">
                                 <div className="flex items-center justify-between px-2">
                                     <h4 className="text-xs font-black uppercase text-slate-500 tracking-widest">Select Students</h4>
-                                    
+
                                     <label className="flex items-center gap-3 cursor-pointer group">
                                         <span className="text-[10px] font-black uppercase text-muted-foreground group-hover:text-primary transition-colors">Select All in stream</span>
-                                        <div 
+                                        <div
                                             onClick={async () => {
-                                                 const token = await getToken();
-                                                 if (!token || !enrollingSubject) return;
-                                                 setIsEnrollDataLoading(true);
-                                                 try {
-                                                     const data = await fetchStudents(token, 0, 1000, '', enrollingSubject.class_id, enrollingSubject.stream_id);
-                                                     const allIds = data.items.map((s: any) => s.id);
-                                                     if (enrolledStudentIds.length >= data.total && data.total > 0) {
-                                                         setEnrolledStudentIds([]);
-                                                     } else {
-                                                         setEnrolledStudentIds(allIds);
-                                                     }
-                                                 } catch (err) {
-                                                     console.error(err);
-                                                 } finally {
-                                                     setIsEnrollDataLoading(false);
-                                                 }
+                                                const token = await getToken();
+                                                if (!token || !enrollingSubject) return;
+                                                setIsEnrollDataLoading(true);
+                                                try {
+                                                    const data = await fetchStudents(token, 0, 1000, '', enrollingSubject.class_id, enrollingSubject.stream_id);
+                                                    const allIds = data.items.map((s: any) => s.id);
+                                                    if (enrolledStudentIds.length >= data.total && data.total > 0) {
+                                                        setEnrolledStudentIds([]);
+                                                    } else {
+                                                        setEnrolledStudentIds(allIds);
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                } finally {
+                                                    setIsEnrollDataLoading(false);
+                                                }
                                             }}
                                             className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${enrolledStudentIds.length >= enrollModalTotal && enrollModalTotal > 0 ? 'bg-primary border-primary' : 'border-border hover:border-primary/50'}`}
                                         >
@@ -1210,7 +1312,7 @@ export default function SubjectManagementPage() {
                                         {enrollingStudents.map((student) => {
                                             const isSelected = enrolledStudentIds.includes(student.id);
                                             return (
-                                                <div 
+                                                <div
                                                     key={student.id}
                                                     onClick={() => {
                                                         if (isSelected) {
@@ -1243,7 +1345,7 @@ export default function SubjectManagementPage() {
                                 {/* Pagination */}
                                 {enrollModalTotal > enrollModalLimit && (
                                     <div className="flex items-center justify-center gap-4">
-                                        <button 
+                                        <button
                                             disabled={enrollModalPage === 0 || isEnrollDataLoading}
                                             onClick={() => loadEnrollmentData(enrollingSubject, enrollModalPage - 1)}
                                             className="p-2 rounded-xl border border-border hover:bg-muted disabled:opacity-30 transition-all"
@@ -1253,7 +1355,7 @@ export default function SubjectManagementPage() {
                                         <span className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">
                                             Page {enrollModalPage + 1} of {Math.ceil(enrollModalTotal / enrollModalLimit)}
                                         </span>
-                                        <button 
+                                        <button
                                             disabled={(enrollModalPage + 1) * enrollModalLimit >= enrollModalTotal || isEnrollDataLoading}
                                             onClick={() => loadEnrollmentData(enrollingSubject, enrollModalPage + 1)}
                                             className="p-2 rounded-xl border border-border hover:bg-muted disabled:opacity-30 transition-all"
@@ -1267,7 +1369,7 @@ export default function SubjectManagementPage() {
                                     <button onClick={() => setIsEnrollModalOpen(false)} className="flex-1 py-4 bg-muted text-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all">
                                         Cancel
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={handleEnroll}
                                         disabled={isEnrolling}
                                         className="flex-[2] py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 min-w-[200px]"

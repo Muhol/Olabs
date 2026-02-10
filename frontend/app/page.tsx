@@ -131,7 +131,7 @@ export default function DashboardPage() {
                                 <div className="flex-1">
                                     <div className="flex items-center justify-between">
                                         <h4 className="font-black text-foreground text-base tracking-tight">{log.book}</h4>
-                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{new Date(log.borrow_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} Today</span>
+                                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{new Date(log.borrow_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {new Date(log.borrow_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                     </div>
                                     <div className="flex items-center gap-4 mt-1">
                                         <div className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-wider">{log.student} • <span className="text-primary">{log.class}</span></div>

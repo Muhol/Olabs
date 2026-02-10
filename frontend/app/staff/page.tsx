@@ -39,6 +39,8 @@ export default function StaffPage() {
     // Class/Stream Data
     const [classes, setClasses] = useState<any[]>([]);
     const [streams, setStreams] = useState<any[]>([]);
+    const [allStaff, setAllStaff] = useState<any[]>([]); // For filtering assigned classes/streams
+    const [metadataLoading, setMetadataLoading] = useState(false);
     const [selectedClassId, setSelectedClassId] = useState('');
     const [selectedStreamId, setSelectedStreamId] = useState('');
     const [selectedSubroles, setSelectedSubroles] = useState<string[]>([]);
@@ -63,17 +65,22 @@ export default function StaffPage() {
     }, [activeTab]);
 
     const loadMetaData = async () => {
+        setMetadataLoading(true);
         try {
             const token = await getToken();
             if (!token) return;
-            const [classesData, streamsData] = await Promise.all([
+            const [classesData, streamsData, staffData] = await Promise.all([
                 fetchClasses(token),
-                fetchStreams(token)
+                fetchStreams(token),
+                fetchStaff(token, '', 'verified') // Fetch all verified staff to check assignments
             ]);
             setClasses(classesData);
             setStreams(streamsData);
+            setAllStaff(staffData);
         } catch (err) {
             console.error("Failed to load metadata", err);
+        } finally {
+            setMetadataLoading(false);
         }
     };
 
@@ -135,6 +142,9 @@ export default function StaffPage() {
         setSelectedSubroles(user.subroles || []);
         setIsEditModalOpen(true);
         setRoleError('');
+        
+        // Refresh metadata to ensure filtering shows latest assignments
+        loadMetaData();
     };
 
     const availableRoles = [
@@ -327,39 +337,61 @@ export default function StaffPage() {
                                     {/* Teacher Specific Fields */}
                                     {(selectedRole === 'teacher' || selectedRole === 'admin') && (
                                         <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-4 animate-in slide-in-from-top-2">
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Assigned Class</label>
-                                                <select
-                                                    value={selectedClassId}
-                                                    onChange={(e) => {
-                                                        setSelectedClassId(e.target.value);
-                                                        setSelectedStreamId('');
-                                                    }}
-                                                    className="w-full p-3 rounded-xl bg-card border border-border text-foreground font-bold text-sm"
-                                                    required
-                                                >
-                                                    <option value="">Select Class</option>
-                                                    {classes.map(c => (
-                                                        <option key={c.id} value={c.id}>{c.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
+                                            {metadataLoading ? (
+                                                <div className="flex items-center justify-center py-8 gap-3">
+                                                    <Loader2 className="animate-spin text-primary" size={20} />
+                                                    <p className="text-sm font-bold text-muted-foreground">Loading class/stream data...</p>
+                                                </div>
+                                            ) : (
+                                                <>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                                                            Assigned Class <span className="text-muted-foreground font-normal">(Optional)</span>
+                                                        </label>
+                                                        <select
+                                                            value={selectedClassId}
+                                                            onChange={(e) => {
+                                                                setSelectedClassId(e.target.value);
+                                                                setSelectedStreamId('');
+                                                            }}
+                                                            className="w-full p-3 rounded-xl bg-card border border-border text-foreground font-bold text-sm"
+                                                        >
+                                                            <option value="">No Class (Subject Teacher Only)</option>
+                                                            {classes.map(c => (
+                                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
 
                                             <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Assigned Stream</label>
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                                                    Assigned Stream <span className="text-muted-foreground font-normal">(Optional)</span>
+                                                </label>
                                                 <select
                                                     value={selectedStreamId}
                                                     onChange={(e) => setSelectedStreamId(e.target.value)}
                                                     className="w-full p-3 rounded-xl bg-card border border-border text-foreground font-bold text-sm"
                                                     disabled={!selectedClassId}
-                                                    required
                                                 >
-                                                    <option value="">Select Stream</option>
-                                                    {streams.filter(s => s.class_id === selectedClassId).map(s => (
-                                                        <option key={s.id} value={s.id}>{s.name}</option>
-                                                    ))}
+                                                    <option value="">No Specific Stream</option>
+                                                    {streams
+                                                        .filter(s => s.class_id === selectedClassId)
+                                                        .filter(s => {
+                                                            // Filter out streams already assigned to other teachers
+                                                            const assignedStaff = allStaff.find(staff => 
+                                                                staff.assigned_stream_id === s.id && 
+                                                                staff.id !== editingUser?.id
+                                                            );
+                                                            return !assignedStaff;
+                                                        })
+                                                        .map(s => (
+                                                            <option key={s.id} value={s.id}>{s.name}</option>
+                                                        ))
+                                                    }
                                                 </select>
-                                            </div>
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     )}
 

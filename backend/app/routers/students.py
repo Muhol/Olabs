@@ -14,9 +14,10 @@ def get_students(
     limit: int = 100,
     search: Optional[str] = None,
     class_id: Optional[str] = None,
-    stream_id: Optional[str] = None
+    stream_id: Optional[str] = None,
+    subject_id: Optional[str] = None
 ):
-    return service.get_students(db, skip, limit, search, class_id, stream_id)
+    return service.get_students(db, skip, limit, search, class_id, stream_id, subject_id)
 
 @router.post("/students")
 def create_student(

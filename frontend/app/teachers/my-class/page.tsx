@@ -100,30 +100,48 @@ export default function MyClassPage() {
     };
 
     const loadData = async () => {
-        if (!classId) {
+        // If we are filtering by subject, we don't strictly need a classId assigned to the user
+        // But if not filtering by subject, we need the user's assigned class
+        if (!classId && !selectedSubject) {
             setStudents([]);
             setLoading(false);
             return;
         }
+
         setLoading(true);
         try {
             const token = await getToken();
             if (!token) return;
 
-            // Fetch students filtered by the teacher's class and stream
-            // Fetch students filtered by the teacher's class and stream
-            const data = await fetchStudents(
-                token,
-                skip,
-                limit,
-                search,
-                classId,
-                streamId || undefined
-            );
-            setStudents(data.items);
-            setTotalStudents(data.total);
+            // If a subject is selected, filter strictly by that subject (ignoring class/stream constraints)
+            // This ensures we get exactly the enrolled students
+            if (selectedSubject) {
+                const data = await fetchStudents(
+                    token,
+                    skip,
+                    limit,
+                    search,
+                    undefined, // Ignore class
+                    undefined, // Ignore stream
+                    selectedSubject // Filter by subject
+                );
+                setStudents(data.items);
+                setTotalStudents(data.total);
+            } else {
+                // Otherwise, fetch students filtered by the teacher's assigned class and stream
+                const data = await fetchStudents(
+                    token,
+                    skip,
+                    limit,
+                    search,
+                    classId,
+                    streamId || undefined
+                );
+                setStudents(data.items);
+                setTotalStudents(data.total);
+            }
         } catch (err) {
-            setError('Failed to load your class students.');
+            setError('Failed to load students.');
         } finally {
             setLoading(false);
         }
@@ -151,10 +169,8 @@ export default function MyClassPage() {
 
     // Trigger loadData when parameters change
     useEffect(() => {
-        if (classId) {
-            loadData();
-        }
-    }, [classId, streamId, search, skip, limit]);
+        loadData();
+    }, [classId, streamId, search, skip, limit, selectedSubject]);
 
     if (loading && !students.length) {
         return (
@@ -170,7 +186,7 @@ export default function MyClassPage() {
         (userRole === 'admin' && systemUser?.subroles &&
             (systemUser.subroles.includes('all') || systemUser.subroles.includes('teacher')));
 
-    if (!classId && !loading && !isPrivileged) {
+    if (!classId && !selectedSubject && !loading && !isPrivileged) {
         return (
             <div className="p-12 text-center glass-card rounded-[3rem] border border-white/10 bg-card">
                 <div className="w-20 h-20 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center border border-rose-500/20 mx-auto mb-6">
@@ -178,7 +194,7 @@ export default function MyClassPage() {
                 </div>
                 <h2 className="text-2xl font-black text-foreground uppercase mb-2">No Class Assigned</h2>
                 <p className="text-muted-foreground font-medium max-w-md mx-auto">
-                    You haven't been assigned to a class or stream yet. Please contact the administrator.
+                    You haven't been assigned to a class or stream yet. Only specific subject assignments are available.
                 </p>
             </div>
         );
@@ -223,34 +239,41 @@ export default function MyClassPage() {
                         <Users size={24} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1">Total Students</p>
-                        <p className="text-2xl font-black text-foreground">{students.length}</p>
+                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1">
+                            {selectedSubject ? 'Students in Subject' : 'Total in Stream'}
+                        </p>
+                        <p className="text-2xl font-black text-foreground">{totalStudents}</p>
                     </div>
                 </div>
 
-                <div className="glass-card p-6 rounded-[2rem] border border-white/10 bg-card flex items-center gap-4">
-                    <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center border border-emerald-500/20">
-                        <BarChart3 size={24} />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1">Cleared</p>
-                        <p className="text-2xl font-black text-foreground">
-                            {students.filter(s => s.is_cleared).length}
-                        </p>
-                    </div>
-                </div>
+                {classId && (
+                    <>
+                        {/* <div className="glass-card p-6 rounded-[2rem] border border-white/10 bg-card flex items-center gap-4">
+                            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center border border-emerald-500/20">
+                                <BarChart3 size={24} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1">Cleared</p>
+                                <p className="text-2xl font-black text-foreground">
+                                    {students.filter(s => s.is_cleared).length}
+                                </p>
+                            </div>
+                        </div>
 
-                <div className="glass-card p-6 rounded-[2rem] border border-white/10 bg-card flex items-center gap-4">
-                    <div className="w-12 h-12 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center border border-rose-500/20">
-                        <Layers size={24} />
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1">Pending Clearance</p>
-                        <p className="text-2xl font-black text-foreground">
-                            {students.filter(s => !s.is_cleared).length}
-                        </p>
-                    </div>
-                </div>
+                        <div className="glass-card p-6 rounded-[2rem] border border-white/10 bg-card flex items-center gap-4">
+                            <div className="w-12 h-12 bg-rose-500/10 text-rose-500 rounded-2xl flex items-center justify-center border border-rose-500/20">
+                                <Layers size={24} />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest leading-none mb-1">Pending Clearance</p>
+                                <p className="text-2xl font-black text-foreground">
+                                    {students.filter(s => !s.is_cleared).length}
+                                </p>
+                            </div>
+                        </div> */}
+                    </>
+                )}
+
             </div>
 
             {/* Tab Switcher */}
@@ -294,7 +317,7 @@ export default function MyClassPage() {
                     <button
                         onClick={async () => {
                             setSelectedSubject(null);
-                            await loadData(); // Reset to primary class
+                            // loadData will trigger via useEffect
                         }}
                         className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-black uppercase hover:bg-primary/90 transition-all"
                     >
@@ -357,32 +380,20 @@ export default function MyClassPage() {
                                 <tbody className="divide-y divide-white/5">
                                     {students
                                         .filter(student => {
-                                            // Filter by selected subject if one is selected
-                                            if (!selectedSubject) return true;
-
-                                            // Find the selected subject object to check if it's compulsory
-                                            const subject = teacherSubjects.find(s => s.subject_id === selectedSubject);
-
-                                            // If subject is compulsory, show all students (assuming all in class take it)
-                                            if (subject?.is_compulsory) return true;
-
-                                            // Otherwise, check for explicit assignment
-                                            return student.subjects?.some((s: any) => s.id === selectedSubject);
+                                            // Client-side filtering is no longer strictly necessary if backend filters correctly
+                                            // But for safety, we can leave basic checks or remove logic that relied on 'is_compulsory'
+                                            // Actually, the backend now returns ONLY enrolled students.
+                                            // So we can just show them all.
+                                            return true;
                                         })
                                         .length === 0 ? (
                                         <tr>
                                             <td colSpan={4} className="py-20 text-center text-muted-foreground font-black uppercase tracking-widest text-xs">
-                                                {selectedSubject ? 'No students taking this subject' : 'No students found in this stream'}
+                                                {selectedSubject ? 'No students linked to this subject' : 'No students found in this stream'}
                                             </td>
                                         </tr>
                                     ) : (
                                         students
-                                            .filter(student => {
-                                                if (!selectedSubject) return true;
-                                                const subject = teacherSubjects.find(s => s.subject_id === selectedSubject);
-                                                if (subject?.is_compulsory) return true;
-                                                return student.subjects?.some((s: any) => s.id === selectedSubject);
-                                            })
                                             .map((student) => (
                                                 <tr
                                                     key={student.id}
@@ -527,42 +538,20 @@ export default function MyClassPage() {
                                                         key={subject.id}
                                                         whileHover={{ scale: 1.02 }}
                                                         whileTap={{ scale: 0.98 }}
-                                                        onClick={async () => {
+                                                        onClick={() => {
                                                             setActiveTab('students');
                                                             setSelectedSubject(subject.subject_id);
-
-                                                            // Check if we are currently displaying the class and stream this subject belongs to
-                                                            const isCorrectContext = students.length > 0 &&
-                                                                students[0].class_id === subject.class_id &&
-                                                                (subject.stream_id ? students[0].stream_id === subject.stream_id : !students[0].stream_id);
-
-                                                            if (!isCorrectContext) {
-                                                                setLoading(true);
-                                                                try {
-                                                                    const token = await getToken();
-                                                                    if (token) {
-                                                                        const data = await fetchStudents(
-                                                                            token, 0, 100, '', subject.class_id, subject.stream_id || undefined
-                                                                        );
-                                                                        setStudents(data.items);
-                                                                        setTotalStudents(data.total);
-                                                                    }
-                                                                } catch (err) {
-                                                                    console.error("Failed to switch class context", err);
-                                                                } finally {
-                                                                    setLoading(false);
-                                                                }
-                                                            }
+                                                            // loadData will trigger via useEffect
                                                         }}
                                                         className={`glass-card p-6 rounded-[2rem] border cursor-pointer transition-all ${isSelected
-                                                                ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
-                                                                : 'border-border hover:border-primary/30 bg-card'
+                                                            ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
+                                                            : 'border-border hover:border-primary/30 bg-card'
                                                             }`}
                                                     >
                                                         <div className="flex items-start justify-between mb-4">
                                                             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${isSelected
-                                                                    ? 'bg-primary text-white border-primary'
-                                                                    : 'bg-primary/10 text-primary border-primary/20'
+                                                                ? 'bg-primary text-white border-primary'
+                                                                : 'bg-primary/10 text-primary border-primary/20'
                                                                 }`}>
                                                                 <BookOpen size={24} />
                                                             </div>

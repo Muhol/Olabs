@@ -56,11 +56,12 @@ export async function deleteBook(token: string, bookUuid: string) {
   return response.json();
 }
 
-export async function fetchStudents(token: string, skip: number = 0, limit: number = 100, search: string = '', classId?: string, streamId?: string) {
+export async function fetchStudents(token: string, skip: number = 0, limit: number = 100, search: string = '', classId?: string, streamId?: string, subjectId?: string) {
   const params: any = { skip: skip.toString(), limit: limit.toString() };
   if (search) params.search = search;
   if (classId) params.class_id = classId;
   if (streamId) params.stream_id = streamId;
+  if (subjectId) params.subject_id = subjectId;
 
   const query = new URLSearchParams(params);
   const response = await fetch(`${API_BASE_URL}/students?${query}`, {

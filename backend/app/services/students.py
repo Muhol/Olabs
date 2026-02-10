@@ -4,13 +4,15 @@ from fastapi import HTTPException
 from ..services.logs import log_action
 from typing import Optional
 
-def get_students(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None, class_id: Optional[str] = None, stream_id: Optional[str] = None):
+def get_students(db: Session, skip: int = 0, limit: int = 100, search: Optional[str] = None, class_id: Optional[str] = None, stream_id: Optional[str] = None, subject_id: Optional[str] = None):
     query = db.query(models.Student)
     
     if class_id:
         query = query.filter(models.Student.class_id == class_id)
     if stream_id:
         query = query.filter(models.Student.stream_id == stream_id)
+    if subject_id:
+        query = query.join(models.Student.subjects).filter(models.Subject.id == subject_id)
 
     if search:
         search_f = f"%{search}%"

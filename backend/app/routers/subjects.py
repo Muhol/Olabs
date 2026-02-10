@@ -36,6 +36,20 @@ def list_subjects(
 ):
     return service.get_subjects(db, skip=skip, limit=limit, search=search, available_for_teacher_id=available_for_teacher)
 
+@router.get("/by-class-stream")
+def get_subjects_by_class_stream(
+    class_id: str,
+    stream_id: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(auth.get_current_user)
+):
+    """
+    Get subjects for a specific class and optionally stream.
+    Returns subjects matching the stream OR class-wide subjects (no stream).
+    """
+    return service.get_subjects_by_class_and_stream(db, class_id, stream_id)
+
+
 @router.post("/", response_model=schemas.SubjectResponse)
 def create_subject(
     subject: schemas.SubjectCreate, 

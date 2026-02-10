@@ -16,7 +16,7 @@ import {
     Check,
     ArrowRight
 } from 'lucide-react';
-import { fetchStudents, fetchSubjects, enrollStudentsToSubject, fetchEnrolledStudentIds } from '@/lib/api';
+import { fetchStudents, fetchSubjectsByClassAndStream, enrollStudentsToSubject, fetchEnrolledStudentIds } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -68,14 +68,18 @@ export default function ClassEnrollmentPage() {
         try {
             const token = await getToken();
             if (!token) return;
-            // Fetch all subjects
-            const allSubjects = await fetchSubjects(token);
-            // Filter to only those in the teacher's class and stream
-            const classSubjects = allSubjects.filter((s: any) =>
-                s.class_id === classId && (streamId ? s.stream_id === streamId : true)
-            );
+            
+            console.log('🔍 [Enrollment] Fetching subjects for classId:', classId);
+            console.log('🔍 [Enrollment] Teacher streamId:', streamId);
+            
+            // Use the new dedicated endpoint to fetch subjects by class and stream
+            const classSubjects = await fetchSubjectsByClassAndStream(token, classId!, streamId);
+            console.log('📚 [Enrollment] Subjects fetched:', classSubjects);
+            console.log('📊 [Enrollment] Total subjects:', classSubjects.length);
+            
             setSubjects(classSubjects);
         } catch (err) {
+            console.error('❌ [Enrollment] Error loading subjects:', err);
             setError('Failed to load subjects for your class.');
         } finally {
             setLoading(false);

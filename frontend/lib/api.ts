@@ -375,6 +375,18 @@ export async function fetchSubjects(token: string, availableForTeacher?: string,
   return response.json();
 }
 
+export async function fetchSubjectsByClassAndStream(token: string, classId: string, streamId?: string) {
+  const params = new URLSearchParams({ class_id: classId });
+  if (streamId) params.append('stream_id', streamId);
+
+  const response = await fetch(`${API_BASE_URL}/subjects/by-class-stream?${params.toString()}`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error('Failed to fetch subjects by class/stream');
+  return response.json();
+}
+
+
 export async function createSubject(token: string, subject: { name: string, is_compulsory: boolean, class_id: string, stream_id?: string, teacher_id?: string }) {
   const response = await fetch(`${API_BASE_URL}/subjects`, {
     method: 'POST',

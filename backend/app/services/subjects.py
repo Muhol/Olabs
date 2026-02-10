@@ -51,6 +51,40 @@ def get_subjects(db: Session, skip: int = 0, limit: int = 100, search: Optional[
         })
     return {"total": total, "items": res}
 
+def get_subjects_by_class_and_stream(db: Session, class_id: str, stream_id: Optional[str] = None):
+    """
+    Get all subjects for a specific class and optionally stream.
+    Used by teachers to view subjects in their assigned class/stream.
+    """
+    query = db.query(models.Subject).filter(models.Subject.class_id == class_id)
+    
+    if stream_id:
+        # Get subjects for specific stream OR class-wide subjects (stream_id is None)
+        query = query.filter(
+            or_(
+                models.Subject.stream_id == stream_id,
+                models.Subject.stream_id.is_(None)
+            )
+        )
+    
+    subjects = query.all()
+    
+    res = []
+    for subj in subjects:
+        res.append({
+            "id": str(subj.id),
+            "name": subj.name,
+            "is_compulsory": subj.is_compulsory,
+            "class_id": str(subj.class_id),
+            "class_name": subj.assigned_class.name if subj.assigned_class else None,
+            "stream_id": str(subj.stream_id) if subj.stream_id else None,
+            "stream_name": subj.assigned_stream.name if subj.assigned_stream else None,
+            "student_count": subj.student_count,
+            "assigned_teacher_id": str(subj.teacher_assignments[0].teacher_id) if subj.teacher_assignments else None
+        })
+    return res
+
+
 def create_subject(db: Session, subject: schemas.SubjectCreate):
     db_subject = models.Subject(
         id=uuid.uuid4(),

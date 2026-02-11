@@ -283,6 +283,7 @@ export async function checkAuthPolicy(email?: string) {
   return response.json();
 }
 
+
 export async function fetchConfig(token: string) {
   const response = await fetch(`${API_BASE_URL}/config`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -322,7 +323,11 @@ export async function fetchCurrentUser(token: string) {
   const response = await fetch(`${API_BASE_URL}/auth/me`, {
     headers: { 'Authorization': `Bearer ${token}` }
   });
-  if (!response.ok) throw new Error('Failed to fetch user profile from database');
+  if (!response.ok) {
+    const error: any = new Error('Failed to fetch user profile from database');
+    error.status = response.status;
+    throw error;
+  }
   return response.json();
 }
 

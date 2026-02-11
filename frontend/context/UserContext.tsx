@@ -33,8 +33,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
                     const dbUser = await fetchCurrentUser(token);
                     setSystemUser(dbUser);
                 }
-            } catch (err) {
-                console.error("[AUTH CONTEXT] Failed to fetch system user:", err);
+            } catch (err: any) {
+                if (err.status === 403) {
+                    console.info("[AUTH CONTEXT] User is blocked by system policy (Registration disabled).");
+                } else {
+                    console.error("[AUTH CONTEXT] Failed to fetch system user:", err);
+                }
             } finally {
                 setLoadingSystemUser(false);
             }
@@ -48,7 +52,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         syncUser();
     }, [isLoaded, user, getToken]);
 
-    const userRole = systemUser?.role || 'librarian';
+    // const userRole = systemUser?.role || "none";
+    const userRole = systemUser?.role;
 
     return (
         <UserContext.Provider value={{ 

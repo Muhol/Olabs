@@ -22,6 +22,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
+import { PendingApproval } from '@/components/dashboard/PendingApproval';
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/', roles: ['librarian', 'admin', 'SUPER_ADMIN', 'teacher'] },
@@ -94,12 +95,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     const isLoading = !isLoaded || (user && loadingSystemUser);
 
+    // console.log("userRole", userRole);
+
     if (isLoading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-background text-foreground transition-colors duration-300">
                 <div className="text-center space-y-4">
                     <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
                     <p className="text-slate-500 font-black uppercase tracking-[0.3em] text-xs">Authenticating...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!systemUser) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background text-foreground p-4">
+                <div className="max-w-md w-full glass-card p-8 rounded-[2.5rem] border border-border text-center space-y-6">
+                    <div className="w-20 h-20 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 mx-auto border border-amber-500/20">
+                        <ShieldAlert size={40} />
+                    </div>
+                    <div>
+                        <h1 className="text-2xl font-black uppercase tracking-tight">Access Restricted</h1>
+                        <p className="text-muted-foreground font-medium mt-2">
+                            You are not permitted to create an account on this platform.
+                        </p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-2xl border border-border text-xs font-bold text-muted-foreground">
+                        Please contact the school administration to have your role assigned.
+                    </div>
+                    <UserButton afterSignOutUrl="/" />
                 </div>
             </div>
         );

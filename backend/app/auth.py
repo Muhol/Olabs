@@ -84,10 +84,19 @@ async def get_current_user(
                     db.commit()
 
             # 2. If user doesn't exist, create them and assign role ONCE
+            newly_created = False
             if not db_user:
                 print(f"[AUTH] No existing record for {email}. Creating new user...")
                 
-                # Determine role based on current system state (Assignment happens ONLY here)
+                # Check registration policy before creating new user
+                config = db.query(models.GlobalConfig).first()
+                if config and not config.allow_public_signup:
+                    # If this is the FIRST user ever, we ALWAYS allow it as SUPER_ADMIN
+                    user_count = db.query(models.User).count()
+                    if user_count > 0:
+                        print(f"[AUTH] Access blocked for {email}: Public registration disabled.")
+                        raise HTTPException(status_code=403, detail="Registration is currently disabled.")
+
                 user_count = db.query(models.User).count()
                 assigned_role = "SUPER_ADMIN" if user_count == 0 else "none"
                 print(f"[AUTH] ASSIGNING PERMANENT ROLE: {assigned_role}")
@@ -102,11 +111,11 @@ async def get_current_user(
                 try:
                     db.commit()
                     db.refresh(db_user)
+                    newly_created = True
                     print(f"[AUTH] New local user created with ID: {db_user.id}, Role: {db_user.role}")
                 except Exception as commit_err:
                     print(f"[AUTH ERROR] Failed to commit new user: {str(commit_err)}")
                     db.rollback()
-                    # Race condition check
                     db_user = db.query(models.User).filter(models.User.email == email).first()
                     if not db_user:
                         raise HTTPException(status_code=500, detail="User synchronization failed.")
@@ -128,19 +137,6 @@ async def get_current_user(
                 db.commit()
                 print(f"[AUTH] Profile metadata synced for {email}")
 
-            # --- Access Control Policy Check ---
-            if role == "none" or role == "librarian":
-                config = db.query(models.GlobalConfig).first()
-                if config and not config.allow_public_signup:
-                    # If the user is already in the database with a role other than 'none', they are fine.
-                    # But if they are brand new (just created above) or their role is 'none', block them if registration is disabled.
-                    # Wait, if they are already in DB, maybe they should be allowed even if registration is disabled?
-                    # The requirement says "allow_public_signup". Usually this means new signups.
-                    # Let's check if they were JUST created.
-                    # Actually, if db_user exists and role != 'none', it's an existing verified user.
-                    if db_user.role == "none":
-                         print(f"[AUTH] Access blocked for {email}: Public registration disabled.")
-                         raise HTTPException(status_code=403, detail="Registration is currently disabled.")
         except HTTPException:
             raise
         except Exception as db_err:

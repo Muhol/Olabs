@@ -42,9 +42,16 @@ def update_config(
 def check_policy(email: Optional[str] = None, db: Session = Depends(database.get_db)):
     config = db.query(models.GlobalConfig).first()
     if not config:
-        return {"allow_signup": True}
+        return {"allowed": True}
     
     if not config.allow_public_signup:
-        return {"allow_signup": False, "reason": "Public signup is disabled"}
+        # Check if user already exists in local DB
+        if email:
+            existing = db.query(models.User).filter(models.User.email == email).first()
+            if existing:
+                return {"allowed": True}
+        
+        return {"allowed": False, "reason": "Registration is currently restricted to invited personnel."}
             
-    return {"allow_signup": True}
+    return {"allowed": True}
+

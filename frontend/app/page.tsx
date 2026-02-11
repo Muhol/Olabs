@@ -66,7 +66,7 @@ export default function DashboardPage() {
         );
     }
 
-    const role = userProfile?.role || 'librarian';
+    const role = userProfile?.role || 'none';
 
     return (
         <div className="space-y-10 animate-in fade-in duration-700">

@@ -37,17 +37,21 @@ export default function SettingsPage() {
         }
     }, [isLoaded, user, loadingSystemUser]);
 
+    const fetchSystemConfig = async()=> {
+        const token = await getToken();
+        if (!token) return;
+
+        // Only if super admin, fetch system configs
+        if (systemUser?.role === 'SUPER_ADMIN') {
+            const configData = await fetchConfig(token);
+            setConfig(configData);
+        }
+    }
+
     const loadData = async () => {
         setLoading(true);
         try {
-            const token = await getToken();
-            if (!token) return;
-
-            // Only if super admin, fetch system configs
-            if (systemUser?.role === 'SUPER_ADMIN') {
-                const configData = await fetchConfig(token);
-                setConfig(configData);
-            }
+            await fetchSystemConfig();
         } catch (err: any) {
             setError('Failed to load system configuration settings');
         } finally {
@@ -64,9 +68,11 @@ export default function SettingsPage() {
             const updates = { [key]: value };
             const updated = await updateConfig(token, updates);
             setConfig(updated);
+            await fetchSystemConfig();
         } catch (err: any) {
             setError('Failed to update system settings');
         } finally {
+
             setActionLoading(false);
         }
     };
@@ -124,7 +130,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="glass-card p-6 rounded-3xl border border-white/10 flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${config?.allow_public_signup ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border-rose-500/20'}`}>
-                        <ToggleRight size={24} />
+                        {actionLoading ? <Loader2 className="animate-spin" size={24} /> : <ToggleRight size={24} />}
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Public Intake</p>
@@ -156,13 +162,15 @@ export default function SettingsPage() {
                                     <h4 className="font-bold  text-sm">Public Intake</h4>
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Allow anyone to register</p>
                                 </div>
-                                <button
-                                    disabled={actionLoading}
-                                    onClick={() => handleTogglePolicy('allow_public_signup', !config?.allow_public_signup)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${config?.allow_public_signup ? 'bg-primary' : 'bg-slate-800'}`}
-                                >
-                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config?.allow_public_signup ? 'translate-x-6' : 'translate-x-1'}`} />
-                                </button>
+                                {actionLoading ? <Loader2 className="animate-spin" size={24} /> : (
+                                    <button
+                                        disabled={actionLoading}
+                                        onClick={() => handleTogglePolicy('allow_public_signup', !config?.allow_public_signup)}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${config?.allow_public_signup ? 'bg-primary' : 'bg-slate-800'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${config?.allow_public_signup ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>

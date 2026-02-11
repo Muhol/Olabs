@@ -44,6 +44,16 @@ export default function AuthPage() {
 
             setLoadingSocial(true);
             setError('');
+
+            // If registering, check general policy first
+            if (!isLogin) {
+                const policy = await checkAuthPolicy();
+                if (!policy.allowed) {
+                    setError(policy.reason || 'Public registration is currently restricted.');
+                    setLoadingSocial(false);
+                    return;
+                }
+            }
             
             await activeStrategy.authenticateWithRedirect({
                 strategy: 'oauth_google',
@@ -91,7 +101,7 @@ export default function AuthPage() {
         setError('');
 
         try {
-            // First check if sign-up is allowed by system policy (our internal check)
+            // Check policy before creating Clerk account
             const policy = await checkAuthPolicy(email);
             if (!policy.allowed) {
                 setError(policy.reason || 'Registration is currently restricted.');

@@ -294,8 +294,8 @@ export default function StaffPage() {
             <AnimatePresence>
                 {isEditModalOpen && editingUser && (
                     <div className="fixed inset-0 h-screen z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2rem] border border-border bg-card p-8 shadow-2xl">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0  bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card max-h-[80vh] overflow-y-scroll rounded-[2rem] border border-border bg-card p-8 shadow-2xl">
                             <h3 className="text-2xl font-black text-foreground uppercase mb-6 flex items-center gap-2">
                                 <Briefcase className="text-primary" /> Update Role
                             </h3>

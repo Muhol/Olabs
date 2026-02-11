@@ -30,7 +30,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4'];
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4','#106981','#139284'];
 
 export default function ReportsPage() {
     const { getToken } = useAuth();

@@ -163,7 +163,7 @@ export default function LogsPage() {
                         <Search size={14} /> Search
                     </button>
                 </div>
-                <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
+                {/* <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
                     {['ALL', 'INFO', 'WARNING', 'ERROR'].map((l) => (
                         <button
                             key={l}
@@ -174,7 +174,7 @@ export default function LogsPage() {
                             {l}
                         </button>
                     ))}
-                </div>
+                </div> */}
             </div>
 
             {/* Logs Table */}

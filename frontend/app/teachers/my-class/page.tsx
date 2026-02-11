@@ -481,7 +481,7 @@ export default function MyClassPage() {
                         <>
                             <div className="flex items-center justify-between gap-4">
                                 <p className="text-sm text-muted-foreground font-medium hidden md:block">
-                                    You teach <span className="font-black text-primary">{teacherSubjects.length}</span> subject{teacherSubjects.length !== 1 ? 's' : ''} in this class
+                                    You teach <span className="font-black text-primary">{teacherSubjects.length}</span> subject{teacherSubjects.length !== 1 ? 's' : ''}
                                 </p>
                                 <div className="relative group flex-1 md:max-w-md">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">

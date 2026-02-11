@@ -73,8 +73,9 @@ def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleU
     
     # Assign class/stream if it's a teacher or admin
     if new_role in ["teacher", "admin"]:
-        target_user.assigned_class_id = role_update.class_id
-        target_user.assigned_stream_id = role_update.stream_id
+        # Convert empty strings to None to avoid UUID validation errors
+        target_user.assigned_class_id = role_update.class_id if role_update.class_id else None
+        target_user.assigned_stream_id = role_update.stream_id if role_update.stream_id else None
     else:
         # Clear assignments if role changes to librarian or none
         target_user.assigned_class_id = None

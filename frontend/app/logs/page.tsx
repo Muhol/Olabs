@@ -73,7 +73,7 @@ export default function LogsPage() {
                     <ShieldAlert size={40} />
                 </div>
                 <div className="space-y-2">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-white">Access Denied</h2>
+                    <h2 className="text-2xl font-black uppercase tracking-tight ">Access Denied</h2>
                     <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Section restricted to Level 5 Personnel (SUPER_ADMIN)</p>
                 </div>
             </div>
@@ -97,11 +97,11 @@ export default function LogsPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Terminal size={14} /> System Audit Trail
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-white uppercase">System Audit</h1>
+                    <h1 className="text-4xl font-black tracking-tight  uppercase">System Audit</h1>
                     <p className="text-slate-400 font-medium tracking-tight">Review school library operations, user actions, and security events.</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all">
+                    <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10  rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all">
                         <Download size={14} /> Export Logs
                     </button>
                     <button
@@ -121,7 +121,7 @@ export default function LogsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Events</p>
-                        <p className="text-2xl font-black text-white">{stats.total_events}</p>
+                        <p className="text-2xl font-black ">{stats.total_events}</p>
                     </div>
                 </div>
                 <div className="glass-card p-6 rounded-3xl border border-white/10 flex items-center gap-4">
@@ -130,7 +130,7 @@ export default function LogsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Security Alerts</p>
-                        <p className="text-2xl font-black text-white">{stats.security_alerts}</p>
+                        <p className="text-2xl font-black ">{stats.security_alerts}</p>
                     </div>
                 </div>
                 <div className="glass-card p-6 rounded-3xl border border-white/10 flex items-center gap-4">
@@ -139,7 +139,7 @@ export default function LogsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Critical Failures</p>
-                        <p className="text-2xl font-black text-white">{stats.critical_failures}</p>
+                        <p className="text-2xl font-black ">{stats.critical_failures}</p>
                     </div>
                 </div>
             </div>
@@ -154,11 +154,11 @@ export default function LogsPage() {
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && loadData()}
                         placeholder="Search logs by action, user, or details..."
-                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold text-sm focus:border-primary outline-none transition-all shadow-inner"
+                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-white/5 border border-white/10  font-bold text-sm focus:border-primary outline-none transition-all shadow-inner"
                     />
                     <button
                         onClick={loadData}
-                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary  font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                     >
                         <Search size={14} /> Search
                     </button>
@@ -168,7 +168,7 @@ export default function LogsPage() {
                         <button
                             key={l}
                             onClick={() => setFilter(l)}
-                            className={`px-6 py-2 rounded-xl font-black text-[10px] tracking-widest transition-all ${filter === l ? 'bg-primary text-white shadow-lg' : 'text-slate-500 hover:text-white'
+                            className={`px-6 py-2 rounded-xl font-black text-[10px] tracking-widest transition-all ${filter === l ? 'bg-primary  shadow-lg' : 'text-slate-500 hover:'
                                 }`}
                         >
                             {l}
@@ -206,7 +206,7 @@ export default function LogsPage() {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className="text-white font-black text-xs tracking-tight">{log.action}</span>
+                                        <span className=" font-black text-xs tracking-tight">{log.action}</span>
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-2">

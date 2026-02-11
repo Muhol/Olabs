@@ -102,12 +102,12 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <ShieldCheck size={14} /> System Core Settings
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-white uppercase">Access Control</h1>
+                    <h1 className="text-4xl font-black tracking-tight uppercase">Access Control</h1>
                     <p className="text-slate-400 font-medium tracking-tight">Manage user registration policies and system protocols.</p>
                 </div>
                 <button
                     onClick={loadData}
-                    className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
+                    className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10  rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
                 >
                     <RefreshCw size={14} className={actionLoading ? 'animate-spin' : ''} /> Refresh Settings
                 </button>
@@ -128,7 +128,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Public Intake</p>
-                        <p className="text-2xl font-black text-white">{config?.allow_public_signup ? 'ACTIVE' : 'OFFLINE'}</p>
+                        <p className="text-2xl font-black ">{config?.allow_public_signup ? 'ACTIVE' : 'OFFLINE'}</p>
                     </div>
                 </div>
                 <div className="glass-card p-6 rounded-3xl border border-white/10 flex items-center gap-4">
@@ -137,7 +137,7 @@ export default function SettingsPage() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Security Guard</p>
-                        <p className="text-2xl font-black text-white">RELIABLE</p>
+                        <p className="text-2xl font-black ">RELIABLE</p>
                     </div>
                 </div>
             </div>
@@ -153,7 +153,7 @@ export default function SettingsPage() {
                             {/* Toggle 1 */}
                             <div className="flex items-center justify-between gap-4">
                                 <div className="space-y-1">
-                                    <h4 className="font-bold text-white text-sm">Public Intake</h4>
+                                    <h4 className="font-bold  text-sm">Public Intake</h4>
                                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">Allow anyone to register</p>
                                 </div>
                                 <button

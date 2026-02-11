@@ -282,9 +282,14 @@ export default function AuthPage() {
                     style={{ borderRadius: isLogin ? '0 3rem 3rem 0' : '3rem 0 0 3rem' }}
                 >
                     <div className="space-y-8 max-w-xs">
-                        <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/30 animate-float shadow-2xl overflow-hidden p-4">
-                             {/* Use the app logo placeholder L */}
-                             <div className="w-full h-full rounded-2xl bg-white/20 flex items-center justify-center font-black text-4xl">L</div>
+                        <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/30 animate-float shadow-2xl overflow-hidden p-2">
+                             <Image 
+                                src="/icon.png" 
+                                alt="Logo" 
+                                width={80} 
+                                height={80} 
+                                className="object-contain"
+                             />
                         </div>
                         
                         <div className="space-y-3">
@@ -312,18 +317,32 @@ export default function AuthPage() {
                     
                     {/* Branding footer in panel */}
                     <div className="absolute bottom-10 flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center font-black text-xs">L</div>
-                        <span className="font-black tracking-widest text-[10px]">STAR PRO • SECURITY V4</span>
+                        <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
+                             <Image 
+                                src="/icon.png" 
+                                alt="Icon" 
+                                width={32} 
+                                height={32} 
+                                className="object-contain"
+                             />
+                        </div>
+                        <span className="font-black tracking-widest text-[10px]">SECURITY V4</span>
                     </div>
                 </motion.div>
             </motion.div>
 
             {/* Global Logo & Footer */}
             <div className="absolute top-8 left-8 flex items-center gap-3 z-50">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-black text-white shadow-xl shadow-primary/20">
-                    L
+                <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
+                    <Image 
+                        src="/icon.png" 
+                        alt="Logo" 
+                        width={40} 
+                        height={40} 
+                        className="object-contain"
+                    />
                 </div>
-                <span className="font-black tracking-tight text-xl text-white">STAR PRO</span>
+                {/* <span className="font-black tracking-tight text-xl text-white">STAR PRO</span> */}
             </div>
             
             <p className="absolute bottom-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.5em] z-50 px-4 text-center">

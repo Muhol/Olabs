@@ -30,7 +30,7 @@ export function PendingApproval({ userName }: PendingApprovalProps) {
                         Hello, <span className="text-primary">{userName?.split(' ')[0] || 'Member'}</span>
                     </h1>
                     <p className="text-lg text-muted-foreground font-medium max-w-lg mx-auto leading-relaxed">
-                        Your account has been successfully registered on the <span className="text-foreground font-bold italic">Olabs Core</span>, but it requires <span className="text-secondary font-bold underline">Administrator Verification</span> before you can access the command center.
+                        Your account has been successfully registered on the <span className="text-foreground font-bold italic">Central Core</span>, but it requires <span className="text-secondary font-bold underline">Administrator Verification</span> before you can access the command center.
                     </p>
                 </div>
 

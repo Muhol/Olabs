@@ -15,13 +15,13 @@ export function SuperAdminPanel({ pendingRegistrations, systemConfig }: SuperAdm
         <div className="space-y-6 animate-in slide-in-from-bottom duration-1000">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {pendingRegistrations > 0 && (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="lg:col-span-2 p-6 rounded-[2.5rem] bg-amber-500 border border-amber-600 flex items-center justify-between gap-6 shadow-2xl shadow-amber-500/20">
-                        <div className="flex items-center gap-6 text-white">
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="lg:col-span-2 p-6 rounded-[2.5rem] bg-amber-500/30 border border-amber-600 flex items-center justify-between gap-6 shadow-2xl shadow-amber-500/20">
+                        <div className="flex items-center gap-6 text-amber-500">
                             <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
                                 <UserCircle size={32} />
                             </div>
                             <div>
-                                <p className="text-white font-black uppercase tracking-[0.2em] text-[10px]">Pending Approvals</p>
+                                <p className="font-black uppercase tracking-[0.2em] text-[10px]">Pending Approvals</p>
                                 <h3 className="text-2xl font-black">{pendingRegistrations} Users Awaiting Access</h3>
                             </div>
                         </div>

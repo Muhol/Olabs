@@ -13,6 +13,9 @@ const nunito = Nunito({
 export const metadata: Metadata = {
   title: "Library Star Pro | Dashboard",
   description: "Advanced Institutional Library Management",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({

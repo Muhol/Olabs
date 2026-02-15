@@ -109,6 +109,17 @@ def delete_student(db: Session, student_uuid: str, performer_email: str):
     log_action(db, "warning", "student deletion", performer_email, f"Deleted student: {std_name}", target_user=admin_num)
     return {"message": "Student deleted successfully"}
 
+def reset_student_account(db: Session, student_uuid: str, performer_email: str):
+    db_student = db.query(models.Student).filter(models.Student.id == student_uuid).first()
+    if not db_student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    db_student.activated = False
+    db_student.password = None
+    db.commit()
+    log_action(db, "info", "student account reset", performer_email, f"Reset account for student: {db_student.full_name}", target_user=db_student.admission_number)
+    return {"message": "Student account reset successfully. They can now onboard again."}
+
 def promote_students(db: Session, performer_email: str):
     import datetime
     active_students = db.query(models.Student).filter(models.Student.is_cleared == False).all()

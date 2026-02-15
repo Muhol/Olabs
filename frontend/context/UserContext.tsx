@@ -56,11 +56,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const userRole = systemUser?.role;
 
     return (
-        <UserContext.Provider value={{ 
-            systemUser, 
-            userRole, 
-            loadingSystemUser, 
-            refreshUser: syncUser 
+        <UserContext.Provider value={{
+            systemUser,
+            userRole,
+            loadingSystemUser,
+            refreshUser: syncUser
         }}>
             {children}
         </UserContext.Provider>

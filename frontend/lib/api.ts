@@ -138,6 +138,18 @@ export async function promoteStudents(token: string) {
   return response.json();
 }
 
+export async function resetStudentAccount(token: string, studentId: string) {
+  const response = await fetch(`${API_BASE_URL}/students/${studentId}/reset-account`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Reset failed');
+  }
+  return response.json();
+}
+
 export async function fetchClasses(token: string) {
   const response = await fetch(`${API_BASE_URL}/classes`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -572,6 +584,91 @@ export async function deleteAssignment(token: string, assignmentId: string) {
   if (!response.ok) {
     const data = await response.json();
     throw new Error(data.detail || 'Failed to delete assignment');
+  }
+  return response.json();
+}
+
+// Timetable APIs
+export async function fetchTimetableByStream(token: string, streamId: string) {
+  const response = await fetch(`${API_BASE_URL}/timetable/stream/${streamId}`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to fetch stream timetable');
+  }
+  return response.json();
+}
+
+export async function fetchAllTimetables(token: string) {
+  const response = await fetch(`${API_BASE_URL}/timetable/all`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to fetch all timetables');
+  }
+  return response.json();
+}
+
+export async function bulkCreateTimetableSlots(token: string, slots: any[]) {
+  const response = await fetch(`${API_BASE_URL}/timetable/bulk`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ slots })
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to bulk create timetable slots');
+  }
+  return response.json();
+}
+
+export async function bulkDeleteTimetableSlots(token: string, filters: any) {
+  const response = await fetch(`${API_BASE_URL}/timetable/bulk`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(filters)
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to bulk delete timetable slots');
+  }
+  return response.json();
+}
+
+export async function deleteTimetableSlot(token: string, slotId: string) {
+  const response = await fetch(`${API_BASE_URL}/timetable/${slotId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to delete timetable slot');
+  }
+  return response.json();
+}
+
+export async function updateTimetableSlot(token: string, slotId: string, updates: any) {
+  const response = await fetch(`${API_BASE_URL}/timetable/${slotId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(updates)
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to update timetable slot');
   }
   return response.json();
 }

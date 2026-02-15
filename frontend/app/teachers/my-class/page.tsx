@@ -13,9 +13,13 @@ import {
     BarChart3,
     BookOpen,
     CheckCircle2,
-    Search
+    Search,
+    Calendar,
+    Zap,
+    GraduationCap,
+    Clock
 } from 'lucide-react';
-import { fetchStudents, fetchClasses, fetchStreams, getTeacherSubjectAssignments } from '@/lib/api';
+import { fetchStudents, fetchClasses, fetchStreams, getTeacherSubjectAssignments, fetchTimetableByStream } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import StudentDetailsModal from '@/components/modals/StudentDetailsModal';
@@ -30,10 +34,14 @@ export default function MyClassPage() {
     const [assignmentInfo, setAssignmentInfo] = useState<{ className: string; streamName: string } | null>(null);
 
     // Subjects tab state
-    const [activeTab, setActiveTab] = useState<'students' | 'subjects'>('subjects');
+    const [activeTab, setActiveTab] = useState<'students' | 'subjects' | 'timetable'>('students');
     const [teacherSubjects, setTeacherSubjects] = useState<any[]>([]);
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [subjectsLoading, setSubjectsLoading] = useState(false);
+
+    // Timetable state
+    const [timetable, setTimetable] = useState<any[]>([]);
+    const [timetableLoading, setTimetableLoading] = useState(false);
 
     // Pagination & Search State
     const [search, setSearch] = useState('');
@@ -157,8 +165,6 @@ export default function MyClassPage() {
 
             // Fetch all teacher's subject assignments
             const allAssignments = await getTeacherSubjectAssignments(token, systemUser.id);
-
-            // Show all subjects regardless of class/stream
             setTeacherSubjects(allAssignments);
         } catch (err) {
             console.error('Failed to load teacher subjects:', err);
@@ -167,10 +173,28 @@ export default function MyClassPage() {
         }
     };
 
+    const loadTimetable = async () => {
+        if (!streamId) return;
+        setTimetableLoading(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            const data = await fetchTimetableByStream(token, streamId);
+            setTimetable(data);
+        } catch (err) {
+            console.error('Failed to load timetable:', err);
+        } finally {
+            setTimetableLoading(false);
+        }
+    };
+
     // Trigger loadData when parameters change
     useEffect(() => {
         loadData();
-    }, [classId, streamId, search, skip, limit, selectedSubject]);
+        if (activeTab === 'timetable') {
+            loadTimetable();
+        }
+    }, [classId, streamId, search, skip, limit, selectedSubject, activeTab]);
 
     if (loading && !students.length) {
         return (
@@ -298,6 +322,18 @@ export default function MyClassPage() {
                     <BookOpen size={16} />
                     My Subjects
                 </button>
+                {streamId && (
+                    <button
+                        onClick={() => setActiveTab('timetable')}
+                        className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'timetable'
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        <Calendar size={16} />
+                        Class Timetable
+                    </button>
+                )}
             </div>
 
             {/* Selected Subject Filter Badge */}
@@ -589,6 +625,102 @@ export default function MyClassPage() {
                                 ))}
                             </div>
                         </>
+                    )}
+                </div>
+            )}
+
+            {/* Timetable Tab */}
+            {activeTab === 'timetable' && (
+                <div className="space-y-8 overflow-x-auto pb-12">
+                    <div className="sticky left-0 flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+                        <div className="space-y-1">
+                            <h2 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tight text-foreground">
+                                <Calendar className="w-6 h-6 text-primary" /> Weekly Master Schedule
+                            </h2>
+                            <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]">Full academic planner for your stream</p>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                            Live Sync
+                        </div>
+                    </div>
+
+                    {timetableLoading ? (
+                        <div className="h-64 flex flex-col items-center justify-center gap-4">
+                            <Loader2 className="animate-spin text-primary" size={48} />
+                            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Loading Schedule...</p>
+                        </div>
+                    ) : (
+                        <div className="space-y-6">
+                            {[
+                                { id: 1, name: 'Monday' },
+                                { id: 2, name: 'Tuesday' },
+                                { id: 3, name: 'Wednesday' },
+                                { id: 4, name: 'Thursday' },
+                                { id: 5, name: 'Friday' },
+                                { id: 6, name: 'Saturday' }
+                            ].map((day) => {
+                                const daySlots = (timetable || []).filter((s: any) => s.day_of_week === day.id)
+                                    .sort((a: any, b: any) => a.start_time.padStart(5, '0').localeCompare(b.start_time.padStart(5, '0')));
+
+                                return (
+                                    <div key={day.id} className="group relative flex flex-col md:flex-row gap-4 md:gap-8">
+                                        <div className="md:w-32 sticky top-0 left-0 flex flex-row md:flex-col items-center md:items-start shrink-0">
+                                            <div className="px-4 py-1.5 rounded-xl backdrop-blur-sm bg-primary/10 border border-primary/20 text-primary w-full text-center md:text-left">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.2em]">{day.name}</span>
+                                            </div>
+                                            <div className="hidden md:block h-full w-px bg-gradient-to-b from-primary/20 to-transparent ml-6 mt-2" />
+                                        </div>
+
+                                        <div className="flex-1 pb-3 -mx-4 px-4 md:mx-0 md:px-0">
+                                            <div className="flex gap-3 min-w-max">
+                                                {daySlots.length > 0 ? (
+                                                    daySlots.map((slot: any) => (
+                                                        <div
+                                                            key={slot.id}
+                                                            className={`min-w-[160px] p-3.5 rounded-2xl border transition-all duration-300 group/slot ${slot.type === 'break'
+                                                                    ? 'bg-amber-500/5 border-amber-500/10 hover:bg-amber-500/10'
+                                                                    : 'bg-card border-border shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/40'
+                                                                }`}
+                                                        >
+                                                            <div className="flex flex-col gap-2.5">
+                                                                <div className="flex items-center justify-between">
+                                                                    <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest tabular-nums bg-muted px-2 py-0.5 rounded-lg border border-border">
+                                                                        {slot.start_time} - {slot.end_time}
+                                                                    </span>
+                                                                    {slot.type === 'break' && (
+                                                                        <Zap size={8} className="text-amber-500 animate-pulse" />
+                                                                    )}
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <p className={`font-black uppercase tracking-tight leading-tight ${slot.type === 'break' ? 'text-amber-600 text-[10px]' : 'text-foreground text-xs'
+                                                                        }`}>
+                                                                        {slot.subject_name}
+                                                                    </p>
+                                                                    {slot.teacher_name && (
+                                                                        <div className="flex items-center gap-1.5 opacity-70">
+                                                                            <GraduationCap size={9} className="text-primary" />
+                                                                            <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[120px]">
+                                                                                {slot.teacher_name}
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="flex items-center gap-3 py-4 px-8 rounded-2xl border border-dashed border-border opacity-30">
+                                                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                                                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground italic">No Sessions</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     )}
                 </div>
             )}

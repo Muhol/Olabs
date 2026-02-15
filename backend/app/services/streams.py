@@ -14,7 +14,8 @@ def get_streams(db: Session, class_id: Optional[str] = None):
             "id": str(s.id),
             "name": s.name,
             "class_id": str(s.class_id),
-            "full_name": f"{s.parent_class.name}{s.name}"
+            "class_name": s.parent_class.name,
+            "full_name": f"{s.parent_class.name} {s.name}"
         } for s in streams
     ]
 

@@ -119,12 +119,30 @@ This project is open-source and available under the [MIT License](LICENSE).
 
 Tasks to be done (remaining tasks)
 
-<!-- 2. implementing settings in the backend  -->
-<!-- 10. promotion of students to the next level -->
-1. unapproved users should not be visible in the verified tab in the staff page
-2. admins can be assigned specific subroles ie timetable manager, finance, teacher, all(ie can do everything an admin can do, but cannot delete other admins),and etc, these roles are assigned by the super admin alone .An admin can be assigned multiple subroles
-2. add a model for subjects, migrate the database and create a page to manage subjects which is only accessible to admins (ie creating and deleting subjects and assigning them to students and the teachers who teach the subject)
-3. a subject can be compulsory or optional(if optional, students can choose the subjects they want to take)
-4. all classes have all the subjects and students can choose the optional subjects they want to take
-4. my class should have a tab for subjects and a tab for student of the class if the teacher is assigned to a CLASS/stream eg F1/A and the subjects tab should show the subjects the current user is teaching and clicking on the subject should show the students taking the subject
-5. 
+ STUDENT MODULE
+ 1. INITIAL SETUP
+    - ADD some fields for the student table called activated and the default is false, another feild called password to store hash password, and profile photo(nullable)
+    
+    - The initial setup of a student account the student should sign up using the admission number as the username and the password should be the same as the admission number, which they will be required to change after the first login, and the account should be activated after this, and after the account is activated the student should be able to login and use the portal using the admission number and the new password they created 
+
+    - a reset incase a student cannot login or has forgotten the password or maybe another student login into another student's account by mistake, the reset should be done by the admin, where the admin deactivates the account and the set password is set to null so that the student can sign up again
+
+    - all authentication logic should be handled by the backend api not using clerk or any third party auth tool 
+
+    - create a new module called students
+    -   the module should use the same backend 
+        the module should have the following features:
+          - dashboard for the student (Upcoming assignments,Overdue assignments, Attendance percentage,Announcements,Timetable preview (today’s classes),Fee balance,)
+          - a view of the subjects the student is taking and the teachers of the subjects(
+            clicking on the subject should open a modal to show the 
+              - name of the subject
+              - name of the teacher
+              - Subject performance analytics
+              - Subject announcements
+              - Course materials (PDF, slides, videos)
+              - assignments given to the student in that subject and the results of the assignments
+              - results of the term exams
+          )
+          - a view of the assignments given to the student and the status of the assignment, due date 
+          - a view of the results of the assignments
+          - a view of the results of the term exams(report card)

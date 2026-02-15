@@ -1,0 +1,129 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-nunito: "Nunito", sans-serif;
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  :root {
+    --background: #f8fafc;
+    --foreground: #1e293b;
+    --card: #ffffff;
+    --card-foreground: #1e293b;
+    --popover: #ffffff;
+    --popover-foreground: #1e293b;
+    --primary: #10b981;
+    --primary-foreground: #ffffff;
+    --secondary: #3b82f6;
+    --secondary-foreground: #ffffff;
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+    --accent: #f1f5f9;
+    --accent-foreground: #1e293b;
+    --destructive: #ef4444;
+    --destructive-foreground: #f8fafc;
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #10b981;
+    --radius: 1rem;
+    --font-nunito: "Nunito", sans-serif;
+  }
+
+  .dark {
+    --background: black;
+    --foreground: #f8fafc;
+    --card: #030303;
+    --card-foreground: #f8fafc;
+    --popover: #030303;
+    --popover-foreground: #f8fafc;
+    --primary: #22c55e;
+    --primary-foreground: #052e16;
+    --secondary: #60a5fa;
+    --secondary-foreground: #0b0d0e;
+    --muted: #090a0c;
+    --muted-foreground: #94a3b8;
+    --accent: #0a0b0c;
+    --accent-foreground: #f8fafc;
+    --destructive: #7f1d1d;
+    --destructive-foreground: #f8fafc;
+    --border: #33415533;
+    --input: #33415533;
+    --ring: #22c55e;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: var(--font-nunito);
+  }
+}
+
+@layer components {
+  .glass-card {
+    background: color-mix(in srgb, var(--background), transparent 90%);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border);
+  }
+
+  .glow-text {
+    text-shadow: 0 0 15px color-mix(in srgb, var(--primary), transparent 40%);
+  }
+
+  .dark .glow-text {
+    text-shadow: 0 0 20px color-mix(in srgb, var(--secondary), transparent 50%);
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateY(15px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.5s ease-out forwards;
+}
+
+@keyframes loading-bar {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(-10%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1s ease-in-out infinite;
+}

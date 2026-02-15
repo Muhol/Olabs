@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, ForeignKey, Text, Table, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, Date, Time, ForeignKey, Text, Table, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -46,6 +46,7 @@ class Subject(Base):
     assigned_teachers = relationship("User", secondary=teacher_subjects, back_populates="assigned_subjects")
     teacher_assignments = relationship("TeacherSubjectAssignment", back_populates="subject", cascade="all, delete-orphan")
     assignments = relationship("Assignment", back_populates="subject", cascade="all, delete-orphan")
+    attendance_sessions = relationship("AttendanceSession", back_populates="subject", cascade="all, delete-orphan")
 
     @property
     def student_count(self):
@@ -122,6 +123,9 @@ class Student(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     full_name = Column(String)
     admission_number = Column(String, unique=True, index=True)
+    password = Column(String, nullable=True) # Hashed password for student login
+    activated = Column(Boolean, default=False)
+    profile_photo = Column(String, nullable=True)
     class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id"), nullable=True)
     stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id"), nullable=True)
     stream = Column(String, nullable=True) # Keep legacy for now or migrate
@@ -132,6 +136,159 @@ class Student(Base):
     assigned_stream = relationship("Stream", back_populates="students")
     borrows = relationship("BorrowRecord", back_populates="student")
     subjects = relationship("Subject", secondary="student_subjects", back_populates="assigned_students")
+    attendance_records = relationship("AttendanceRecord", back_populates="student", cascade="all, delete-orphan")
+    attendance = relationship("Attendance", back_populates="student", cascade="all, delete-orphan")
+    submissions = relationship("AssignmentSubmission", back_populates="student", cascade="all, delete-orphan")
+    exam_results = relationship("ExamResult", back_populates="student", cascade="all, delete-orphan")
+    fee_records = relationship("FeeRecord", back_populates="student", cascade="all, delete-orphan")
+
+class TimetableSlot(Base):
+    __tablename__ = "timetable_slots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=True)
+    start_time = Column(String) # e.g. "08:00"
+    end_time = Column(String)   # e.g. "09:00"
+    day_of_week = Column(Integer) # 1-6 (Mon-Sat)
+    type = Column(String) # lesson, break
+
+    stream = relationship("Stream")
+    subject = relationship("Subject")
+
+class AttendanceSession(Base):
+    __tablename__ = "attendance_sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    timetable_slot_id = Column(UUID(as_uuid=True), ForeignKey("timetable_slots.id", ondelete="SET NULL"), nullable=True)
+    session_date = Column(Date, default=datetime.date.today)
+    teacher_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    status = Column(String, default="open") # open, submitted, locked
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    submitted_at = Column(DateTime, nullable=True)
+
+    subject = relationship("Subject", back_populates="attendance_sessions")
+    timetable_slot = relationship("TimetableSlot")
+    teacher = relationship("User")
+    records = relationship("AttendanceRecord", back_populates="session", cascade="all, delete-orphan")
+
+class AttendanceRecord(Base):
+    __tablename__ = "attendance_records"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    attendance_session_id = Column(UUID(as_uuid=True), ForeignKey("attendance_sessions.id", ondelete="CASCADE"), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    status = Column(String) # present, absent, late, excused, sick, suspended
+
+    session = relationship("AttendanceSession", back_populates="records")
+    student = relationship("Student", back_populates="attendance_records")
+
+class Attendance(Base):
+    __tablename__ = "attendance"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=True) # Null for general attendance
+    date = Column(DateTime, default=datetime.datetime.utcnow)
+    status = Column(String) # Present, Absent, Late
+    remarks = Column(Text, nullable=True)
+
+    student = relationship("Student", back_populates="attendance")
+    subject = relationship("Subject")
+
+class TimetableEntry(Base):
+    __tablename__ = "timetable_entries"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id", ondelete="CASCADE"), nullable=False)
+    stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id", ondelete="CASCADE"), nullable=True)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    day_of_week = Column(String) # Monday, Tuesday, etc.
+    start_time = Column(String) # e.g. "08:00"
+    end_time = Column(String) # e.g. "09:00"
+    room = Column(String, nullable=True)
+
+class Announcement(Base):
+    __tablename__ = "announcements"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    title = Column(String)
+    content = Column(Text)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    subject = relationship("Subject")
+    author = relationship("User")
+
+class AssignmentSubmission(Base):
+    __tablename__ = "assignment_submissions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    assignment_id = Column(UUID(as_uuid=True), ForeignKey("assignments.id", ondelete="CASCADE"), nullable=False)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    submitted_at = Column(DateTime, default=datetime.datetime.utcnow)
+    file_url = Column(String, nullable=True)
+    status = Column(String) # pending, submitted, late, graded
+    grade = Column(Float, nullable=True)
+    feedback = Column(Text, nullable=True)
+
+    assignment = relationship("Assignment")
+    student = relationship("Student", back_populates="submissions")
+
+class ExamResult(Base):
+    __tablename__ = "exam_results"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    term = Column(String) # e.g. "Term 1"
+    year = Column(Integer) # e.g. 2024
+    exam_type = Column(String) # e.g. "Mid-term", "Final"
+    marks = Column(Float)
+    grade = Column(String, nullable=True)
+    remarks = Column(Text, nullable=True)
+
+    student = relationship("Student", back_populates="exam_results")
+    subject = relationship("Subject")
+
+class FeeRecord(Base):
+    __tablename__ = "fee_records"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    amount = Column(Float)
+    type = Column(String) # payment, charge
+    date = Column(DateTime, default=datetime.datetime.utcnow)
+    description = Column(String)
+    recorded_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+
+    student = relationship("Student", back_populates="fee_records")
+    recorded_by = relationship("User")
+
+class FeeStructure(Base):
+    __tablename__ = "fee_structures"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String)
+    amount = Column(Float)
+    term = Column(String)
+    year = Column(Integer)
+
+class CourseMaterial(Base):
+    __tablename__ = "course_materials"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    title = Column(String)
+    description = Column(Text, nullable=True)
+    file_url = Column(String)
+    file_type = Column(String) # pdf, slide, video
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    subject = relationship("Subject")
 
 class Book(Base):
     __tablename__ = "books"

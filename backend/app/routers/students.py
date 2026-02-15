@@ -58,3 +58,11 @@ def promote_students(
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
     return service.promote_students(db, current_user["email"])
+
+@router.post("/students/{student_uuid}/reset-account")
+def reset_student_account(
+    student_uuid: str,
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
+):
+    return service.reset_student_account(db, student_uuid, current_user["email"])

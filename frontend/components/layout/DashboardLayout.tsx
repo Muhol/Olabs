@@ -15,7 +15,8 @@ import {
     Briefcase,
     GraduationCap,
     Library,
-    CheckCircle2
+    CheckCircle2,
+    Wrench
 } from 'lucide-react';
 import { UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { usePathname } from 'next/navigation';
@@ -35,6 +36,7 @@ const sidebarItems = [
     { icon: Briefcase, label: 'Staff', href: '/staff', roles: ['admin', 'SUPER_ADMIN'] },
     { icon: BookOpen, label: 'Subjects', href: '/subjects', roles: ['admin', 'SUPER_ADMIN'] },
     { icon: History, label: 'History', href: '/history', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
+    { icon: Wrench, label: 'Admin Functions', href: '/admin/functions', roles: ['admin', 'SUPER_ADMIN'] },
     { icon: FileText, label: 'Reports', href: '/reports', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: ShieldAlert, label: 'System Logs', href: '/logs', roles: ['SUPER_ADMIN'] },
     { icon: Settings, label: 'Settings', href: '/settings', roles: ['admin', 'SUPER_ADMIN'] },
@@ -187,12 +189,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-black">
                             L
                         </div> */}
-                        <Image 
-                            src="/icon.png" 
-                            alt="Logo" 
+                        <Image
+                            src="/icon.png"
+                            alt="Logo"
                             fill
                             objectFit='cover'
-                            // className="rounded-lg object-cover"
+                        // className="rounded-lg object-cover"
                         />
                     </div>
                     <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg lg:hidden">

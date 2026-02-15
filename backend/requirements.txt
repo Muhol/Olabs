@@ -9,3 +9,5 @@ pydantic-settings>=2.0.0
 PyYAML>=6.0.1
 cloudinary
 python-multipart
+passlib[bcrypt]
+python-jose[cryptography]

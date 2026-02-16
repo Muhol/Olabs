@@ -4,14 +4,29 @@ from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
 from typing import Optional, Any
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+import bcrypt
 from .. import database, models, schemas
 import os
 
 router = APIRouter()
 
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Password helper functions using direct bcrypt implementation
+# passlib has compatibility issues with bcrypt 4.0+ and Python 3.13
+def verify_password(plain_password: str, hashed_password: str):
+    try:
+        if not hashed_password:
+            return False
+        return bcrypt.checkpw(
+            plain_password.encode('utf-8'), 
+            hashed_password.encode('utf-8')
+        )
+    except Exception as e:
+        print(f"[AUTH ERROR] Password verification failed: {e}")
+        return False
+
+def get_password_hash(password: str):
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 # JWT Configuration
 SECRET_KEY = os.getenv("STUDENT_JWT_SECRET", "supersecretstudentkey") # Use a different secret than Clerk if needed
@@ -19,12 +34,6 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 1 week
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/student/auth/login")
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password):
-    return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()

@@ -189,13 +189,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-black">
                             L
                         </div> */}
-                        <Image
+                        {/* <Image
                             src="/icon.png"
                             alt="Logo"
                             fill
                             objectFit='cover'
                         // className="rounded-lg object-cover"
-                        />
+                        /> */}
                     </div>
                     <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg lg:hidden">
                         <X size={20} />

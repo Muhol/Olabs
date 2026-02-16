@@ -4,7 +4,7 @@ import { LayoutContent } from "./layout-content";
 import Script from "next/script";
 
 export const viewport: Viewport = {
-  themeColor: "#000000ff",
+  themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -13,7 +13,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Olabs Student Portal",
   description: "Student portal for Olabs school management system",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

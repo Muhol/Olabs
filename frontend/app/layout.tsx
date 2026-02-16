@@ -12,7 +12,7 @@ const nunito = Nunito({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#4C7C6D",
+  themeColor: "#000000ff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -21,7 +21,6 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Library Star Pro | Dashboard",
   description: "Advanced Institutional Library Management",
-  manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

@@ -150,6 +150,14 @@ export async function resetStudentAccount(token: string, studentId: string) {
   return response.json();
 }
 
+export async function fetchStudentAttendance(token: string, studentId: string) {
+  const response = await fetch(`${API_BASE_URL}/students/${studentId}/attendance`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) throw new Error('Failed to fetch student attendance');
+  return response.json();
+}
+
 export async function fetchClasses(token: string) {
   const response = await fetch(`${API_BASE_URL}/classes`, {
     headers: { 'Authorization': `Bearer ${token}` }
@@ -669,6 +677,48 @@ export async function updateTimetableSlot(token: string, slotId: string, updates
   if (!response.ok) {
     const data = await response.json();
     throw new Error(data.detail || 'Failed to update timetable slot');
+  }
+  return response.json();
+}
+
+// Attendance APIs
+export async function submitAttendance(token: string, data: { subject_id: string, date: string, students: { student_id: string, status: string }[] }) {
+  const response = await fetch(`${API_BASE_URL}/attendance/submit`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(data)
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to submit attendance');
+  }
+  return response.json();
+}
+
+export async function fetchAttendanceSession(token: string, subjectId: string, date: string) {
+  const response = await fetch(`${API_BASE_URL}/attendance/session/${subjectId}/${date}`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    if (response.status === 404) return null; // Handle not found gracefully
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to fetch attendance session');
+  }
+  return response.json();
+}
+
+export async function fetchSessionRecords(token: string, sessionId: string) {
+  const response = await fetch(`${API_BASE_URL}/attendance/records/${sessionId}`, {
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Failed to fetch session records');
   }
   return response.json();
 }

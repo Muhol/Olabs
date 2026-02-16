@@ -183,3 +183,43 @@ def promote_students(db: Session, performer_email: str):
         "graduated": graduated,
         "skipped_or_error": errors
     }
+
+def get_student_attendance(db: Session, student_uuid: str):
+    db_student = db.query(models.Student).filter(models.Student.id == student_uuid).first()
+    if not db_student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    
+    total = db.query(models.AttendanceRecord).filter(models.AttendanceRecord.student_id == student_uuid).count()
+    present = db.query(models.AttendanceRecord).filter(
+        models.AttendanceRecord.student_id == student_uuid,
+        models.AttendanceRecord.status.in_(["present", "late"])
+    ).count()
+    absent = db.query(models.AttendanceRecord).filter(
+        models.AttendanceRecord.student_id == student_uuid,
+        models.AttendanceRecord.status == "absent"
+    ).count()
+    
+    # Calculate percentage
+    percentage = (present / total * 100) if total > 0 else 100.0
+    
+    # Get latest records
+    recent_records = db.query(models.AttendanceRecord).join(models.AttendanceSession).filter(
+        models.AttendanceRecord.student_id == student_uuid
+    ).order_by(models.AttendanceSession.session_date.desc()).limit(10).all()
+    
+    serialized_records = [
+        {
+            "id": str(r.id),
+            "date": r.session.session_date.isoformat(),
+            "status": r.status,
+            "subject_name": r.session.subject.name if r.session.subject else "N/A"
+        } for r in recent_records
+    ]
+    
+    return {
+        "total": total,
+        "present": present,
+        "absent": absent,
+        "percentage": round(percentage, 1),
+        "recent_records": serialized_records
+    }

@@ -26,9 +26,23 @@ async def get_current_user(
     print(f"[AUTH] Start get_current_user. Token present: {bool(token)}")
     try:
         # For development without Clerk keys, we can allow a 'mock' token
+        # For development without Clerk keys, we can allow a 'mock' token
         if os.getenv("ENV") == "dev" and token == "dev_token_admin":
             print("[AUTH] Mock token detected. Returning dev admin.")
-            return {"role": "SUPER_ADMIN", "id": "dev_admin", "email": "dev@admin.com", "full_name": "Dev Admin"}
+            # Fetch a real admin user to ensure FKs work
+            admin = db.query(models.User).filter(models.User.role == "SUPER_ADMIN").first()
+            if admin:
+                 return {
+                     "role": "SUPER_ADMIN", 
+                     "id": str(admin.id), 
+                     "email": admin.email, 
+                     "full_name": admin.full_name,
+                     "assigned_class_id": str(admin.assigned_class_id) if admin.assigned_class_id else None,
+                     "assigned_stream_id": str(admin.assigned_stream_id) if admin.assigned_stream_id else None,
+                     "subroles": [sr.subrole_name for sr in admin.subroles]
+                 }
+            # Fallback if no admin exists (e.g. fresh db)
+            return {"role": "SUPER_ADMIN", "id": "33333333-3333-3333-3333-333333333333", "email": "dev@admin.com", "full_name": "Dev Admin"}
             
         # Verify the token locally (or via JWKS)
         print("[AUTH] Verifying token...")

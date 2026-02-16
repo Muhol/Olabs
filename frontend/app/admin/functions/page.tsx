@@ -16,10 +16,15 @@ import {
     XCircle,
     Trash,
     Filter,
-    X
+    X,
+    ShieldAlert,
+    RefreshCw,
+    UserCircle2,
+    TriangleAlert,
+    Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchClasses, fetchStreams, bulkCreateTimetableSlots } from '@/lib/api';
+import { fetchClasses, fetchStreams, bulkCreateTimetableSlots, fetchStudents, resetStudentAccount } from '@/lib/api';
 import TimetableModal from '@/components/admin/TimetableModal';
 
 const DAYS = [
@@ -33,7 +38,7 @@ const DAYS = [
 
 export default function AdminFunctionsPage() {
     const { getToken } = useAuth();
-    const [activeTab, setActiveTab] = useState<'timetabling'>('timetabling');
+    const [activeTab, setActiveTab] = useState<'timetabling' | 'account-management'>('timetabling');
     const [classes, setClasses] = useState<any[]>([]);
     const [streams, setStreams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -61,6 +66,13 @@ export default function AdminFunctionsPage() {
 
     // Stream Timetable Modal
     const [selectedStream, setSelectedStream] = useState<any>(null);
+
+    // Account Management State
+    const [studentSearch, setStudentSearch] = useState('');
+    const [searchResults, setSearchResults] = useState<any[]>([]);
+    const [searching, setSearching] = useState(false);
+    const [resettingId, setResettingId] = useState<string | null>(null);
+    const [confirmingResetStudent, setConfirmingResetStudent] = useState<any>(null);
 
     useEffect(() => {
         loadInitialData();
@@ -202,6 +214,47 @@ export default function AdminFunctionsPage() {
         }
     };
 
+    const handleStudentSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!studentSearch.trim()) return;
+        
+        setSearching(true);
+        setStatus({ type: 'none', message: '' });
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Authentication failed");
+            
+            const data = await fetchStudents(token, 0, 10, studentSearch);
+            setSearchResults(data.items);
+        } catch (err: any) {
+            console.error('Student search failed', err);
+            setStatus({ type: 'error', message: 'Failed to find students: ' + err.message });
+        } finally {
+            setSearching(false);
+        }
+    };
+
+    const handleResetAccount = async (student: any) => {
+        setResettingId(student.id);
+        setStatus({ type: 'none', message: '' });
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Authentication failed");
+            
+            await resetStudentAccount(token, student.id);
+            setStatus({ type: 'success', message: `Account for ${student.full_name} has been reset successfully.` });
+            
+            // Update local state if needed (e.g., mark as not activated)
+            setSearchResults(prev => prev.map(s => s.id === student.id ? { ...s, activated: false } : s));
+            setConfirmingResetStudent(null);
+        } catch (err: any) {
+            console.error('Reset failed', err);
+            setStatus({ type: 'error', message: 'Account reset failed: ' + err.message });
+        } finally {
+            setResettingId(null);
+        }
+    };
+
     if (loading) {
         return (
             <div className="h-[80vh] flex flex-col items-center justify-center gap-4">
@@ -231,6 +284,12 @@ export default function AdminFunctionsPage() {
                     className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'timetabling' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     Timetabling
+                </button>
+                <button
+                    onClick={() => setActiveTab('account-management')}
+                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'account-management' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                    Account Management
                 </button>
             </div>
 
@@ -314,6 +373,122 @@ export default function AdminFunctionsPage() {
                                 </div>
                             </div>
                         ))}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'account-management' && (
+                <div className="space-y-8">
+                    {/* Warning Banner */}
+                    <motion.div 
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] flex items-start gap-4"
+                    >
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500 flex-shrink-0">
+                            <TriangleAlert size={20} />
+                        </div>
+                        <div className="space-y-1">
+                            <h4 className="text-amber-500 font-black uppercase tracking-widest text-[10px]">Security Protocol Warning</h4>
+                            <p className="text-sm text-foreground/80 font-medium">
+                                Resetting an account is a destructive action. The student's current password will be <strong>deleted</strong> and they will be forced to complete the <strong>onboarding process</strong> again. Use this only for recovery purposes.
+                            </p>
+                        </div>
+                    </motion.div>
+
+                    {/* Search Section */}
+                    <section className="p-8 glass-card rounded-[2.5rem] border border-border bg-card/50 space-y-8">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center">
+                                    <UserCircle2 size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black uppercase tracking-tight">Student Account Recovery</h3>
+                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Search and reset student credentials for re-onboarding</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleStudentSearch} className="relative group">
+                            <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-muted-foreground group-focus-within:text-primary transition-colors">
+                                <Search size={20} />
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search by name or admission number..."
+                                value={studentSearch}
+                                onChange={(e) => setStudentSearch(e.target.value)}
+                                className="w-full bg-muted/50 border border-border rounded-2xl py-5 pl-14 pr-6 font-bold text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                            />
+                            <button
+                                type="submit"
+                                disabled={searching}
+                                className="absolute right-3 top-2 bottom-2 px-6 bg-primary text-primary-foreground rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                            >
+                                {searching ? <Loader2 size={16} className="animate-spin" /> : 'Search'}
+                            </button>
+                        </form>
+                    </section>
+
+                    {/* Results Section */}
+                    <div className="space-y-6">
+                        {searchResults.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {searchResults.map((student) => (
+                                    <motion.div
+                                        key={student.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="p-6 glass-card rounded-[2rem] border border-border bg-card space-y-6 group hover:border-primary/30 transition-all flex flex-col justify-between"
+                                    >
+                                        <div className="space-y-4">
+                                            <div className="flex items-start justify-between">
+                                                <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center text-muted-foreground">
+                                                    <UserCircle2 size={24} />
+                                                </div>
+                                                <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${student.activated ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 'bg-amber-500/10 border-amber-500/20 text-amber-500'}`}>
+                                                    {student.activated ? 'Activated' : 'Reset / Pending'}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <h4 className="text-lg font-black tracking-tight text-foreground line-clamp-1">{student.full_name}</h4>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{student.admission_number}</p>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 bg-muted/30 p-3 rounded-xl border border-border">
+                                                <span className="flex items-center gap-1.5"><ShieldAlert size={12} className="text-secondary" /> {student.full_class || 'No Class'}</span>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            onClick={() => setConfirmingResetStudent(student)}
+                                            disabled={resettingId === student.id}
+                                            className="w-full py-3 bg-secondary/10 hover:bg-secondary text-secondary hover:text-white rounded-xl border border-secondary/20 transition-all flex items-center justify-center gap-2 text-[9px] font-black uppercase tracking-widest"
+                                        >
+                                            {resettingId === student.id ? (
+                                                <Loader2 size={14} className="animate-spin" />
+                                            ) : (
+                                                <>
+                                                    <RefreshCw size={14} /> Reset Account
+                                                </>
+                                            )}
+                                        </button>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        ) : studentSearch && !searching ? (
+                            <div className="p-20 text-center glass-card rounded-[3rem] border border-dashed border-border bg-card/30">
+                                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4 text-muted-foreground/30">
+                                    <Search size={32} />
+                                </div>
+                                <h3 className="font-black text-lg uppercase tracking-tight text-muted-foreground/50">No Students Found</h3>
+                                <p className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mt-1">Check the admission number or name and try again</p>
+                            </div>
+                        ) : !searching && (
+                            <div className="p-20 text-center bg-muted/10 rounded-[3rem] border border-dashed border-border">
+                                <p className="text-muted-foreground/40 font-black uppercase tracking-[0.3em] text-xs">Enter a name or admission number to start searching</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -602,6 +777,77 @@ export default function AdminFunctionsPage() {
             </AnimatePresence>
 
             {/* Stream Timetable Modal */}
+            {/* Reset Confirmation Modal */}
+            <AnimatePresence>
+                {confirmingResetStudent && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setConfirmingResetStudent(null)}
+                            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-md bg-card border border-amber-500/30 rounded-[2.5rem] shadow-2xl p-8 overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500" />
+                            
+                            <div className="flex flex-col items-center text-center space-y-6">
+                                <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
+                                    <TriangleAlert size={40} className="text-amber-600" />
+                                </div>
+                                
+                                <div className="space-y-2">
+                                    <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Account Reset</h3>
+                                    <p className="text-sm text-muted-foreground font-medium">
+                                        You are about to reset the account for <span className="text-foreground font-black">{confirmingResetStudent.full_name}</span>.
+                                    </p>
+                                </div>
+
+                                <div className="w-full bg-amber-500/5 p-5 rounded-2xl border border-amber-500/10 text-left space-y-3">
+                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase text-amber-600">
+                                        <ShieldAlert size={14} /> Critical Consequences
+                                    </div>
+                                    <ul className="space-y-2">
+                                        <li className="flex items-start gap-2 text-[11px] text-muted-foreground font-bold uppercase tracking-tight">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1 flex-shrink-0" />
+                                            Active password will be permanently deleted
+                                        </li>
+                                        <li className="flex items-start gap-2 text-[11px] text-muted-foreground font-bold uppercase tracking-tight">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1 flex-shrink-0" />
+                                            Student will be logged out of all devices
+                                        </li>
+                                        <li className="flex items-start gap-2 text-[11px] text-muted-foreground font-bold uppercase tracking-tight">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1 flex-shrink-0" />
+                                            Mandatory re-onboarding required
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="flex gap-3 w-full">
+                                    <button
+                                        onClick={() => setConfirmingResetStudent(null)}
+                                        disabled={!!resettingId}
+                                        className="flex-1 py-4 border border-border rounded-xl font-black uppercase text-xs tracking-widest hover:bg-muted transition-all disabled:opacity-50"
+                                    >
+                                        Abort
+                                    </button>
+                                    <button
+                                        onClick={() => handleResetAccount(confirmingResetStudent)}
+                                        disabled={!!resettingId}
+                                        className="flex-[1.5] py-4 bg-amber-600 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-amber-600/20 hover:bg-amber-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {resettingId ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Reset'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             <TimetableModal
                 isOpen={!!selectedStream}
                 onClose={() => setSelectedStream(null)}

@@ -14,19 +14,25 @@ import {
     ShieldCheck,
     Zap
 } from "lucide-react";
+import { fetchJSON } from "@/lib/api";
 
 export default function StudentResults() {
     const [results, setResults] = useState<any>({});
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem("student_token");
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/student/portal/results`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-            .then(res => res.json())
-            .then(setResults)
-            .finally(() => setLoading(false));
+        const loadResults = async () => {
+            try {
+                const data = await fetchJSON("/api/student/portal/results");
+                setResults(data);
+            } catch (err) {
+                console.error("Failed to load results:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadResults();
     }, []);
 
     if (loading) {

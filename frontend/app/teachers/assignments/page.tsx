@@ -230,11 +230,11 @@ export default function TeacherAssignmentsPage() {
                                                     {subjects.map((sub: any) => {
                                                         const subjectAssignments = assignments.filter(a => a.subject_id === sub.subject_id);
                                                         return (
-                                                            <div key={`${sub.subject_id}-${sub.class_id}`} className="glass-card rounded-[1.5rem] border border-border bg-card p-5 flex flex-col shadow-lg hover:shadow-xl transition-all group overflow-hidden relative">
-                                                                <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full -translate-y-12 translate-x-12 group-hover:scale-150 transition-transform duration-500" />
+                                                            <div key={`${sub.subject_id}-${sub.class_id}`} className="glass-card rounded-xl border border-border bg-card p-4 flex flex-col shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+                                                                <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full -translate-y-10 translate-x-10 group-hover:scale-150 transition-transform duration-500" />
 
-                                                                <div className="flex items-start justify-between mb-4">
-                                                                    <div className="w-10 h-10 rounded-xl bg-secondary/10 text-secondary flex items-center justify-center border border-secondary/20 font-black text-lg">
+                                                                <div className="flex items-start justify-between mb-3">
+                                                                    <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center border border-secondary/20 font-black text-sm">
                                                                         {sub.subject_name.charAt(0)}
                                                                     </div>
                                                                     <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[8px] font-black uppercase tracking-widest border border-border">
@@ -242,28 +242,28 @@ export default function TeacherAssignmentsPage() {
                                                                     </span>
                                                                 </div>
 
-                                                                <h3 className="text-base font-black text-foreground uppercase mb-1 line-clamp-1 group-hover:text-primary transition-colors">{sub.subject_name}</h3>
+                                                                <h3 className="text-sm font-black text-foreground uppercase mb-2 line-clamp-1 group-hover:text-primary transition-colors">{sub.subject_name}</h3>
 
-                                                                <div className="space-y-2 mb-4">
+                                                                <div className="space-y-1.5 mb-3 min-h-[60px]">
                                                                     {subjectAssignments.slice(0, 2).map((a) => (
                                                                         <div key={a.id} className="flex items-center justify-between group/item">
-                                                                            <div className="flex items-center gap-2 overflow-hidden">
-                                                                                <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                                                                <span className="text-xs font-bold truncate text-muted-foreground">{a.title}</span>
+                                                                            <div className="flex items-center gap-1.5 overflow-hidden">
+                                                                                <div className="w-1 h-1 rounded-full bg-primary" />
+                                                                                <span className="text-[11px] font-bold truncate text-muted-foreground">{a.title}</span>
                                                                             </div>
                                                                             <button
                                                                                 onClick={() => handleDelete(a.id)}
                                                                                 className="p-1 text-slate-300 hover:text-rose-500 opacity-0 group-hover/item:opacity-100 transition-all"
                                                                             >
-                                                                                <Trash2 size={12} />
+                                                                                <Trash2 size={11} />
                                                                             </button>
                                                                         </div>
                                                                     ))}
                                                                     {subjectAssignments.length > 2 && (
-                                                                        <p className="text-[9px] font-bold text-slate-400 italic">+{subjectAssignments.length - 2} more...</p>
+                                                                        <p className="text-[8px] font-bold text-slate-400 italic">+{subjectAssignments.length - 2} more...</p>
                                                                     )}
                                                                     {subjectAssignments.length === 0 && (
-                                                                        <p className="text-[10px] font-medium text-slate-400 italic">No tasks created yet.</p>
+                                                                        <p className="text-[9px] font-medium text-slate-400 italic">No tasks created yet.</p>
                                                                     )}
                                                                 </div>
 
@@ -272,9 +272,9 @@ export default function TeacherAssignmentsPage() {
                                                                         setSelectedSubject(sub);
                                                                         setIsCreateModalOpen(true);
                                                                     }}
-                                                                    className="mt-auto w-full py-2.5 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                                                                    className="mt-auto w-full py-2 bg-primary text-white rounded-lg font-black uppercase text-[9px] tracking-widest shadow-md shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-1"
                                                                 >
-                                                                    <Plus size={16} /> Add Assignment
+                                                                    <Plus size={14} /> Add Assignment
                                                                 </button>
                                                             </div>
                                                         );
@@ -360,14 +360,14 @@ export default function TeacherAssignmentsPage() {
                                                     size={18}
                                                 />
                                                 <input
-                                                ref={dateInputRef}
-                                                type="datetime-local"
-                                                onClick={() => dateInputRef.current?.showPicker()}
-                                                value={newAssignment.due_date}
-                                                onChange={(e) => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
-                                                onKeyDown={(e) => e.preventDefault()}
-                                                className="w-full pl-12 pr-6 py-4 rounded-2xl bg-card border border-border text-foreground font-bold focus:border-primary outline-none transition-all cursor-pointer caret-transparent"
-                                            />
+                                                    ref={dateInputRef}
+                                                    type="datetime-local"
+                                                    onClick={() => dateInputRef.current?.showPicker()}
+                                                    value={newAssignment.due_date}
+                                                    onChange={(e) => setNewAssignment({ ...newAssignment, due_date: e.target.value })}
+                                                    onKeyDown={(e) => e.preventDefault()}
+                                                    className="w-full pl-12 pr-6 py-4 rounded-2xl bg-card border border-border text-foreground font-bold focus:border-primary outline-none transition-all cursor-pointer caret-transparent"
+                                                />
                                             </div>
                                         </div>
 

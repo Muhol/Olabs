@@ -12,6 +12,7 @@ import {
     ExternalLink,
     Loader2
 } from "lucide-react";
+import { fetchJSON } from "@/lib/api";
 
 export default function StudentAssignments() {
     const [assignments, setAssignments] = useState<any[]>([]);
@@ -22,13 +23,14 @@ export default function StudentAssignments() {
     }, []);
 
     const fetchAssignments = async () => {
-        const token = localStorage.getItem("student_token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/student/portal/dashboard`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        const data = await res.json();
-        setAssignments([...data.upcoming_assignments, ...data.overdue_assignments]);
-        setLoading(false);
+        try {
+            const data = await fetchJSON("/api/student/portal/dashboard");
+            setAssignments([...data.upcoming_assignments, ...data.overdue_assignments]);
+        } catch (err) {
+            console.error("Failed to load assignments:", err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const getStatusBadge = (dueDate: string) => {

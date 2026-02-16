@@ -21,7 +21,7 @@ const navigation = [
     { name: "My Subjects", href: "/subjects", icon: BookOpen },
     { name: "Assignments", href: "/assignments", icon: FileText },
     { name: "Exam Results", href: "/results", icon: PiSquare },
-    { name: "Fees", href: "/fees", icon: Wallet },
+    // { name: "Fees", href: "/fees", icon: Wallet },
 ];
 
 export function LayoutContent({

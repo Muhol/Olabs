@@ -66,3 +66,11 @@ def reset_student_account(
     current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
 ):
     return service.reset_student_account(db, student_uuid, current_user["email"])
+
+@router.get("/students/{student_uuid}/attendance")
+def get_student_attendance(
+    student_uuid: str,
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.get_current_user)
+):
+    return service.get_student_attendance(db, student_uuid)

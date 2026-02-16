@@ -242,6 +242,16 @@ class AttendanceRecordResponse(AttendanceRecordBase):
     class Config:
         from_attributes = True
 
+class AttendanceItem(BaseModel):
+    student_id: UUID
+    status: str
+
+class AttendanceBulkSubmit(BaseModel):
+    subject_id: UUID
+    timetable_slot_id: UUID  # Required: identifies which class period this attendance is for
+    date: datetime.date = datetime.date.today()
+    students: List[AttendanceItem]
+
 # Attendance schemas (Legacy - kept for compatibility)
 class AttendanceBase(BaseModel):
     student_id: UUID

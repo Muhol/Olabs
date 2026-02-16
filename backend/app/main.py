@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from . import models, database
-from .routers import books, students, classes, streams, circulation, analytics, users, auth, config, logs, subjects, assignments, student_auth, student_portal, finance, student_features, timetable
+from .routers import books, students, classes, streams, circulation, analytics, users, auth, config, logs, subjects, assignments, student_auth, student_portal, finance, student_features, timetable, attendance
 
 load_dotenv()
 
@@ -39,6 +39,7 @@ app.include_router(student_portal.router, prefix="/api/student/portal", tags=["S
 app.include_router(finance.router, prefix="/api/finance", tags=["Finance"])
 app.include_router(student_features.router, prefix="/api/features", tags=["Student Features"])
 app.include_router(timetable.router, tags=["Timetable"])
+app.include_router(attendance.router, tags=["Attendance"])
 
 @app.get("/")
 async def root():

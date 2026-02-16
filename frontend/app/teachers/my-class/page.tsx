@@ -23,6 +23,7 @@ import { fetchStudents, fetchClasses, fetchStreams, getTeacherSubjectAssignments
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import StudentDetailsModal from '@/components/modals/StudentDetailsModal';
+import AttendanceModal from '@/components/modals/AttendanceModal';
 
 export default function MyClassPage() {
     const { getToken } = useAuth();
@@ -38,6 +39,9 @@ export default function MyClassPage() {
     const [teacherSubjects, setTeacherSubjects] = useState<any[]>([]);
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [subjectsLoading, setSubjectsLoading] = useState(false);
+
+    // Attendance State
+    const [isAttendanceModalOpen, setIsAttendanceModalOpen] = useState(false);
 
     // Timetable state
     const [timetable, setTimetable] = useState<any[]>([]);
@@ -394,6 +398,15 @@ export default function MyClassPage() {
                                 <Search size={14} /> Search
                             </button>
                         </div>
+                        {selectedSubject && (
+                            <button
+                                onClick={() => setIsAttendanceModalOpen(true)}
+                                className="px-6 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-lg shadow-emerald-500/20 flex items-center gap-2 transition-all active:scale-95"
+                            >
+                                <Calendar size={16} />
+                                Take Attendance
+                            </button>
+                        )}
                     </div>
 
                     <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card relative">
@@ -679,8 +692,8 @@ export default function MyClassPage() {
                                                         <div
                                                             key={slot.id}
                                                             className={`min-w-[160px] p-3.5 rounded-2xl border transition-all duration-300 group/slot ${slot.type === 'break'
-                                                                    ? 'bg-amber-500/5 border-amber-500/10 hover:bg-amber-500/10'
-                                                                    : 'bg-card border-border shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/40'
+                                                                ? 'bg-amber-500/5 border-amber-500/10 hover:bg-amber-500/10'
+                                                                : 'bg-card border-border shadow-sm hover:shadow-lg hover:shadow-primary/5 hover:border-primary/40'
                                                                 }`}
                                                         >
                                                             <div className="flex flex-col gap-2.5">
@@ -732,6 +745,20 @@ export default function MyClassPage() {
                         onClose={() => setViewingStudent(null)}
                         tokenGetter={getToken}
                         onUpdate={loadData}
+                    />
+                )}
+                {isAttendanceModalOpen && selectedSubject && (
+                    <AttendanceModal
+                        isOpen={isAttendanceModalOpen}
+                        onClose={() => setIsAttendanceModalOpen(false)}
+                        subjectId={selectedSubject}
+                        streamId={teacherSubjects.find(s => s.subject_id === selectedSubject)?.stream_id}
+                        subjectName={teacherSubjects.find(s => s.subject_id === selectedSubject)?.subject_name || 'Subject'}
+                        className={teacherSubjects.find(s => s.subject_id === selectedSubject)?.class_name || 'Class'}
+                        tokenGetter={getToken}
+                        onSuccess={() => {
+                            // Optionally reload data or show success toast
+                        }}
                     />
                 )}
             </AnimatePresence>

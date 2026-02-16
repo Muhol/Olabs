@@ -13,21 +13,29 @@ import {
   ShieldAlert,
   GraduationCap,
   Loader2,
-  Wallet
+  Wallet,
+  CheckCircle2,
+  User
 } from "lucide-react";
+import { fetchJSON } from "@/lib/api";
 
 export default function StudentDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("student_token");
-    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/student/portal/dashboard`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(setData)
-      .finally(() => setLoading(false));
+    const loadDashboard = async () => {
+      try {
+        const dashboardData = await fetchJSON("/api/student/portal/dashboard");
+        setData(dashboardData);
+      } catch (err) {
+        console.error("Failed to load dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadDashboard();
   }, []);
 
   if (loading) {
@@ -57,7 +65,7 @@ export default function StudentDashboard() {
               <Zap size={12} className="animate-pulse" /> System Status: Online
             </div>
             <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tighter uppercase leading-none">
-              Welcome Back, <br /> Student
+              Welcome Back, <br /> {data?.student_name || 'Student'}
             </h1>
             <p className="text-foreground/80 font-medium max-w-sm text-xs leading-relaxed">
               Your academic progress is being tracked. Current attendance record is at
@@ -104,6 +112,83 @@ export default function StudentDashboard() {
         ))}
       </div>
 
+      {/* Attendance Tracking Section */}
+      <section className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <div className="space-y-1">
+            <h2 className="text-2xl font-black flex items-center gap-3 uppercase tracking-tight text-foreground">
+              <CheckCircle2 className="w-6 h-6 text-primary" /> Attendance Overview
+            </h2>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-[0.1em]">Track your presence across all subjects</p>
+          </div>
+          <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl">
+            <div className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Overall</div>
+            <div className="text-2xl font-black text-primary tracking-tighter">{data?.attendance_percentage?.toFixed(1) || 0}%</div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {(data?.subject_attendance || []).map((subject: any) => (
+            <div key={subject.subject_id} className="group relative bg-card border border-border rounded-2xl p-5 hover:border-primary/30 transition-all overflow-hidden shadow-sm">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-2xl rounded-full translate-x-8 -translate-y-8 group-hover:scale-150 transition-transform duration-700" />
+              
+              <div className="relative space-y-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h3 className="text-base font-black text-foreground uppercase tracking-tight mb-1 line-clamp-1 group-hover:text-primary transition-colors">
+                      {subject.subject_name}
+                    </h3>
+                    <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-wider text-muted-foreground">
+                      <User size={10} className="text-primary" />
+                      <span className="line-clamp-1">{subject.teacher_name}</span>
+                    </div>
+                  </div>
+                  <div className={`px-3 py-1 rounded-lg font-black text-lg tabular-nums ${
+                    subject.attendance_percentage >= 75 
+                      ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' 
+                      : subject.attendance_percentage >= 50
+                      ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20'
+                      : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'
+                  }`}>
+                    {subject.attendance_percentage?.toFixed(0) || 0}%
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="w-full bg-muted rounded-full h-2 p-0.5 border border-border overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all duration-1000 ${
+                        subject.attendance_percentage >= 75 
+                          ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' 
+                          : subject.attendance_percentage >= 50
+                          ? 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.5)]'
+                          : 'bg-rose-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'
+                      }`}
+                      style={{ width: `${subject.attendance_percentage || 0}%` }}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-2 pt-2">
+                    <div className="flex flex-col items-center p-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
+                      <div className="text-xs font-black text-emerald-500 tabular-nums">{subject.present_count || 0}</div>
+                      <div className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">Present</div>
+                    </div>
+                    <div className="flex flex-col items-center p-2 bg-rose-500/5 rounded-lg border border-rose-500/10">
+                      <div className="text-xs font-black text-rose-500 tabular-nums">{subject.absent_count || 0}</div>
+                      <div className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">Absent</div>
+                    </div>
+                    <div className="flex flex-col items-center p-2 bg-muted/50 rounded-lg border border-border">
+                      <div className="text-xs font-black text-foreground tabular-nums">{subject.total_sessions || 0}</div>
+                      <div className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">Total</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Daily Schedule Summary */}
         <section className="space-y-6">
@@ -115,7 +200,7 @@ export default function StudentDashboard() {
               {new Date().toLocaleDateString('en-US', { weekday: 'long' })}
             </div>
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[400px] overflow-y-auto relative ">
             {(data?.timetable_today || []).length > 0 ? (
               (data?.timetable_today || [])
                 .sort((a: any, b: any) => a.start_time.padStart(5, '0').localeCompare(b.start_time.padStart(5, '0')))
@@ -155,6 +240,9 @@ export default function StudentDashboard() {
                 <Calendar className="w-10 h-10 mb-4 text-muted-foreground" />
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">No Classes Today</p>
               </div>
+            )}
+            {(data?.timetable_today || []).length > 0 && (
+              <div className="w-full h-[100px] bg-gradient-to-t from-background to-transparent sticky -bottom-1 left-0 right-0"></div>
             )}
           </div>
         </section>

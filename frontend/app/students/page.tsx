@@ -676,6 +676,7 @@ export default function StudentsPage() {
                         onClose={() => setViewingStudent(null)}
                         tokenGetter={getToken}
                         onUpdate={loadData}
+                        userRole={userRole}
                     />
                 )}
             </AnimatePresence>

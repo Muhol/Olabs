@@ -12,7 +12,7 @@ const nunito = Nunito({
 });
 
 export const viewport: Viewport = {
-  themeColor: "#000000ff",
+  themeColor: "#ffffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

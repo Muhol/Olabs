@@ -4,7 +4,7 @@ import { LayoutContent } from "./layout-content";
 import Script from "next/script";
 
 export const viewport: Viewport = {
-  themeColor: "#000000",
+  themeColor: "#ffffffff",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,

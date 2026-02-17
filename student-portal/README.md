@@ -75,3 +75,21 @@ student-portal/
 ## License
 
 MIT
+
+
+
+
+Tasks yet to be done student portal
+1. submiting assignments functionality 
+2. personal information section on the student dashboard
+3. Announcement section on the student dashboard (it should support word formatting ie paragraphs, bold, italics, underline, tables, images, links, etc)
+4. displaying of grades and performance in subjects and an option to download the transcript as a pdf
+5. 
+
+
+
+Tasks yet to be done admin portal
+1. specification whether the assignment is to be submitted online or not(requires physical submission)
+2. adding cbc grading system for grading the students  
+3. Announcments section on the admin dashboard
+4. Ability to add announcements whether subject specific class specific or for all students (it should support word formatting ie paragraphs, bold, italics, underline, tables, images, links, etc)

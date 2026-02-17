@@ -1,9 +1,17 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, Date, Time, ForeignKey, Text, Table, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime, Date, Time, ForeignKey, Text, Table, UniqueConstraint, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
 import datetime
 from .database import Base
+
+cbc_level_enum = Enum(
+    "EE",  # Exceeding Expectation
+    "ME",  # Meeting Expectation
+    "AE",  # Approaching Expectation
+    "BE",  # Below Expectation
+    name="cbc_performance_level"
+)
 
 class Class(Base):
     __tablename__ = "classes"
@@ -30,6 +38,20 @@ teacher_subjects = Table(
     Column("subject_id", UUID(as_uuid=True), ForeignKey("subjects.id"), primary_key=True),
 )
 
+subject_competencies = Table(
+    "subject_competencies",
+    Base.metadata,
+    Column("subject_id", UUID(as_uuid=True), ForeignKey("subjects.id"), primary_key=True),
+    Column("competency_id", UUID(as_uuid=True), ForeignKey("competencies.id"), primary_key=True),
+)
+
+class Competency(Base):
+    __tablename__ = "competencies"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, index=True)  # e.g Critical Thinking
+    description = Column(Text, nullable=True)
+
 class Subject(Base):
     __tablename__ = "subjects"
 
@@ -47,6 +69,7 @@ class Subject(Base):
     teacher_assignments = relationship("TeacherSubjectAssignment", back_populates="subject", cascade="all, delete-orphan")
     assignments = relationship("Assignment", back_populates="subject", cascade="all, delete-orphan")
     attendance_sessions = relationship("AttendanceSession", back_populates="subject", cascade="all, delete-orphan")
+    competencies = relationship("Competency", secondary=subject_competencies)
 
     @property
     def student_count(self):
@@ -141,6 +164,8 @@ class Student(Base):
     submissions = relationship("AssignmentSubmission", back_populates="student", cascade="all, delete-orphan")
     exam_results = relationship("ExamResult", back_populates="student", cascade="all, delete-orphan")
     fee_records = relationship("FeeRecord", back_populates="student", cascade="all, delete-orphan")
+    competency_assessments = relationship("StudentCompetencyAssessment", back_populates="student", cascade="all, delete-orphan")
+    subject_summaries = relationship("StudentSubjectSummary", back_populates="student", cascade="all, delete-orphan")
 
 class TimetableSlot(Base):
     __tablename__ = "timetable_slots"
@@ -232,7 +257,9 @@ class AssignmentSubmission(Base):
     file_url = Column(String, nullable=True)
     status = Column(String) # pending, submitted, late, graded
     grade = Column(Float, nullable=True)
+    performance_level = Column(cbc_level_enum, nullable=True)
     feedback = Column(Text, nullable=True)
+    rubric_feedback = Column(Text, nullable=True)
 
     assignment = relationship("Assignment")
     student = relationship("Student", back_populates="submissions")
@@ -248,6 +275,8 @@ class ExamResult(Base):
     exam_type = Column(String) # e.g. "Mid-term", "Final"
     marks = Column(Float)
     grade = Column(String, nullable=True)
+    performance_level = Column(cbc_level_enum, nullable=True)
+    competency_score = Column(Float, nullable=True)  # optional weighted computation
     remarks = Column(Text, nullable=True)
 
     student = relationship("Student", back_populates="exam_results")
@@ -380,3 +409,64 @@ class Assignment(Base):
     # Relationships
     subject = relationship("Subject", back_populates="assignments")
     teacher = relationship("User", back_populates="created_assignments")
+
+class StudentCompetencyAssessment(Base):
+    __tablename__ = "student_competency_assessments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"))
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"))
+    competency_id = Column(UUID(as_uuid=True), ForeignKey("competencies.id", ondelete="CASCADE"))
+
+    term = Column(String)
+    year = Column(Integer)
+
+    performance_level = Column(cbc_level_enum, nullable=False)
+    remarks = Column(Text, nullable=True)
+
+    assessed_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+    assessed_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    student = relationship("Student", back_populates="competency_assessments")
+    subject = relationship("Subject")
+    competency = relationship("Competency")
+    assessor = relationship("User")
+
+class Rubric(Base):
+    __tablename__ = "rubrics"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id"))
+    title = Column(String)
+
+    subject = relationship("Subject")
+    criteria = relationship("RubricCriteria", back_populates="rubric", cascade="all, delete-orphan")
+
+class RubricCriteria(Base):
+    __tablename__ = "rubric_criteria"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    rubric_id = Column(UUID(as_uuid=True), ForeignKey("rubrics.id"))
+    competency_id = Column(UUID(as_uuid=True), ForeignKey("competencies.id"))
+    description = Column(Text)
+
+    rubric = relationship("Rubric", back_populates="criteria")
+    competency = relationship("Competency")
+
+class StudentSubjectSummary(Base):
+    __tablename__ = "student_subject_summaries"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id"))
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id"))
+
+    term = Column(String)
+    year = Column(Integer)
+
+    overall_performance = Column(cbc_level_enum)
+    teacher_comment = Column(Text)
+
+    student = relationship("Student", back_populates="subject_summaries")
+    subject = relationship("Subject")

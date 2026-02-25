@@ -2,20 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    X,
+    CheckCircle2,
     Calendar,
-    Clock,
+    X,
     Plus,
-    BookOpen,
+    Clock,
     Trash2,
     Loader2,
-    CheckCircle2,
+    BookOpen,
     AlertCircle,
-    XCircle
+    XCircle,
+    RefreshCcw,
+    User,
+    RotateCcw,
+    RefreshCcw as RefreshCcwIcon
 } from 'lucide-react';
 import { useAuth } from '@clerk/nextjs';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchTimetableByStream, fetchSubjectsByClassAndStream, bulkCreateTimetableSlots, deleteTimetableSlot, updateTimetableSlot } from '@/lib/api';
+import { fetchTimetableByStream, fetchSubjectsByClassAndStream, bulkCreateTimetableSlots, deleteTimetableSlot, updateTimetableSlot, bulkUpdateTimetableSlots } from '@/lib/api';
 
 const DAYS = [
     { id: 1, name: 'Monday' },
@@ -53,9 +57,12 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
     const [editingSlot, setEditingSlot] = useState<any>(null);
     const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
-    
-    // Edit Mode State
+
+    // Edit Mode & Painting State
     const [isEditing, setIsEditing] = useState(false);
+    const [activePaintSubjectId, setActivePaintSubjectId] = useState<string | null>(null);
+    const [pendingChanges, setPendingChanges] = useState<{ [slotId: string]: string | null }>({});
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (isOpen && stream) {
@@ -121,19 +128,83 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
     };
 
     const handleUpdateSubject = async (slotId: string, subjectId: string) => {
-        setIsUpdating(true);
+        if (!isEditing) {
+            setIsUpdating(true);
+            try {
+                const t = await getToken();
+                if (!t) throw new Error("Auth failed");
+
+                await updateTimetableSlot(t, slotId, { subject_id: subjectId || null });
+                loadStreamData();
+                setEditingSlot(null);
+            } catch (err: any) {
+                console.error('Update failed', err);
+                setStatus({ type: 'error', message: err.message || 'Update failed.' });
+            } finally {
+                setIsUpdating(false);
+            }
+        } else {
+            // In hybrid bulk edit mode, just mark as pending
+            setPendingChanges(prev => ({
+                ...prev,
+                [slotId]: subjectId || null
+            }));
+            setEditingSlot(null);
+        }
+    };
+
+    const handleSlotClick = (slot: any) => {
+        if (!isEditing || slot.type === 'break') return;
+
+        if (activePaintSubjectId && activePaintSubjectId !== 'clear') {
+            // Painting Mode (only for actual subjects)
+            setPendingChanges(prev => ({
+                ...prev,
+                [slot.id]: activePaintSubjectId
+            }));
+        } else {
+            // Modal Selection Mode (Triggers if activePaintSubjectId is null OR 'clear')
+            setEditingSlot(slot);
+            const isPending = pendingChanges.hasOwnProperty(slot.id);
+            setSelectedSubjectId(isPending ? pendingChanges[slot.id] : slot.subject_id);
+        }
+    };
+
+    const handleSaveChanges = async () => {
+        const updates = Object.entries(pendingChanges).map(([id, subject_id]) => ({
+            id,
+            subject_id
+        }));
+
+        if (updates.length === 0) {
+            setIsEditing(false);
+            return;
+        }
+
+        setIsSaving(true);
         try {
             const t = await getToken();
             if (!t) throw new Error("Auth failed");
 
-            await updateTimetableSlot(t, slotId, { subject_id: subjectId || null });
+            await bulkUpdateTimetableSlots(t, updates);
+            setStatus({ type: 'success', message: `Saved ${updates.length} changes.` });
+            setPendingChanges({});
+            setIsEditing(false);
+            setActivePaintSubjectId(null);
             loadStreamData();
-            setEditingSlot(null);
-        } catch (err) {
-            console.error('Update failed', err);
+        } catch (err: any) {
+            console.error('Batch save failed', err);
+            setStatus({ type: 'error', message: err.message || 'Failed to save changes.' });
         } finally {
-            setIsUpdating(false);
+            setIsSaving(false);
         }
+    };
+
+    const handleDiscardChanges = () => {
+        if (Object.keys(pendingChanges).length > 0 && !confirm("Discard all unsaved changes?")) return;
+        setPendingChanges({});
+        setIsEditing(false);
+        setActivePaintSubjectId(null);
     };
 
     const handleDeleteSlot = async (slotId: string) => {
@@ -195,7 +266,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={onClose}
+                onClick={Object.keys(pendingChanges).length > 0 ? undefined : onClose}
                 className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm"
             />
 
@@ -206,124 +277,229 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                 className="relative w-full max-w-6xl max-h-[90vh] glass-card rounded-[2.5rem] border border-border bg-card shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-8 border-b border-border flex items-center justify-between bg-muted/20">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                            <Calendar size={24} />
+                <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                            <Calendar size={20} />
                         </div>
                         <div>
-                            <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">
+                            <h3 className="text-xl font-black text-foreground uppercase tracking-tight">
                                 {stream.full_name || (stream.class_name ? `${stream.class_name} ${stream.name}` : stream.name)} Timetable
                             </h3>
-                            <p className="text-muted-foreground font-medium text-xs">Manage weekly schedule and session timings</p>
+                            <p className="text-muted-foreground font-medium text-[10px]">Manage weekly schedule and session timings</p>
                         </div>
                     </div>
                     <div className="flex items-center gap-4">
-                        <button 
-                            onClick={() => setIsEditing(!isEditing)} 
-                            className={`flex items-center gap-2 px-4 py-3 font-black uppercase text-[10px] tracking-widest rounded-xl border transition-all active:scale-95 ${isEditing ? 'bg-rose-500 text-white border-rose-600 shadow-lg shadow-rose-500/20' : 'bg-muted hover:bg-muted/80 text-foreground border-border'}`}
-                        >
-                            {isEditing ? <CheckCircle2 size={16} /> : <BookOpen size={16} />} 
-                            {isEditing ? 'Done Editing' : 'Edit Slots'}
-                        </button>
-                        <button
-                            onClick={() => {
-                                setStatus({ type: 'none', message: '' });
-                                setIsAdding(true);
-                            }}
-                            className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                        >
-                            <Plus size={16} /> Add Timeslot
-                        </button>
-                        <button onClick={onClose} className="p-3 hover:bg-muted rounded-xl transition-all">
-                            <X size={24} />
+                        {isEditing ? (
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={handleDiscardChanges}
+                                    className="flex items-center gap-2 px-4 py-3 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-border transition-all active:scale-95"
+                                >
+                                    <XCircle size={16} /> Discard
+                                </button>
+                                <button
+                                    onClick={handleSaveChanges}
+                                    disabled={isSaving || Object.keys(pendingChanges).length === 0}
+                                    className="flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                >
+                                    {isSaving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+                                    Save {Object.keys(pendingChanges).length > 0 ? `(${Object.keys(pendingChanges).length})` : ''}
+                                </button>
+                            </div>
+                        ) : (
+                            <>
+                                <button
+                                    onClick={() => setIsEditing(true)}
+                                    className="flex items-center gap-2 px-4 py-3 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-border transition-all active:scale-95"
+                                >
+                                    <BookOpen size={16} /> Edit Slots
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setStatus({ type: 'none', message: '' });
+                                        setIsAdding(true);
+                                    }}
+                                    className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                                >
+                                    <Plus size={16} /> Add Timeslot
+                                </button>
+                            </>
+                        )}
+                        <button onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-all ml-1">
+                            <X size={20} />
                         </button>
                     </div>
                 </div>
 
+                {/* Subject Palette (When Editing) */}
+                <AnimatePresence>
+                    {isEditing && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="bg-muted/30 border-b border-border"
+                        >
+                            <div className="p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground mr-4">Subject Palette</h4>
+                                    <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Select subject then click slots</p>
+                                </div>
+                                <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
+                                    <button
+                                        onClick={() => setActivePaintSubjectId(activePaintSubjectId === 'clear' ? null : 'clear')}
+                                        className={`shrink-0 px-3 py-2 rounded-lg border-2 transition-all font-black uppercase text-[9px] tracking-widest flex items-center gap-1.5 ${activePaintSubjectId === 'clear'
+                                            ? 'bg-rose-500 text-white border-rose-600 shadow-lg shadow-rose-500/20'
+                                            : 'bg-card text-muted-foreground border-dashed border-border hover:border-rose-500/50'
+                                            }`}
+                                    >
+                                        <X size={12} /> Clear
+                                    </button>
+                                    <div className="w-px h-8 bg-border mx-1" />
+                                    {subjects.map(sub => (
+                                        <button
+                                            key={sub.id}
+                                            onClick={() => setActivePaintSubjectId(activePaintSubjectId === sub.id ? null : sub.id)}
+                                            className={`shrink-0 px-4 py-2 rounded-lg border-2 transition-all font-black uppercase text-[9px] tracking-widest ${activePaintSubjectId === sub.id
+                                                ? 'bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105'
+                                                : 'bg-card text-foreground border-border hover:border-primary/50'
+                                                }`}
+                                        >
+                                            {sub.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-8 space-y-8">
+                <div className="flex-1 overflow-y-auto p-6 space-y-8">
                     {loading ? (
                         <div className="h-64 flex flex-col items-center justify-center gap-4">
                             <Loader2 className="animate-spin text-primary" size={48} />
                             <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Retrieving Schedule...</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                            {/* FIRST LOOP: DAYS */}
+                        <div className="space-y-8">
                             {DAYS.map(day => {
                                 const daySlots = timetable.filter(s => s.day_of_week === day.id)
                                     .sort((a, b) => a.start_time.padStart(5, '0').localeCompare(b.start_time.padStart(5, '0')));
 
                                 return (
-                                    <div key={day.id} className="space-y-4">
-                                        <div className="flex items-center justify-between px-2">
-                                            <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">{day.name}</h4>
-                                            <div className="flex items-center gap-2">
-
-                                                {daySlots.length > 0 && isEditing && (
+                                    <div key={day.id} className="group relative flex flex-col md:flex-row gap-3 md:gap-4">
+                                        <div className="md:w-28 sticky top-0 left-0 z-20 flex flex-row md:flex-col items-center md:items-start shrink-0">
+                                            <div className="px-3 py-1 rounded-lg backdrop-blur-md bg-primary/30 border border-primary/60 text-primary w-full text-center md:text-left flex items-center justify-between shadow-sm">
+                                                <span className="text-[9px] font-black uppercase tracking-[0.1em]">{day.name}</span>
+                                                {isEditing && daySlots.length > 0 && (
                                                     <button
                                                         onClick={() => handleClearDay(day.id, day.name)}
-                                                        className="p-1 hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 rounded-lg transition-all"
-                                                        title={`Wipe ${day.name}`}
+                                                        className="md:hidden p-1 text-rose-500 hover:bg-rose-500/10 rounded-md"
                                                     >
-                                                        <Trash2 size={12} />
+                                                        <Trash2 size={10} />
                                                     </button>
                                                 )}
                                             </div>
+                                            {isEditing && daySlots.length > 0 && (
+                                                <button
+                                                    onClick={() => handleClearDay(day.id, day.name)}
+                                                    className="hidden md:flex mt-2 items-center gap-1.5 px-2 py-1 text-[8px] font-black uppercase tracking-widest text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-md transition-all"
+                                                >
+                                                    <Trash2 size={9} /> Wipe Day
+                                                </button>
+                                            )}
+                                            <div className="hidden md:block h-full w-px bg-gradient-to-b from-primary/20 to-transparent ml-5 mt-1" />
                                         </div>
 
-                                        <div className="space-y-3">
-                                            {/* NESTED LOOP: SLOTS */}
-                                            {daySlots.length === 0 ? (
-                                                <div className="p-6 border border-dashed border-border rounded-2xl flex flex-col items-center justify-center text-center opacity-40">
-                                                    <Clock size={16} className="mb-2" />
-                                                    <span className="text-[9px] font-bold uppercase tracking-widest">Free Day</span>
-                                                </div>
-                                            ) : (
-                                                daySlots.map(slot => (
-                                                    <div
-                                                        key={slot.id}
-                                                        onClick={() => {
-                                                            if (isEditing && slot.type === 'lesson') {
-                                                                setEditingSlot(slot);
-                                                                setSelectedSubjectId(slot.subject_id || '');
-                                                            }
-                                                        }}
-                                                        className={`p-4 rounded-2xl border transition-all relative group ${isEditing ? 'cursor-pointer hover:border-primary/50 hover:shadow-md' : ''} ${slot.type === 'break'
-                                                            ? 'bg-amber-500/5 border-amber-500/10'
-                                                            : 'bg-muted/30 border-border shadow-sm'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center justify-between mb-2">
-                                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-muted-foreground uppercase tracking-widest">
-                                                                <Clock size={10} />
-                                                                {slot.start_time} - {slot.end_time}
-                                                            </div>
-                                                            <span className={`px-1.5 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter ${slot.type === 'break' ? 'text-amber-600 bg-amber-100' : 'text-primary bg-primary/10'
-                                                                }`}>
-                                                                {slot.type}
-                                                            </span>
-                                                        </div>
-                                                        <h5 className="font-bold text-sm text-foreground truncate">
-                                                            {slot.type === 'break' ? 'Break' : (subjects.find(sub => sub.id === slot.subject_id)?.name || 'Free')}
-                                                        </h5>
-
-                                                        {isEditing && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleDeleteSlot(slot.id);
-                                                                }}
-                                                                disabled={isDeleting === slot.id}
-                                                                className="absolute -top-2 -right-2 p-1.5 bg-rose-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all shadow-lg hover:scale-110 active:scale-95 disabled:opacity-50"
-                                                            >
-                                                                {isDeleting === slot.id ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
-                                                            </button>
-                                                        )}
+                                        <div className="flex-1 pb-2 -mx-4 px-4 md:mx-0 md:px-0">
+                                            <div className="flex gap-3 min-w-max pb-2">
+                                                {daySlots.length === 0 ? (
+                                                    <div className="py-2 px-6 rounded-xl border border-dashed border-border opacity-30 flex items-center gap-2">
+                                                        <Clock size={12} className="text-muted-foreground" />
+                                                        <span className="text-[8px] font-black uppercase tracking-[0.1em] text-muted-foreground italic">Free</span>
                                                     </div>
-                                                ))
-                                            )}
+                                                ) : (
+                                                    daySlots.map(slot => {
+                                                        const isPending = pendingChanges.hasOwnProperty(slot.id);
+                                                        const currentSubjectId = isPending ? pendingChanges[slot.id] : slot.subject_id;
+                                                        const subject = subjects.find(s => s.id === currentSubjectId);
+
+                                                        return (
+                                                            <div
+                                                                key={slot.id}
+                                                                onClick={() => handleSlotClick(slot)}
+                                                                className={`min-w-[150px] group/slot p-3 rounded-xl border transition-all relative ${isEditing && slot.type !== 'break' ? 'cursor-pointer' : ''
+                                                                    } ${isPending
+                                                                        ? 'border-emerald-500 bg-emerald-500/5 shadow-lg ring-2 ring-emerald-500/20'
+                                                                        : slot.type === 'break'
+                                                                            ? 'bg-amber-500/5 border-amber-500/10 hover:bg-amber-500/10'
+                                                                            : 'bg-muted/30 border-border hover:border-primary/40 hover:shadow-md'
+                                                                    }`}
+                                                            >
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div className="flex items-center gap-1 text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                                                                        <Clock size={8} />
+                                                                        {slot.start_time} - {slot.end_time}
+                                                                    </div>
+                                                                    {isPending && (
+                                                                        <span className="px-1 py-0.5 rounded text-[7px] font-black uppercase tracking-tighter text-emerald-600 bg-emerald-100 flex items-center gap-0.5">
+                                                                            <RefreshCcw size={7} /> New
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+
+                                                                <h5 className={`font-black uppercase tracking-tight leading-tight mb-1 truncate ${slot.type === 'break' ? 'text-amber-600 text-[10px]' : 'text-foreground text-xs'
+                                                                    }`}>
+                                                                    {slot.type === 'break' ? 'Break' : (subject?.name || 'Free Session')}
+                                                                </h5>
+
+                                                                {slot.teacher_name && slot.type !== 'break' && !isPending && (
+                                                                    <div className="flex items-center gap-1.5 opacity-70">
+                                                                        <User size={9} className="text-primary" />
+                                                                        <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest truncate">
+                                                                            {slot.teacher_name}
+                                                                        </span>
+                                                                    </div>
+                                                                )}
+
+                                                                {isEditing && (
+                                                                    <div className="absolute top-0 right-0 flex gap-1 opacity-0 group-hover/slot:opacity-100 transition-all">
+                                                                        {isPending && (
+                                                                            <button
+                                                                                onClick={(e) => {
+                                                                                    e.stopPropagation();
+                                                                                    setPendingChanges(prev => {
+                                                                                        const next = { ...prev };
+                                                                                        delete next[slot.id];
+                                                                                        return next;
+                                                                                    });
+                                                                                }}
+                                                                                className="p-1.5 bg-slate-500 text-white rounded-lg shadow-lg hover:bg-slate-600"
+                                                                                title="Undo Change"
+                                                                            >
+                                                                                <RotateCcw size={10} />
+                                                                            </button>
+                                                                        )}
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                handleDeleteSlot(slot.id);
+                                                                            }}
+                                                                            disabled={isDeleting === slot.id}
+                                                                            className="p-1.5 bg-rose-500 text-white z-20  top-0 right-2 rounded-lg shadow-lg hover:scale-110 active:scale-95"
+                                                                            title="Delete Slot"
+                                                                        >
+                                                                            {isDeleting === slot.id ? <Loader2 size={10} className="animate-spin" /> : <Trash2 size={10} />}
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -354,21 +530,6 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                                 <h4 className="text-xl font-black uppercase tracking-tight">New Timeslot</h4>
                                 <p className="text-xs text-muted-foreground font-medium mt-1">Add sessions to {stream.name}'s schedule</p>
                             </div>
-
-                            {status.type !== 'none' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className={`p-4 rounded-2xl flex items-center gap-3 border ${status.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600' : 'bg-rose-500/10 border-rose-500/20 text-rose-600'
-                                        }`}
-                                >
-                                    {status.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-                                    <p className="text-[10px] font-black uppercase tracking-wider">{status.message}</p>
-                                    <button onClick={() => setStatus({ type: 'none', message: '' })} className="ml-auto p-1 hover:bg-black/5 rounded-lg">
-                                        <XCircle size={14} />
-                                    </button>
-                                </motion.div>
-                            )}
 
                             <form onSubmit={handleAddSlot} className="space-y-6">
                                 <div className="space-y-4">
@@ -465,6 +626,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                     </div>
                 )}
             </AnimatePresence>
+
             {/* Subject Assignment Modal */}
             <AnimatePresence>
                 {editingSlot && (
@@ -472,11 +634,11 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setEditingSlot(null)}
-                            className="absolute inset-0 bg-foreground/60"
+                            className="absolute inset-0 bg-background/60"
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
-                            className="relative w-full max-w-sm glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-6"
+                            className="relative w-full max-w-sm glass-card rounded-[2.5rem] border border-border bg-card p-8 shadow-2xl space-y-6"
                         >
                             <div className="text-center space-y-1">
                                 <h4 className="text-xl font-black uppercase tracking-tight">Assign Subject</h4>
@@ -488,7 +650,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                             <div className="space-y-3">
                                 <button
                                     onClick={() => setSelectedSubjectId('')}
-                                    className={`w-full p-4 rounded-2xl border border-dashed font-black uppercase text-[10px] tracking-widest transition-all ${selectedSubjectId === '' ? 'bg-primary/5 border-primary text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
+                                    className={`w-full p-4 rounded-xl border border-dashed font-black uppercase text-[10px] tracking-widest transition-all ${!selectedSubjectId ? 'bg-primary/5 border-primary text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}
                                 >
                                     No Subject (Free)
                                 </button>
@@ -499,7 +661,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                                             key={sub.id}
                                             disabled={isUpdating}
                                             onClick={() => setSelectedSubjectId(sub.id)}
-                                            className={`w-full p-4 rounded-2xl border text-left font-bold text-xs transition-all flex items-center justify-between ${selectedSubjectId === sub.id ? 'bg-primary text-white border-primary shadow-lg' : 'bg-muted/50 border-border hover:border-primary/40'}`}
+                                            className={`w-full p-4 rounded-xl border text-left font-bold text-xs transition-all flex items-center justify-between ${selectedSubjectId === sub.id ? 'bg-primary text-white border-primary shadow-lg' : 'bg-muted/50 border-border hover:border-primary/40'}`}
                                         >
                                             {sub.name}
                                         </button>
@@ -510,16 +672,16 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setEditingSlot(null)}
-                                    className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted rounded-2xl transition-all"
+                                    className="flex-1 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:bg-muted rounded-xl transition-all"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={() => handleUpdateSubject(editingSlot.id, selectedSubjectId || '')}
-                                    disabled={isUpdating || selectedSubjectId === (editingSlot.subject_id || '')}
-                                    className="flex-[2] py-4 bg-primary text-white rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                                    disabled={isUpdating}
+                                    className="flex-[2] py-4 bg-primary text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
                                 >
-                                    {isUpdating ? <Loader2 size={14} className="animate-spin" /> : 'Confirm Assignment'}
+                                    {isUpdating ? <Loader2 size={14} className="animate-spin" /> : 'Apply'}
                                 </button>
                             </div>
                         </motion.div>
@@ -529,3 +691,4 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
         </div>
     );
 }
+

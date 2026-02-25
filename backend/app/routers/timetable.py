@@ -151,6 +151,26 @@ def delete_timetable_slot(
     db.commit()
     return {"status": "success", "message": "Slot deleted successfully"}
 
+@router.patch("/bulk")
+def bulk_update_timetable_slots(
+    payload: schemas.TimetableSlotBulkUpdate,
+    db: Session = Depends(get_db),
+    admin_user: dict = Depends(check_timetable_management_access)
+):
+    """
+    Update multiple timetable slots at once.
+    Currently only supports updating subject_id.
+    """
+    updated_count = 0
+    for update_item in payload.updates:
+        slot = db.query(models.TimetableSlot).filter(models.TimetableSlot.id == update_item.id).first()
+        if slot:
+            slot.subject_id = update_item.subject_id
+            updated_count += 1
+    
+    db.commit()
+    return {"status": "success", "message": f"Successfully updated {updated_count} slots."}
+
 @router.patch("/{slot_id}", response_model=schemas.TimetableSlotResponse)
 def update_timetable_slot(
     slot_id: UUID,

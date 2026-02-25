@@ -57,12 +57,13 @@ export default function AuthPage() {
             
             await activeStrategy.authenticateWithRedirect({
                 strategy: 'oauth_google',
-                redirectUrl: '/sso-callback',
-                redirectUrlComplete: '/',
+                redirectUrl: `${window.location.origin}/sso-callback`,
+                redirectUrlComplete: window.location.origin,
             });
         } catch (err: any) {
             console.error("[AUTH] Google Redirect Error:", err);
-            setError('Failed to initialize Google security protocol. Please try again.');
+            const detail = err.errors?.[0]?.message || err.message || 'Unknown initialization error';
+            setError(`Security protocol failed: ${detail}. Please refresh and try again.`);
             setLoadingSocial(false);
         }
     };

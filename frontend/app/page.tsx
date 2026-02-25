@@ -12,6 +12,7 @@ import { AdminInsights } from '@/components/dashboard/AdminInsights';
 import { SuperAdminPanel } from '@/components/dashboard/SuperAdminPanel';
 import { ActivityLedger } from '@/components/dashboard/ActivityLedger';
 import { QuickActionsPanel } from '@/components/dashboard/QuickActionsPanel';
+import { AnnouncementFeed } from '@/components/dashboard/AnnouncementFeed';
 
 export default function DashboardPage() {
     const { getToken } = useAuth();
@@ -71,10 +72,10 @@ export default function DashboardPage() {
     return (
         <div className="space-y-10 animate-in fade-in duration-700">
             {/* Top Bar / Welcome */}
-            <DashboardHeader 
-                role={role} 
-                userName={user?.fullName || userProfile?.full_name} 
-                onRefresh={loadDashboardData} 
+            <DashboardHeader
+                role={role}
+                userName={user?.fullName || userProfile?.full_name}
+                onRefresh={loadDashboardData}
             />
 
             {/* Quick Stats Grid */}
@@ -82,31 +83,38 @@ export default function DashboardPage() {
 
             {/* Insights Row for Admin/Super Admin */}
             {(role === 'admin' || role === 'SUPER_ADMIN') && (
-                <AdminInsights 
-                    trends={analytics?.trends} 
-                    topBooks={analytics?.top_books} 
+                <AdminInsights
+                    trends={analytics?.trends}
+                    topBooks={analytics?.top_books}
                     securityEvents={analytics?.recent_security_events}
-                    isSuperAdmin={role === 'SUPER_ADMIN'} 
+                    isSuperAdmin={role === 'SUPER_ADMIN'}
                 />
             )}
 
             {/* Super Admin Special Panel */}
             {role === 'SUPER_ADMIN' && (
-                <SuperAdminPanel 
-                    pendingRegistrations={analytics?.stats?.pending_registrations} 
-                    systemConfig={analytics?.system_config} 
+                <SuperAdminPanel
+                    pendingRegistrations={analytics?.stats?.pending_registrations}
+                    systemConfig={analytics?.system_config}
                 />
+            )}
+
+            {/* Broadcast & Communications */}
+            {(role === 'admin' || role === 'SUPER_ADMIN' || role === 'teacher' || role === 'librarian') && (
+                <div className="grid grid-cols-1 gap-8">
+                    <AnnouncementFeed role={role} />
+                </div>
             )}
 
             {/* Main Action Center */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <ActivityLedger 
-                    role={role} 
-                    recentActivity={recentActivity} 
+                <ActivityLedger
+                    role={role}
+                    recentActivity={recentActivity}
                     recentAssignments={analytics?.recent_assignments}
-                    teacherStats={analytics?.stats} 
+                    teacherStats={analytics?.stats}
                 />
-                
+
                 <QuickActionsPanel role={role} />
             </div>
 

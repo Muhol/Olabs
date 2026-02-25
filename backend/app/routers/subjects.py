@@ -36,6 +36,17 @@ def list_subjects(
 ):
     return service.get_subjects(db, skip=skip, limit=limit, search=search, available_for_teacher_id=available_for_teacher)
 
+@router.get("/all")
+def get_all_subjects(
+    search: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(auth.get_current_user)
+):
+    """
+    Get all subjects without pagination.
+    """
+    return service.get_all_subjects(db, search=search)
+
 @router.get("/by-class-stream")
 def get_subjects_by_class_stream(
     class_id: str,
@@ -124,6 +135,17 @@ def assign_to_teacher_with_classes(
         raise HTTPException(status_code=404, detail="Teacher not found")
     return {"message": "Subjects assigned successfully", "assignments": result}
 
+@router.post("/batch-update-teacher")
+def batch_update_teacher(
+    data: schemas.BatchTeacherAssignment,
+    db: Session = Depends(get_db),
+    admin_user: dict = Depends(check_subject_management_access)
+):
+    """Batch update multiple teacher-subject assignments."""
+    if not service.batch_update_teacher_assignments(db, data.assignments):
+        raise HTTPException(status_code=500, detail="Failed to perform batch assignment")
+    return {"message": "Batch assignment successful"}
+
 @router.get("/teacher/{teacher_id}/assignments")
 def get_teacher_assignments(
     teacher_id: str,
@@ -173,3 +195,14 @@ def get_enrolled_student_ids(
         raise HTTPException(status_code=403, detail="Access denied.")
         
     return service.get_enrolled_student_ids(db, subject_id)
+
+@router.delete("/all/danger")
+def delete_all_subjects(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(auth.get_current_user)
+):
+    """Danger Zone: Delete all subjects. Super Admin Only."""
+    if current_user.get("role") != "SUPER_ADMIN":
+        raise HTTPException(status_code=403, detail="Only Super Admin can perform this action")
+    service.delete_all_subjects(db)
+    return {"message": "All subjects have been purged from the system"}

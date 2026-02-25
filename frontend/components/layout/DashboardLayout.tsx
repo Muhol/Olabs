@@ -16,7 +16,8 @@ import {
     GraduationCap,
     Library,
     CheckCircle2,
-    Wrench
+    Wrench,
+    Megaphone
 } from 'lucide-react';
 import { UserButton, useUser, useAuth } from "@clerk/nextjs";
 import { usePathname } from 'next/navigation';
@@ -31,6 +32,7 @@ const sidebarItems = [
     { icon: GraduationCap, label: 'My Class', href: '/teachers/my-class', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
     { icon: CheckCircle2, label: 'Subject Enrollment', href: '/teachers/enrollment', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
     { icon: FileText, label: 'Assignments', href: '/teachers/assignments', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
+    { icon: Megaphone, label: 'Announcements', href: '/announcements', roles: ['teacher', 'admin', 'SUPER_ADMIN'] },
     { icon: Library, label: 'Library Books', href: '/inventory', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: Users, label: 'Students', href: '/students', roles: ['librarian', 'admin', 'SUPER_ADMIN'] },
     { icon: Briefcase, label: 'Staff', href: '/staff', roles: ['admin', 'SUPER_ADMIN'] },

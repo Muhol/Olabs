@@ -25,10 +25,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
             setLoadingSystemUser(false);
             return;
         }
-
+        
         if (isLoaded && user) {
+            // console.log("System User: fetching...");
+            const token = await getToken();
+            // console.log("Token:", token);
             try {
-                const token = await getToken();
                 if (token) {
                     const dbUser = await fetchCurrentUser(token);
                     setSystemUser(dbUser);
@@ -52,6 +54,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         syncUser();
     }, [isLoaded, user, getToken]);
 
+    // console.log("System User:", systemUser);    
     // const userRole = systemUser?.role || "none";
     const userRole = systemUser?.role;
 

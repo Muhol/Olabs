@@ -252,30 +252,58 @@ export default function StudentDashboard() {
           <h2 className="text-xl font-black flex items-center gap-3 uppercase tracking-tight text-foreground">
             <Bell className="w-5 h-5 text-primary" /> Announcements
           </h2>
-          <div className="space-y-5">
+          <div className="space-y-5 max-h-[400px] overflow-y-auto">
             {(data?.announcements || []).length > 0 ? (
-              (data?.announcements || []).map((ann: any) => (
-                <div key={ann.id} className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-secondary/30 transition-all shadow-sm">
-                  <div className="p-4 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="px-2 py-0.5 bg-secondary/10 text-secondary text-[8px] font-black uppercase rounded border border-secondary/20 tracking-[0.1em]">
-                        {ann.subject_name || "General"}
-                      </span>
-                      <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
-                        {new Date(ann.created_at).toLocaleDateString()}
-                      </span>
+              (data?.announcements || []).map((ann: any) => {
+                const getCategoryStyles = (category: string) => {
+                  switch (category) {
+                    case 'SCHOOL': return 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20';
+                    case 'STREAM': return 'bg-amber-500/10 text-amber-500 border-amber-500/20';
+                    case 'SUBJECT': return 'bg-blue-500/10 text-blue-500 border-blue-500/20';
+                    default: return 'bg-muted text-muted-foreground border-border';
+                  }
+                };
+
+                return (
+                  <div key={ann.id} className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-primary/30 transition-all shadow-sm relative group/ann">
+                    <div className="p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className={`px-2 py-0.5 text-[8px] font-black uppercase rounded border tracking-[0.1em] ${getCategoryStyles(ann.category)}`}>
+                            {ann.target_name || ann.category}
+                          </span>
+                          {ann.category === 'STREAM' && <span className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-widest italic">Stream Dispatch</span>}
+                          {ann.category === 'SUBJECT' && <span className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-widest italic">Academic Alert</span>}
+                        </div>
+                        <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
+                          {new Date(ann.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="text-base font-black text-foreground group-hover/ann:text-primary transition-colors uppercase leading-tight line-clamp-1">{ann.title}</h3>
+                        <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{ann.content}</p>
+                      </div>
+                      <div className="flex items-center gap-2 pt-1 border-t border-border/10">
+                        <div className="w-5 h-5 rounded-full bg-muted flex items-center justify-center text-primary group-hover/ann:bg-primary group-hover/ann:text-white transition-all">
+                          <User size={10} />
+                        </div>
+                        <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">
+                          {ann.author_name}
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="text-base font-black text-foreground group-hover:text-primary transition-colors uppercase leading-tight line-clamp-1">{ann.title}</h3>
-                    <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{ann.content}</p>
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="p-20 text-center bg-muted/10 border border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center opacity-70">
                 <Bell className="w-10 h-10 mb-4 text-muted-foreground" />
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">No New Announcements</p>
               </div>
             )}
+              <div className="w-full z-10 h-[100px] bg-gradient-to-t from-background to-transparent sticky -bottom-1 left-0 right-0"></div>
+            {/* {(data?.announcements || []).length > 0 && (
+            )} */}
           </div>
         </section>
       </div>

@@ -14,9 +14,27 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Do not cache authentication paths or API calls
+  if (
+    url.pathname.startsWith('/auth') || 
+    url.pathname.startsWith('/sso-callback') ||
+    url.pathname.startsWith('/api') ||
+    url.hostname.includes('clerk')
+  ) {
+    return;
+  }
+
+  // Network-First Strategy for everything else
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
+    fetch(event.request)
+      .then((response) => {
+        // Optional: Update cache with the new version
+        return response;
+      })
+      .catch(() => {
+        return caches.match(event.request);
+      })
   );
 });

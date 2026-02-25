@@ -3,6 +3,7 @@ from sqlalchemy import and_
 from typing import List, Optional
 from .. import models, schemas
 import uuid
+from uuid import UUID
 
 from sqlalchemy.exc import IntegrityError
 
@@ -50,6 +51,41 @@ def get_subjects(db: Session, skip: int = 0, limit: int = 100, search: Optional[
             "assigned_teacher_id": str(subj.teacher_assignments[0].teacher_id) if subj.teacher_assignments else None
         })
     return {"total": total, "items": res}
+
+def get_all_subjects(db: Session, search: Optional[str] = None):
+    query = db.query(models.Subject)
+    
+    if search:
+        search_f = f"%{search}%"
+        # Join with classes and streams for multi-field search
+        query = query.join(models.Class, models.Subject.class_id == models.Class.id, isouter=True) \
+                     .join(models.Stream, models.Subject.stream_id == models.Stream.id, isouter=True)
+        
+        query = query.filter(
+            or_(
+                models.Subject.name.ilike(search_f),
+                models.Class.name.ilike(search_f),
+                models.Stream.name.ilike(search_f)
+            )
+        )
+        
+    subjects = query.all()
+    
+    res = []
+    for subj in subjects:
+        res.append({
+            "id": str(subj.id),
+            "name": subj.name,
+            "is_compulsory": subj.is_compulsory,
+            "class_id": str(subj.class_id),
+            "class_name": subj.assigned_class.name if subj.assigned_class else None,
+            "stream_id": str(subj.stream_id) if subj.stream_id else None,
+            "stream_name": subj.assigned_stream.name if subj.assigned_stream else None,
+            "student_count": subj.student_count,
+            "assigned_teacher_id": str(subj.teacher_assignments[0].teacher_id) if subj.teacher_assignments else None,
+            "assigned_teacher_name": subj.teacher_assignments[0].teacher.full_name if subj.teacher_assignments and subj.teacher_assignments[0].teacher else None
+        })
+    return res
 
 def get_subjects_by_class_and_stream(db: Session, class_id: str, stream_id: Optional[str] = None):
     """
@@ -131,6 +167,27 @@ def update_subject(db: Session, subject_id: str, subject_update: schemas.Subject
         return None
     
     update_data = subject_update.dict(exclude_unset=True)
+    
+    # Handle teacher assignment separately since it's a different table
+    if 'teacher_id' in update_data:
+        teacher_id = update_data.pop('teacher_id')
+        
+        # Remove existing assignment
+        db.query(models.TeacherSubjectAssignment).filter(
+            models.TeacherSubjectAssignment.subject_id == subject_id
+        ).delete()
+        
+        # Create new if teacher_id is provided
+        if teacher_id:
+            db_assignment = models.TeacherSubjectAssignment(
+                teacher_id=teacher_id,
+                subject_id=subject_id,
+                class_id=db_subject.class_id,
+                stream_id=db_subject.stream_id
+            )
+            db.add(db_assignment)
+
+    # Update base subject fields
     for key, value in update_data.items():
         setattr(db_subject, key, value)
     
@@ -248,6 +305,34 @@ def get_teacher_subject_assignments(db: Session, teacher_id: str):
         })
     return res
 
+def batch_update_teacher_assignments(db: Session, assignments: List[schemas.SubjectTeacherPair]):
+    """
+    Update multiple teacher-subject assignments in a single transaction.
+    Clears existing assignments for each subject provided.
+    """
+    for pair in assignments:
+        db_subject = db.query(models.Subject).filter(models.Subject.id == pair.subject_id).first()
+        if not db_subject:
+            continue
+            
+        # Remove existing assignment for this subject
+        db.query(models.TeacherSubjectAssignment).filter(
+            models.TeacherSubjectAssignment.subject_id == pair.subject_id
+        ).delete()
+        
+        # Create new assignment if teacher_id is provided
+        if pair.teacher_id:
+            db_assignment = models.TeacherSubjectAssignment(
+                teacher_id=pair.teacher_id,
+                subject_id=pair.subject_id,
+                class_id=db_subject.class_id,
+                stream_id=db_subject.stream_id
+            )
+            db.add(db_assignment)
+    
+    db.commit()
+    return True
+
 def enroll_students_in_subject(db: Session, subject_id: str, student_ids: List[str]):
     subject = db.query(models.Subject).filter(models.Subject.id == subject_id).first()
     if not subject:
@@ -265,3 +350,11 @@ def get_enrolled_student_ids(db: Session, subject_id: str):
     if not subject:
         return []
     return [str(s.id) for s in subject.assigned_students]
+
+def delete_all_subjects(db: Session):
+    """Deletes all subjects and associated data (via cascades)"""
+    subjects = db.query(models.Subject).all()
+    for s in subjects:
+        db.delete(s)
+    db.commit()
+    return True

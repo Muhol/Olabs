@@ -33,7 +33,11 @@ export default function StudentOnboardPage() {
       setFullName(data.full_name);
       setStep(2);
     } catch (err: any) {
-      setError(err.message);
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        setError("Network Error: Could not reach the server. Please check your internet connection or ensure the API is running.");
+      } else {
+        setError(err.message || "An unexpected error occurred during verification.");
+      }
     } finally {
       setLoading(false);
     }
@@ -63,7 +67,11 @@ export default function StudentOnboardPage() {
       localStorage.setItem("student_token", data.access_token);
       setStep(3);
     } catch (err: any) {
-      setError(err.message);
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        setError("Network Error: Could not reach the server. Please check your connection.");
+      } else {
+        setError(err.message || "Activation failed.");
+      }
     } finally {
       setLoading(false);
     }

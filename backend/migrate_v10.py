@@ -1,5 +1,5 @@
 """
-Migration script to add day_of_week and type to timetable_slots table.
+Migration script to add missing columns to exam_results table.
 """
 
 from sqlalchemy import create_engine, text
@@ -16,34 +16,36 @@ engine = create_engine(DATABASE_URL)
 
 def migrate():
     with engine.connect() as conn:
-        print("Starting migration: Adding day_of_week and type to timetable_slots...")
+        print("Starting migration: Adding missing columns to exam_results table...")
         
-        # 1. Add day_of_week
-        result = conn.execute(text("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name='timetable_slots' AND column_name='day_of_week';
-        """))
-        if result.rowcount == 0:
-            print("Adding column 'day_of_week'...")
-            conn.execute(text("ALTER TABLE timetable_slots ADD COLUMN day_of_week INTEGER;"))
-        else:
-            print("Column 'day_of_week' already exists.")
-
-        # 2. Add type
-        result = conn.execute(text("""
-            SELECT column_name 
-            FROM information_schema.columns 
-            WHERE table_name='timetable_slots' AND column_name='type';
-        """))
-        if result.rowcount == 0:
-            print("Adding column 'type'...")
-            conn.execute(text("ALTER TABLE timetable_slots ADD COLUMN type VARCHAR;"))
-        else:
-            print("Column 'type' already exists.")
+        # Define columns to add
+        columns = [
+            ("max_score", "FLOAT"),
+            ("weight", "FLOAT"),
+            ("grade", "VARCHAR"),
+            ("performance_level", "cbc_level_enum"),
+            ("competency_score", "FLOAT"),
+            ("remarks", "TEXT")
+        ]
+        
+        for col_name, col_type in columns:
+            print(f"Checking column {col_name}...")
+            # Check if column exists
+            check_query = text(f"""
+                SELECT count(*) FROM information_schema.columns 
+                WHERE table_name='exam_results' AND column_name='{col_name}';
+            """)
+            result = conn.execute(check_query).scalar()
+            
+            if result == 0:
+                print(f"Adding column {col_name} ({col_type})...")
+                alter_query = text(f"ALTER TABLE exam_results ADD COLUMN {col_name} {col_type};")
+                conn.execute(alter_query)
+                print(f"✓ Column {col_name} added.")
+            else:
+                print(f"Column {col_name} already exists.")
 
         conn.commit()
-        print("✓ Columns added successfully")
         print("\nMigration completed successfully!")
 
 if __name__ == "__main__":

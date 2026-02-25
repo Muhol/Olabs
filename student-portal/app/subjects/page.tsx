@@ -259,16 +259,34 @@ export default function StudentSubjects() {
                         <h4 className="font-black text-[10px] text-muted-foreground uppercase tracking-[0.25em] px-1">
                           Recent Announcements
                         </h4>
-                        <div className="space-y-2">
-                          {selectedSubject.announcements.map((ann: any) => (
-                            <div key={ann.id} className="p-3 border-l-4 border-secondary bg-secondary/5 rounded-r-xl space-y-1.5">
-                              <p className="text-[9px] font-black text-foreground uppercase tracking-[0.08em]">{ann.title}</p>
-                              <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{ann.content}</p>
-                              <p className="text-[7px] font-black text-muted-foreground uppercase tracking-wider pt-1">
-                                {new Date(ann.created_at).toLocaleDateString()}
-                              </p>
+                        <div className="space-y-3">
+                          {selectedSubject.announcements.length > 0 ? (
+                            selectedSubject.announcements.map((ann: any) => (
+                              <div key={ann.id} className="p-3 border-l-4 border-primary bg-primary/5 rounded-r-xl space-y-2 group/ann">
+                                <div>
+                                  <p className="text-[9px] font-black text-foreground uppercase tracking-[0.08em] group-hover/ann:text-primary transition-colors">{ann.title}</p>
+                                  <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">{ann.content}</p>
+                                </div>
+                                <div className="flex items-center justify-between pt-1 border-t border-primary/10">
+                                  <div className="flex items-center gap-1.5">
+                                    <div className="w-4 h-4 rounded-full bg-muted flex items-center justify-center text-primary group-hover/ann:bg-primary group-hover/ann:text-white transition-all">
+                                      <User size={8} />
+                                    </div>
+                                    <span className="text-[7px] font-black text-muted-foreground uppercase tracking-widest">
+                                      {ann.author_name}
+                                    </span>
+                                  </div>
+                                  <p className="text-[7px] font-black text-muted-foreground/60 uppercase tracking-wider">
+                                    {new Date(ann.created_at).toLocaleDateString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="p-6 text-center bg-muted/20 border border-dashed border-border rounded-xl opacity-60">
+                              <p className="text-[8px] font-black uppercase tracking-wider text-muted-foreground">No Announcements</p>
                             </div>
-                          ))}
+                          )}
                         </div>
                       </section>
                     </div>

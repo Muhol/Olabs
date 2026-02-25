@@ -17,13 +17,27 @@ import {
     Calendar,
     Zap,
     GraduationCap,
-    Clock
+    Clock,
+    FileText,
+    Brain
 } from 'lucide-react';
 import { fetchStudents, fetchClasses, fetchStreams, getTeacherSubjectAssignments, fetchTimetableByStream } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import StudentDetailsModal from '@/components/modals/StudentDetailsModal';
 import AttendanceModal from '@/components/modals/AttendanceModal';
+import ClassScoreSheetModal from '@/components/modals/ClassScoreSheetModal';
+import TermReportEntryModal from '@/components/modals/TermReportEntryModal';
+import ReportCardModal from '@/components/modals/ReportCardModal';
+import GradingView from '@/components/cbc/GradingView';
+import {
+    fetchCompetencies,
+    fetchSubjectCompetencies,
+    createCompetencyAssessment,
+    createSubjectSummary,
+    fetchStudentAssessments,
+    createExamResult
+} from '@/lib/api';
 
 export default function MyClassPage() {
     const { getToken } = useAuth();
@@ -35,7 +49,7 @@ export default function MyClassPage() {
     const [assignmentInfo, setAssignmentInfo] = useState<{ className: string; streamName: string } | null>(null);
 
     // Subjects tab state
-    const [activeTab, setActiveTab] = useState<'students' | 'subjects' | 'timetable'>('students');
+    const [activeTab, setActiveTab] = useState<'students' | 'subjects' | 'timetable' | 'grading'>('students');
     const [teacherSubjects, setTeacherSubjects] = useState<any[]>([]);
     const [selectedSubject, setSelectedSubject] = useState<string | null>(null);
     const [subjectsLoading, setSubjectsLoading] = useState(false);
@@ -46,6 +60,15 @@ export default function MyClassPage() {
     // Timetable state
     const [timetable, setTimetable] = useState<any[]>([]);
     const [timetableLoading, setTimetableLoading] = useState(false);
+
+    // Score Sheet State
+    const [showScoreSheet, setShowScoreSheet] = useState(false);
+
+    // Report Card State
+    const [managingReportStudent, setManagingReportStudent] = useState<any>(null);
+    const [viewingReportStudent, setViewingReportStudent] = useState<any>(null);
+    const [currentTerm, setCurrentTerm] = useState(`Term ${Math.ceil((new Date().getMonth() + 1) / 4)}`);
+    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
     // Pagination & Search State
     const [search, setSearch] = useState('');
@@ -254,9 +277,20 @@ export default function MyClassPage() {
                 </div>
 
 
-                <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95 self-start md:self-center">
-                    <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-                </button>
+                <div className="flex items-center gap-3 self-start md:self-center">
+                    {classId && (
+                        <button
+                            onClick={() => setShowScoreSheet(true)}
+                            className="flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-indigo-500/20"
+                        >
+                            <FileText size={16} />
+                            Class Score Sheet
+                        </button>
+                    )}
+                    <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
+                        <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+                    </button>
+                </div>
             </div>
 
 
@@ -336,6 +370,18 @@ export default function MyClassPage() {
                     >
                         <Calendar size={16} />
                         Class Timetable
+                    </button>
+                )}
+                {selectedSubject && (
+                    <button
+                        onClick={() => setActiveTab('grading')}
+                        className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'grading'
+                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        <GraduationCap size={16} />
+                        Grading (CBC)
                     </button>
                 )}
             </div>
@@ -423,21 +469,16 @@ export default function MyClassPage() {
                                         <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Admission No.</th>
                                         <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Student Name</th>
                                         <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Stream</th>
+                                        <th className="px-8 py-6 text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Academic Portal</th>
                                         <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-white/5">
                                     {students
-                                        .filter(student => {
-                                            // Client-side filtering is no longer strictly necessary if backend filters correctly
-                                            // But for safety, we can leave basic checks or remove logic that relied on 'is_compulsory'
-                                            // Actually, the backend now returns ONLY enrolled students.
-                                            // So we can just show them all.
-                                            return true;
-                                        })
+                                        .filter(student => true)
                                         .length === 0 ? (
                                         <tr>
-                                            <td colSpan={4} className="py-20 text-center text-muted-foreground font-black uppercase tracking-widest text-xs">
+                                            <td colSpan={5} className="py-20 text-center text-muted-foreground font-black uppercase tracking-widest text-xs">
                                                 {selectedSubject ? 'No students linked to this subject' : 'No students found in this stream'}
                                             </td>
                                         </tr>
@@ -446,16 +487,15 @@ export default function MyClassPage() {
                                             .map((student) => (
                                                 <tr
                                                     key={student.id}
-                                                    onClick={() => setViewingStudent(student)}
-                                                    className="hover:bg-muted/30 transition-colors group border-b border-border/50 cursor-pointer"
+                                                    className="hover:bg-muted/30 transition-colors group border-b border-border/50"
                                                 >
-                                                    <td className="px-8 py-4">
-                                                        <span className="font-black text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">
+                                                    <td className="px-8 py-4" onClick={() => setViewingStudent(student)}>
+                                                        <span className="font-black text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20 cursor-pointer">
                                                             {student.admission_number}
                                                         </span>
                                                     </td>
-                                                    <td className="px-8 py-4">
-                                                        <div className="flex items-center gap-3">
+                                                    <td className="px-8 py-4" onClick={() => setViewingStudent(student)}>
+                                                        <div className="flex items-center gap-3 cursor-pointer">
                                                             <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-all">
                                                                 <UserCircle2 size={24} />
                                                             </div>
@@ -465,6 +505,34 @@ export default function MyClassPage() {
                                                     <td className="px-8 py-4">
                                                         <div className="flex items-center gap-2 text-primary font-black text-xs">
                                                             <Layers size={14} /> {student.stream || 'N/A'}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-4">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            {classId && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setManagingReportStudent(student);
+                                                                        }}
+                                                                        className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm border border-indigo-500/10"
+                                                                        title="Manage Term Assessment"
+                                                                    >
+                                                                        <Brain size={16} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setViewingReportStudent(student);
+                                                                        }}
+                                                                        className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm border border-emerald-500/10"
+                                                                        title="Generate Report Card"
+                                                                    >
+                                                                        <GraduationCap size={16} />
+                                                                    </button>
+                                                                </>
+                                                            )}
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-4 text-right">
@@ -738,6 +806,17 @@ export default function MyClassPage() {
                 </div>
             )}
 
+            {/* Grading Tab */}
+            {activeTab === 'grading' && selectedSubject && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                    <GradingView
+                        subjectId={selectedSubject}
+                        subject={teacherSubjects.find(s => s.subject_id === selectedSubject)}
+                        tokenGetter={getToken}
+                    />
+                </div>
+            )}
+
             <AnimatePresence>
                 {viewingStudent && (
                     <StudentDetailsModal
@@ -759,6 +838,32 @@ export default function MyClassPage() {
                         onSuccess={() => {
                             // Optionally reload data or show success toast
                         }}
+                    />
+                )}
+                {showScoreSheet && (
+                    <ClassScoreSheetModal
+                        tokenGetter={getToken}
+                        onClose={() => setShowScoreSheet(false)}
+                    />
+                )}
+                {managingReportStudent && (
+                    <TermReportEntryModal
+                        studentId={managingReportStudent.id}
+                        studentName={managingReportStudent.full_name}
+                        term={currentTerm}
+                        year={currentYear}
+                        tokenGetter={getToken}
+                        onClose={() => setManagingReportStudent(null)}
+                    />
+                )}
+                {viewingReportStudent && (
+                    <ReportCardModal
+                        studentId={viewingReportStudent.id}
+                        studentName={viewingReportStudent.full_name}
+                        term={currentTerm}
+                        year={currentYear}
+                        tokenGetter={getToken}
+                        onClose={() => setViewingReportStudent(null)}
                     />
                 )}
             </AnimatePresence>

@@ -42,12 +42,42 @@ def get_student_dashboard(
     attendance_percentage = (present_attendance / total_attendance * 100) if total_attendance > 0 else 100.0
 
     # 4. Announcements
+    from sqlalchemy import or_
     announcements = db.query(models.Announcement).filter(
-        (models.Announcement.subject_id == None) | # School-wide
-        models.Announcement.subject_id.in_(
-            db.query(models.Subject.id).filter(models.Subject.assigned_students.any(id=current_student.id))
+        or_(
+            models.Announcement.category == "SCHOOL",
+            (models.Announcement.category == "STREAM") & (models.Announcement.stream_id == current_student.stream_id),
+            (models.Announcement.category == "SUBJECT") & models.Announcement.subject_id.in_(
+                db.query(models.Subject.id).filter(models.Subject.assigned_students.any(id=current_student.id))
+            )
         )
     ).order_by(models.Announcement.created_at.desc()).limit(5).all()
+    
+    # Populate names for response
+    for ann in announcements:
+        ann.author_name = ann.author.full_name if ann.author else "Unknown"
+        ann.class_name = ann.assigned_class.name if ann.assigned_class else None
+        ann.stream_name = ann.assigned_stream.name if ann.assigned_stream else None
+        ann.subject_name = ann.subject.name if ann.subject else None
+        
+        # Friendly target name
+        if ann.category == "SCHOOL":
+            ann.target_name = "Whole School"
+        elif ann.category == "STREAM" and ann.assigned_stream:
+            class_obj = ann.assigned_class or ann.assigned_stream.parent_class
+            class_name = class_obj.name if class_obj else ""
+            ann.target_name = f"{class_name}. {ann.assigned_stream.name}".strip(". ")
+        elif ann.category == "SUBJECT" and ann.subject:
+            class_name = ann.assigned_class.name if ann.assigned_class else (ann.subject.assigned_class.name if ann.subject.assigned_class else "")
+            stream_name = ann.assigned_stream.name if ann.assigned_stream else (ann.subject.assigned_stream.name if ann.subject.assigned_stream else "")
+            
+            target = f"{ann.subject.name}"
+            context = f"{class_name}. {stream_name}".strip(". ")
+            if context:
+                target += f" ({context})"
+            ann.target_name = target
+        elif ann.category == "STAFF":
+            ann.target_name = "Staff Only"
 
     # 5. Timetable preview
     # Get iso day (1-7), but our system uses 1-6 (Mon-Sat)
@@ -155,8 +185,29 @@ def get_subject_details(
     ).scalar()
 
     announcements = db.query(models.Announcement).filter(
-        models.Announcement.subject_id == subject_id
+        models.Announcement.subject_id == subject_id,
+        models.Announcement.category == "SUBJECT"
     ).order_by(models.Announcement.created_at.desc()).all()
+    
+    # Populate names for response
+    for ann in announcements:
+        ann.author_name = ann.author.full_name if ann.author else "Unknown"
+        ann.class_name = ann.assigned_class.name if ann.assigned_class else None
+        ann.stream_name = ann.assigned_stream.name if ann.assigned_stream else None
+        ann.subject_name = ann.subject.name if ann.subject else None
+        
+        # Friendly target name
+        if ann.category == "SUBJECT" and ann.subject:
+            class_name = ann.assigned_class.name if ann.assigned_class else (ann.subject.assigned_class.name if ann.subject.assigned_class else "")
+            stream_name = ann.assigned_stream.name if ann.assigned_stream else (ann.subject.assigned_stream.name if ann.subject.assigned_stream else "")
+            
+            target = f"{ann.subject.name}"
+            context = f"{class_name}. {stream_name}".strip(". ")
+            if context:
+                target += f" ({context})"
+            ann.target_name = target
+        else:
+            ann.target_name = "Subject Target"
 
     materials = db.query(models.CourseMaterial).filter(
         models.CourseMaterial.subject_id == subject_id
@@ -190,28 +241,69 @@ def get_all_results(
     current_student: models.Student = Depends(get_current_student),
     db: Session = Depends(database.get_db)
 ):
-    # Grouped by year then term
-    raw_results = db.query(models.ExamResult).join(models.Subject).filter(
+    # Fetch all data
+    exam_results = db.query(models.ExamResult).join(models.Subject).filter(
         models.ExamResult.student_id == current_student.id
     ).all()
     
+    term_summaries = db.query(models.SubjectTermResult).join(models.Subject).filter(
+        models.SubjectTermResult.student_id == current_student.id
+    ).all()
+    
     grouped = {}
-    for res in raw_results:
+    
+    # 1. Initialize structure and collect unique exams per term
+    for res in exam_results:
         year = str(res.year)
         term = res.term
         if year not in grouped:
             grouped[year] = {}
         if term not in grouped[year]:
-            grouped[year][term] = []
+            grouped[year][term] = {
+                "exams": set(),
+                "subjects": {}
+            }
         
-        grouped[year][term].append({
-            "subject": res.subject.name,
-            "type": res.exam_type,
-            "marks": res.marks,
-            "grade": res.grade,
-            "remarks": res.remarks
-        })
-    return grouped
+        exam_name = res.exam.name if res.exam else "Assessment"
+        grouped[year][term]["exams"].add(exam_name)
+        
+        sub_id = str(res.subject_id)
+        if sub_id not in grouped[year][term]["subjects"]:
+            grouped[year][term]["subjects"][sub_id] = {
+                "name": res.subject.name,
+                "scores": {},
+                "grade": "N/A"
+            }
+        
+        grouped[year][term]["subjects"][sub_id]["scores"][exam_name] = res.marks
+
+    # 2. Add term summaries (calculated grade levels)
+    for summ in term_summaries:
+        year = str(summ.year)
+        term = summ.term
+        if year not in grouped: continue
+        if term not in grouped[year]: continue
+        
+        sub_id = str(summ.subject_id)
+        if sub_id in grouped[year][term]["subjects"]:
+            grouped[year][term]["subjects"][sub_id]["grade"] = summ.performance_level or "N/A"
+            grouped[year][term]["subjects"][sub_id]["average"] = summ.total_score
+
+    # 3. Finalize structure: Convert sets to sorted lists and subjects to lists
+    final_output = {}
+    for year, terms in grouped.items():
+        final_output[year] = {}
+        for term, data in terms.items():
+            # Sort exams (try to keep common ones like Opener, Mid-term, Final in order)
+            exam_order = ["Opener", "Mid-term", "Final"]
+            sorted_exams = sorted(list(data["exams"]), key=lambda x: exam_order.index(x) if x in exam_order else 99)
+            
+            final_output[year][term] = {
+                "exams": sorted_exams,
+                "subjects": sorted(list(data["subjects"].values()), key=lambda x: x["name"])
+            }
+
+    return final_output
 
 @router.get("/ledger")
 def get_fee_ledger(
@@ -222,3 +314,108 @@ def get_fee_ledger(
         models.FeeRecord.student_id == current_student.id
     ).order_by(models.FeeRecord.date.desc()).all()
     return records
+
+@router.get("/report-card")
+def get_student_report_card(
+    term: str,
+    year: int,
+    current_student: models.Student = Depends(get_current_student),
+    db: Session = Depends(database.get_db)
+):
+    """Return full CBC report card data for the logged-in student."""
+    student = current_student
+
+    # Resolve class teacher
+    class_teacher_name = "N/A"
+    if student.class_id:
+        class_teacher = db.query(models.User).filter(
+            models.User.assigned_class_id == student.class_id
+        ).first()
+        if class_teacher:
+            class_teacher_name = class_teacher.full_name
+
+    # Fetch TermReport
+    from sqlalchemy.orm import joinedload
+    term_report = db.query(models.TermReport).options(
+        joinedload(models.TermReport.entries).joinedload(models.TermReportEntry.item)
+    ).filter(
+        models.TermReport.student_id == student.id,
+        models.TermReport.term == term,
+        models.TermReport.year == year
+    ).first()
+
+    # Fetch Subject Results
+    subject_results = db.query(models.SubjectTermResult, models.Subject.name).join(
+        models.Subject, models.Subject.id == models.SubjectTermResult.subject_id
+    ).filter(
+        models.SubjectTermResult.student_id == student.id,
+        models.SubjectTermResult.term == term,
+        models.SubjectTermResult.year == year
+    ).all()
+
+    subjects_data = [
+        {
+            "subject_name": r.name,
+            "performance_level": r.SubjectTermResult.performance_level,
+            "total_score": r.SubjectTermResult.total_score,
+            "remarks": r.SubjectTermResult.remarks
+        }
+        for r in subject_results
+    ]
+
+    # Build the term report dict if exists
+    term_report_data = None
+    if term_report:
+        entries_data = [
+            {
+                "item_id": str(e.item_id),
+                "level": e.level,
+                "item": {"name": e.item.name, "type": e.item.type} if e.item else None
+            }
+            for e in term_report.entries
+        ]
+        term_report_data = {
+            "total_days": term_report.total_days,
+            "present_days": term_report.present_days,
+            "teacher_comment": term_report.teacher_comment,
+            "head_teacher_comment": term_report.head_teacher_comment,
+            "entries": entries_data
+        }
+
+    # Head teacher comment templates
+    from .. import models as m
+    htc_templates = {}
+    templates = db.query(m.HeadTeacherCommentTemplate).all()
+    for t in templates:
+        htc_templates[t.level] = t.comment
+
+    return {
+        "student": {
+            "full_name": student.full_name,
+            "admission_number": student.admission_number,
+            "grade": student.student_class.name if student.student_class else "N/A",
+            "stream": student.assigned_stream.name if student.assigned_stream else "N/A",
+            "class_teacher": class_teacher_name,
+        },
+        "term": term,
+        "year": year,
+        "subjects": subjects_data,
+        "term_report": term_report_data,
+        "htc_templates": htc_templates,
+    }
+
+@router.get("/report-card/available-terms")
+def get_available_terms(
+    current_student: models.Student = Depends(get_current_student),
+    db: Session = Depends(database.get_db)
+):
+    """Return a list of {term, year} combinations for which a term report exists."""
+    reports = db.query(
+        models.TermReport.term,
+        models.TermReport.year
+    ).filter(
+        models.TermReport.student_id == current_student.id
+    ).distinct().order_by(models.TermReport.year.desc(), models.TermReport.term.desc()).all()
+
+    return [{"term": r.term, "year": r.year} for r in reports]
+

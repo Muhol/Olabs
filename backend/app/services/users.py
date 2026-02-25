@@ -115,3 +115,31 @@ def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleU
         "subroles": [sr.subrole_name for sr in target_user.subroles],
         "assigned_subjects": [{"id": str(sb.id), "name": sb.name} for sb in target_user.assigned_subjects]
     }
+
+def get_user_details(db: Session, user_uuid: str):
+    user = db.query(models.User).filter(models.User.id == user_uuid).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "id": str(user.id),
+        "full_name": user.full_name,
+        "email": user.email,
+        "role": user.role,
+        "assigned_class_id": str(user.assigned_class_id) if user.assigned_class_id else None,
+        "assigned_class_name": user.assigned_class.name if user.assigned_class else None,
+        "assigned_stream_id": str(user.assigned_stream_id) if user.assigned_stream_id else None,
+        "assigned_stream_name": user.assigned_stream.name if user.assigned_stream else None,
+        "subroles": [sr.subrole_name for sr in user.subroles],
+        "subject_assignments": [
+            {
+                "id": str(sa.id),
+                "subject_id": str(sa.subject_id),
+                "subject_name": sa.subject.name,
+                "class_id": str(sa.class_id),
+                "class_name": sa.assigned_class.name if sa.assigned_class else None,
+                "stream_id": str(sa.stream_id) if sa.stream_id else None,
+                "stream_name": sa.assigned_stream.name if sa.assigned_stream else None
+            } for sa in user.subject_assignments
+        ]
+    }

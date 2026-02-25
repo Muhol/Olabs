@@ -35,7 +35,11 @@ export default function StudentLoginPage() {
       localStorage.setItem("student_token", data.access_token);
       router.push("/");
     } catch (err: any) {
-      setError(err.message);
+      if (err instanceof TypeError && err.message === "Failed to fetch") {
+        setError("Network Error: Could not reach the server. Please ensure the API is running and accessible.");
+      } else {
+        setError(err.message || "An error occurred during login.");
+      }
     } finally {
       setLoading(false);
     }

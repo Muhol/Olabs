@@ -9,8 +9,10 @@ import {
     ShieldCheck,
     AlertCircle,
     Loader2,
-    RefreshCw
+    RefreshCw,
+    GraduationCap
 } from 'lucide-react';
+import Link from 'next/link';
 import { fetchConfig, updateConfig, fetchCurrentUser } from '@/lib/api';
 
 import { useUserContext } from '@/context/UserContext';
@@ -37,7 +39,7 @@ export default function SettingsPage() {
         }
     }, [isLoaded, user, loadingSystemUser]);
 
-    const fetchSystemConfig = async()=> {
+    const fetchSystemConfig = async () => {
         const token = await getToken();
         if (!token) return;
 
@@ -183,6 +185,25 @@ export default function SettingsPage() {
                         <p className="text-[11px] text-slate-400 font-medium leading-relaxed">
                             Disabling Public Intake is the most secure configuration for institutional deployment. This will prevent new accounts from being created.
                         </p>
+                    </div>
+
+                    <div className="p-6 border border-white/10 rounded-3xl space-y-6">
+                        <div className="flex items-center gap-2 text-primary">
+                            <GraduationCap size={16} />
+                            <span className="font-black uppercase tracking-widest text-[10px]">Advanced Grading Configuration</span>
+                        </div>
+                        <div className="space-y-4">
+                            <h4 className="font-bold text-sm text-white">Institutional Exam Templates</h4>
+                            <p className="text-[11px] text-slate-400 leading-relaxed">
+                                Define standard exam types (Mid-term, Final) that will be enforced across all subjects for uniform report card generation.
+                            </p>
+                            <Link
+                                href="/settings/exams"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all text-primary"
+                            >
+                                <GraduationCap size={14} /> Configure Uniform Exams
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>

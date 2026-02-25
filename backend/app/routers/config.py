@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import text, inspect
 from typing import List, Optional
 from .. import database, schemas, models, auth
 from ..services.logs import log_action
+from ..database import engine
 
 router = APIRouter()
 
@@ -54,4 +56,49 @@ def check_policy(email: Optional[str] = None, db: Session = Depends(database.get
         return {"allowed": False, "reason": "Registration is currently restricted to invited personnel."}
             
     return {"allowed": True}
+
+@router.get("/db-status")
+def get_db_status(current_user: dict = Depends(auth.require_role(["SUPER_ADMIN"]))):
+    """Identifies redundant tables in the database compared to models."""
+    inspector = inspect(engine)
+    db_tables = set(inspector.get_table_names())
+    model_tables = set(models.Base.metadata.tables.keys())
+    
+    redundant = db_tables - model_tables - {'alembic_version'}
+    return {
+        "db_tables": list(db_tables),
+        "model_tables": list(model_tables),
+        "redundant_tables": list(redundant),
+        "status": "healthy" if not redundant else "action_required"
+    }
+
+@router.post("/db-cleanup")
+def cleanup_db(
+    payload: dict,
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.require_role(["SUPER_ADMIN"]))
+):
+    """Drops identified redundant tables."""
+    tables_to_drop = payload.get("tables", [])
+    if not tables_to_drop:
+        raise HTTPException(status_code=400, detail="No tables specified for deletion.")
+
+    # Safety check: only allow dropping tables that are actually redundant
+    inspector = inspect(engine)
+    db_tables = set(inspector.get_table_names())
+    model_tables = set(models.Base.metadata.tables.keys())
+    redundant = db_tables - model_tables - {'alembic_version'}
+    
+    unauthorized_drops = [t for t in tables_to_drop if t not in redundant]
+    if unauthorized_drops:
+        raise HTTPException(status_code=403, detail=f"Cannot drop tables defined in models: {unauthorized_drops}")
+
+    dropped = []
+    with engine.begin() as conn:
+        for table in tables_to_drop:
+            conn.execute(text(f"DROP TABLE IF EXISTS {table} CASCADE;"))
+            dropped.append(table)
+    
+    log_action(db, "critical", "db cleanup", current_user["email"], f"Dropped redundant database tables: {dropped}")
+    return {"message": "Cleanup successful", "dropped": dropped}
 

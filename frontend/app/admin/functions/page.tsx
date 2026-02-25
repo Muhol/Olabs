@@ -21,10 +21,30 @@ import {
     RefreshCw,
     UserCircle2,
     TriangleAlert,
-    Info
+    Info,
+    Brain,
+    Heart,
+    GripVertical,
+    Pencil,
+    Save,
+    Settings2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchClasses, fetchStreams, bulkCreateTimetableSlots, fetchStudents, resetStudentAccount } from '@/lib/api';
+import {
+    fetchClasses,
+    fetchStreams,
+    bulkCreateTimetableSlots,
+    fetchStudents,
+    resetStudentAccount,
+    fetchDBStatus,
+    cleanupDB,
+    fetchReportItems,
+    createReportItem,
+    updateReportItem,
+    deleteReportItem,
+    fetchHeadTeacherComments,
+    upsertHeadTeacherComment
+} from '@/lib/api';
 import TimetableModal from '@/components/admin/TimetableModal';
 
 const DAYS = [
@@ -38,7 +58,7 @@ const DAYS = [
 
 export default function AdminFunctionsPage() {
     const { getToken } = useAuth();
-    const [activeTab, setActiveTab] = useState<'timetabling' | 'account-management'>('timetabling');
+    const [activeTab, setActiveTab] = useState<'timetabling' | 'account-management' | 'system-maintenance' | 'report-items'>('timetabling');
     const [classes, setClasses] = useState<any[]>([]);
     const [streams, setStreams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -73,6 +93,27 @@ export default function AdminFunctionsPage() {
     const [searching, setSearching] = useState(false);
     const [resettingId, setResettingId] = useState<string | null>(null);
     const [confirmingResetStudent, setConfirmingResetStudent] = useState<any>(null);
+
+    // Database Maintenance State
+    const [dbStatus, setDbStatus] = useState<any>(null);
+    const [dbLoading, setDbLoading] = useState(false);
+    const [isCleanupConfirmOpen, setIsCleanupConfirmOpen] = useState(false);
+    const [isCleaning, setIsCleaning] = useState(false);
+
+    // Report Items State
+    const [reportItems, setReportItems] = useState<any[]>([]);
+    const [reportItemsLoading, setReportItemsLoading] = useState(false);
+    const [riEditingId, setRiEditingId] = useState<string | null>(null);
+    const [riShowForm, setRiShowForm] = useState<'competency' | 'value' | null>(null);
+    const [riFormName, setRiFormName] = useState('');
+    const [riFormType, setRiFormType] = useState<'competency' | 'value'>('competency');
+    const [riFormDescription, setRiFormDescription] = useState('');
+    const [riSaving, setRiSaving] = useState(false);
+
+    // Head Teacher Comments State
+    const [htcTemplates, setHtcTemplates] = useState<Record<string, string>>({ EE: '', ME: '', AE: '', BE: '' });
+    const [htcLoading, setHtcLoading] = useState(false);
+    const [htcSaving, setHtcSaving] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
         loadInitialData();
@@ -137,7 +178,7 @@ export default function AdminFunctionsPage() {
 
     const executeWipe = async () => {
         if (wipeConfirmationText !== "DELETE ALL TIMETABLES") return;
-        
+
         setIsClearing(true);
         setStatus({ type: 'none', message: '' });
         try {
@@ -217,13 +258,13 @@ export default function AdminFunctionsPage() {
     const handleStudentSearch = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!studentSearch.trim()) return;
-        
+
         setSearching(true);
         setStatus({ type: 'none', message: '' });
         try {
             const token = await getToken();
             if (!token) throw new Error("Authentication failed");
-            
+
             const data = await fetchStudents(token, 0, 10, studentSearch);
             setSearchResults(data.items);
         } catch (err: any) {
@@ -240,10 +281,10 @@ export default function AdminFunctionsPage() {
         try {
             const token = await getToken();
             if (!token) throw new Error("Authentication failed");
-            
+
             await resetStudentAccount(token, student.id);
             setStatus({ type: 'success', message: `Account for ${student.full_name} has been reset successfully.` });
-            
+
             // Update local state if needed (e.g., mark as not activated)
             setSearchResults(prev => prev.map(s => s.id === student.id ? { ...s, activated: false } : s));
             setConfirmingResetStudent(null);
@@ -252,6 +293,136 @@ export default function AdminFunctionsPage() {
             setStatus({ type: 'error', message: 'Account reset failed: ' + err.message });
         } finally {
             setResettingId(null);
+        }
+    };
+
+    const loadDBStatus = async () => {
+        setDbLoading(true);
+        setStatus({ type: 'none', message: '' });
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Authentication failed");
+            const data = await fetchDBStatus(token);
+            setDbStatus(data);
+        } catch (err: any) {
+            console.error('Failed to load DB status', err);
+            setStatus({ type: 'error', message: 'Failed to inspect database: ' + err.message });
+        } finally {
+            setDbLoading(false);
+        }
+    };
+
+    const executeCleanup = async () => {
+        if (!dbStatus?.redundant_tables?.length) return;
+        setIsCleaning(true);
+        setStatus({ type: 'none', message: '' });
+        try {
+            const token = await getToken();
+            if (!token) throw new Error("Authentication failed");
+            await cleanupDB(token, dbStatus.redundant_tables);
+            setStatus({ type: 'success', message: `Successfully removed ${dbStatus.redundant_tables.length} redundant tables.` });
+            setDbStatus(null); // Force reload
+            setIsCleanupConfirmOpen(false);
+            await loadDBStatus();
+        } catch (err: any) {
+            console.error('Cleanup failed', err);
+            setStatus({ type: 'error', message: 'Cleanup failed: ' + err.message });
+        } finally {
+            setIsCleaning(false);
+        }
+    };
+
+    useEffect(() => {
+        if (activeTab === 'system-maintenance' && !dbStatus && !dbLoading) {
+            loadDBStatus();
+        }
+        if (activeTab === 'report-items' && reportItems.length === 0 && !reportItemsLoading) {
+            loadReportItems();
+            loadHeadTeacherComments();
+        }
+    }, [activeTab]);
+
+    const loadHeadTeacherComments = async () => {
+        setHtcLoading(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            const data = await fetchHeadTeacherComments(token);
+            const map: Record<string, string> = { EE: '', ME: '', AE: '', BE: '' };
+            data.forEach((t: any) => { map[t.level] = t.comment; });
+            setHtcTemplates(map);
+        } catch (e: any) {
+            setStatus({ type: 'error', message: e.message });
+        } finally {
+            setHtcLoading(false);
+        }
+    };
+
+    const loadReportItems = async () => {
+        setReportItemsLoading(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            setReportItems(await fetchReportItems(token));
+        } catch (e: any) {
+            setStatus({ type: 'error', message: e.message });
+        } finally {
+            setReportItemsLoading(false);
+        }
+    };
+
+    const riResetForm = () => { setRiEditingId(null); setRiShowForm(null); setRiFormName(''); setRiFormDescription(''); };
+
+    const riStartEdit = (item: any) => {
+        setRiEditingId(item.id); setRiFormName(item.name); setRiFormType(item.type);
+        setRiFormDescription(item.description || ''); setRiShowForm(item.type);
+    };
+
+    const riHandleSave = async () => {
+        if (!riFormName.trim()) return;
+        setRiSaving(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            if (riEditingId) {
+                await updateReportItem(token, riEditingId, { name: riFormName, type: riFormType, description: riFormDescription });
+            } else {
+                await createReportItem(token, { name: riFormName, type: riFormType, description: riFormDescription, order: reportItems.filter(i => i.type === riFormType).length });
+            }
+            riResetForm();
+            setReportItems([]);
+            await loadReportItems();
+        } catch (e: any) {
+            setStatus({ type: 'error', message: e.message });
+        } finally {
+            setRiSaving(false);
+        }
+    };
+
+    const riHandleDelete = async (id: string) => {
+        if (!confirm('Delete this item? All associated assessments will be removed.')) return;
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await deleteReportItem(token, id);
+            setReportItems(prev => prev.filter(i => i.id !== id));
+            setStatus({ type: 'success', message: 'Item deleted.' });
+        } catch (e: any) {
+            setStatus({ type: 'error', message: e.message });
+        }
+    };
+
+    const handleHtcSave = async (level: string) => {
+        setHtcSaving(prev => ({ ...prev, [level]: true }));
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await upsertHeadTeacherComment(token, level, { level, comment: htcTemplates[level] });
+            setStatus({ type: 'success', message: `Comment for ${level} configured.` });
+        } catch (e: any) {
+            setStatus({ type: 'error', message: e.message });
+        } finally {
+            setHtcSaving(prev => ({ ...prev, [level]: false }));
         }
     };
 
@@ -278,7 +449,7 @@ export default function AdminFunctionsPage() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex bg-muted p-1.5 rounded-[1.4rem] border border-border self-start">
+            <div className="flex flex-wrap bg-muted p-1.5 rounded-[1.4rem] border border-border self-start gap-1">
                 <button
                     onClick={() => setActiveTab('timetabling')}
                     className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'timetabling' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
@@ -290,6 +461,18 @@ export default function AdminFunctionsPage() {
                     className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'account-management' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                     Account Management
+                </button>
+                <button
+                    onClick={() => setActiveTab('system-maintenance')}
+                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'system-maintenance' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                    System Maintenance
+                </button>
+                <button
+                    onClick={() => setActiveTab('report-items')}
+                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'report-items' ? 'bg-secondary text-white shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                >
+                    Report Items
                 </button>
             </div>
 
@@ -380,7 +563,7 @@ export default function AdminFunctionsPage() {
             {activeTab === 'account-management' && (
                 <div className="space-y-8">
                     {/* Warning Banner */}
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] flex items-start gap-4"
@@ -484,9 +667,268 @@ export default function AdminFunctionsPage() {
                                 <h3 className="font-black text-lg uppercase tracking-tight text-muted-foreground/50">No Students Found</h3>
                                 <p className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-[0.2em] mt-1">Check the admission number or name and try again</p>
                             </div>
-                        ) : !searching && (
+                        ) : (
                             <div className="p-20 text-center bg-muted/10 rounded-[3rem] border border-dashed border-border">
                                 <p className="text-muted-foreground/40 font-black uppercase tracking-[0.3em] text-xs">Enter a name or admission number to start searching</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {activeTab === 'system-maintenance' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                    <section className="p-8 glass-card rounded-[2.5rem] border border-border bg-card/50 space-y-8">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                                    <ShieldAlert size={24} />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-black uppercase tracking-tight">Database Schema Integrity</h3>
+                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Identify and remove database tables not defined in current models</p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={loadDBStatus}
+                                disabled={dbLoading}
+                                className="px-6 py-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest"
+                            >
+                                <RefreshCw size={14} className={dbLoading ? 'animate-spin' : ''} />
+                                Refresh Status
+                            </button>
+                        </div>
+
+                        {dbLoading ? (
+                            <div className="py-20 text-center">
+                                <Loader2 className="animate-spin text-primary mx-auto mb-4" size={40} />
+                                <p className="text-[10px] font-black uppercase tracking-widest">Inspecting Database Hub...</p>
+                            </div>
+                        ) : dbStatus ? (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div className="p-6 bg-card border border-border rounded-2xl">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Total Tables</p>
+                                        <p className="text-2xl font-black">{dbStatus.db_tables.length}</p>
+                                    </div>
+                                    <div className="p-6 bg-card border border-border rounded-2xl">
+                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Defined in Models</p>
+                                        <p className="text-2xl font-black">{dbStatus.model_tables.length}</p>
+                                    </div>
+                                    <div className={`p-6 rounded-2xl border ${dbStatus.redundant_tables.length > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'}`}>
+                                        <p className="text-[10px] font-black uppercase mb-1">Redundant Tables</p>
+                                        <p className="text-2xl font-black">{dbStatus.redundant_tables.length}</p>
+                                    </div>
+                                </div>
+
+                                {dbStatus.redundant_tables.length > 0 ? (
+                                    <div className="space-y-4">
+                                        <div className="p-6 bg-rose-500/5 border border-rose-500/20 rounded-2xl space-y-4">
+                                            <h4 className="text-xs font-black uppercase tracking-widest flex items-center gap-2 text-rose-600">
+                                                <TriangleAlert size={16} /> Action Required: Potential Schema Drift
+                                            </h4>
+                                            <p className="text-sm text-foreground/70 font-medium">
+                                                The following tables exist in the database but are not present in your code's models.
+                                                These may be artifacts from previous migrations or manual changes.
+                                            </p>
+                                            <div className="flex flex-wrap gap-2">
+                                                {dbStatus.redundant_tables.map((table: string) => (
+                                                    <span key={table} className="px-3 py-1.5 bg-rose-500 text-white rounded-lg text-[10px] font-black uppercase tracking-widest">
+                                                        {table}
+                                                    </span>
+                                                ))}
+                                            </div>
+                                            <div className="pt-4">
+                                                <button
+                                                    onClick={() => setIsCleanupConfirmOpen(true)}
+                                                    className="px-8 py-4 bg-rose-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition-all flex items-center gap-3"
+                                                >
+                                                    <Trash size={16} /> Sync Schema (Drop Redundant Tables)
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="p-12 text-center bg-emerald-500/5 border border-dashed border-emerald-500/20 rounded-[2.5rem]">
+                                        <CheckCircle2 className="text-emerald-500 mx-auto mb-4" size={48} />
+                                        <h3 className="text-xl font-black text-emerald-600 uppercase">Schema is Clean</h3>
+                                        <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mt-2">All database tables are accounted for in the current models.</p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="p-20 text-center border border-dashed border-border rounded-[2.5rem]">
+                                <Info className="text-muted-foreground/30 mx-auto mb-4" size={48} />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">Load database status to inspect for discrepancies.</p>
+                            </div>
+                        )}
+                    </section>
+                </div>
+            )}
+
+            {activeTab === 'report-items' && (
+                <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-6 bg-secondary/5 border border-secondary/20 rounded-[2rem] flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary shrink-0">
+                            <Settings2 size={20} />
+                        </div>
+                        <div>
+                            <h4 className="text-secondary font-black uppercase tracking-widest text-[10px]">Global Report Configuration</h4>
+                            <p className="text-sm text-foreground/80 font-medium mt-1">
+                                Define the <strong>Core Competencies</strong> and <strong>Values</strong> that teachers evaluate students against in every term report card. Changes here apply across all classes.
+                            </p>
+                        </div>
+                    </div>
+
+                    {reportItemsLoading ? (
+                        <div className="py-20 text-center"><Loader2 className="animate-spin text-secondary mx-auto" size={48} /></div>
+                    ) : (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                            {(['competency', 'value'] as const).map(type => {
+                                const isComp = type === 'competency';
+                                const Icon = isComp ? Brain : Heart;
+                                const color = isComp ? 'secondary' : 'rose';
+                                const list = reportItems.filter(i => i.type === type);
+
+                                return (
+                                    <div key={type} className="p-8 glass-card rounded-[3rem] border border-border bg-card flex flex-col gap-6 shadow-xl">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-2xl bg-${color}-500/10 text-${color}-500 flex items-center justify-center shadow-inner`}>
+                                                    <Icon size={24} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-black uppercase tracking-tight text-lg">{isComp ? 'Core Competencies' : 'Values & Social Development'}</h3>
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{list.length} item{list.length !== 1 ? 's' : ''} configured</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => { setRiEditingId(null); setRiFormName(''); setRiFormDescription(''); setRiFormType(type); setRiShowForm(type); }}
+                                                className={`p-3 rounded-2xl bg-${color}-500 text-white hover:scale-105 active:scale-95 transition-all shadow-lg`}
+                                            >
+                                                <Plus size={20} />
+                                            </button>
+                                        </div>
+
+                                        <div className="space-y-3">
+                                            {list.length === 0 && riShowForm !== type && (
+                                                <div className="flex flex-col items-center justify-center gap-3 py-8 rounded-2xl border border-dashed border-border text-center">
+                                                    <Icon size={28} className="text-muted-foreground opacity-40" />
+                                                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">No items yet. Click + to add one.</p>
+                                                </div>
+                                            )}
+                                            {list.map(item => (
+                                                <div key={item.id} className="flex items-center gap-3 p-4 bg-muted/30 rounded-2xl border border-border group">
+                                                    <GripVertical size={14} className="text-muted-foreground/30" />
+                                                    <div className="flex-1">
+                                                        <p className="text-xs font-black uppercase tracking-tight">{item.name}</p>
+                                                        {item.description && <p className="text-[10px] text-muted-foreground mt-0.5">{item.description}</p>}
+                                                    </div>
+                                                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <button onClick={() => riStartEdit(item)} className="p-2 rounded-xl bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition-all"><Pencil size={14} /></button>
+                                                        <button onClick={() => riHandleDelete(item.id)} className="p-2 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><Trash size={14} /></button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {riShowForm === type && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, height: 0 }}
+                                                    animate={{ opacity: 1, height: 'auto' }}
+                                                    exit={{ opacity: 0, height: 0 }}
+                                                    className="overflow-hidden"
+                                                >
+                                                    <div className={`p-6 rounded-2xl border-2 border-${color}-500/30 bg-${color}-500/5 space-y-4`}>
+                                                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                                            {riEditingId ? 'Edit Item' : `New ${isComp ? 'Competency' : 'Value'}`}
+                                                        </p>
+                                                        <input
+                                                            type="text"
+                                                            placeholder={isComp ? 'e.g. Critical Thinking' : 'e.g. Integrity'}
+                                                            value={riFormName}
+                                                            onChange={e => setRiFormName(e.target.value)}
+                                                            onKeyDown={e => e.key === 'Enter' && riHandleSave()}
+                                                            autoFocus
+                                                            className={`w-full px-4 py-3 bg-card border border-border rounded-xl text-xs font-bold outline-none focus:border-${color}-500 transition-all`}
+                                                        />
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Short description (optional)"
+                                                            value={riFormDescription}
+                                                            onChange={e => setRiFormDescription(e.target.value)}
+                                                            className={`w-full px-4 py-3 bg-card border border-border rounded-xl text-xs font-medium outline-none focus:border-${color}-500 transition-all`}
+                                                        />
+                                                        <div className="flex gap-3">
+                                                            <button onClick={riResetForm} className="flex-1 py-3 bg-muted text-muted-foreground font-black uppercase text-[10px] tracking-widest rounded-xl">Cancel</button>
+                                                            <button
+                                                                onClick={riHandleSave}
+                                                                disabled={riSaving}
+                                                                className={`flex-1 py-3 bg-${color}-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl flex items-center justify-center gap-2 disabled:opacity-50`}
+                                                            >
+                                                                {riSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                                                                {riEditingId ? 'Update' : 'Add'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Head Teacher Comments Section */}
+                    <div className="mt-16 border-t border-border pt-16">
+                        <div className="flex items-start gap-4 mb-8">
+                            <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+                                <UserCircle2 size={20} />
+                            </div>
+                            <div>
+                                <h4 className="text-orange-500 font-black uppercase tracking-widest text-[10px]">Auto-Assigned Head Teacher Comments</h4>
+                                <p className="text-sm text-foreground/80 font-medium mt-1">
+                                    Configure the official comment that appears on report cards based on the student's <strong>overall calculated performance level</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        {htcLoading ? (
+                            <div className="py-20 text-center"><Loader2 className="animate-spin text-orange-500 mx-auto" size={48} /></div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {(['EE', 'ME', 'AE', 'BE'] as const).map(level => {
+                                    const levelColors: Record<string, string> = { EE: 'emerald', ME: 'secondary', AE: 'amber', BE: 'rose' };
+                                    const col = levelColors[level];
+                                    const fullNames: Record<string, string> = { EE: 'Exceeding Expectation', ME: 'Meeting Expectation', AE: 'Approaching Expectation', BE: 'Below Expectation' };
+
+                                    return (
+                                        <div key={level} className="p-6 bg-card border border-border rounded-3xl shadow-lg flex flex-col gap-4">
+                                            <div className="flex items-center gap-3">
+                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black text-white bg-${col}-500 shadow-md shadow-${col}-500/20`}>
+                                                    {level}
+                                                </span>
+                                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{fullNames[level]}</span>
+                                            </div>
+                                            <textarea
+                                                value={htcTemplates[level]}
+                                                onChange={e => setHtcTemplates(prev => ({ ...prev, [level]: e.target.value }))}
+                                                placeholder={`Enter comment for ${level} students...`}
+                                                className={`w-full h-24 p-4 bg-muted/30 border border-border rounded-2xl text-sm outline-none focus:border-${col}-500 transition-colors resize-none`}
+                                            />
+                                            <button
+                                                onClick={() => handleHtcSave(level)}
+                                                disabled={htcSaving[level] || !htcTemplates[level].trim()}
+                                                className={`self-end px-6 py-2.5 bg-${col}-500 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2`}
+                                            >
+                                                {htcSaving[level] ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                                                Save
+                                            </button>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
@@ -726,12 +1168,12 @@ export default function AdminFunctionsPage() {
                             className="relative w-full max-w-md bg-card border border-rose-500/30 rounded-[2.5rem] shadow-2xl p-8 overflow-hidden"
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-600 via-orange-500 to-rose-600" />
-                            
+
                             <div className="flex flex-col items-center text-center space-y-6">
                                 <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-2">
                                     <AlertCircle size={40} className="text-rose-600" />
                                 </div>
-                                
+
                                 <div className="space-y-2">
                                     <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">System Wipe</h3>
                                     <p className="text-sm text-muted-foreground font-medium">
@@ -743,8 +1185,8 @@ export default function AdminFunctionsPage() {
                                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block text-left">
                                         Type <span className="text-foreground select-all">DELETE ALL TIMETABLES</span> to confirm
                                     </label>
-                                    <input 
-                                        type="text" 
+                                    <input
+                                        type="text"
                                         value={wipeConfirmationText}
                                         onChange={(e) => setWipeConfirmationText(e.target.value)}
                                         placeholder="DELETE ALL TIMETABLES"
@@ -793,12 +1235,12 @@ export default function AdminFunctionsPage() {
                             className="relative w-full max-w-md bg-card border border-amber-500/30 rounded-[2.5rem] shadow-2xl p-8 overflow-hidden"
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500" />
-                            
+
                             <div className="flex flex-col items-center text-center space-y-6">
                                 <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mb-2">
                                     <TriangleAlert size={40} className="text-amber-600" />
                                 </div>
-                                
+
                                 <div className="space-y-2">
                                     <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Account Reset</h3>
                                     <p className="text-sm text-muted-foreground font-medium">
@@ -840,6 +1282,63 @@ export default function AdminFunctionsPage() {
                                         className="flex-[1.5] py-4 bg-amber-600 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-amber-600/20 hover:bg-amber-700 active:scale-95 transition-all flex items-center justify-center gap-2"
                                     >
                                         {resettingId ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Reset'}
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+
+                {isCleanupConfirmOpen && (
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                        <motion.div
+                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            onClick={() => setIsCleanupConfirmOpen(false)}
+                            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+                        />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-md bg-card border border-rose-500/30 rounded-[2.5rem] shadow-2xl p-8 overflow-hidden"
+                        >
+                            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-500 via-orange-500 to-rose-500" />
+
+                            <div className="flex flex-col items-center text-center space-y-6">
+                                <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-2">
+                                    <TriangleAlert size={40} className="text-rose-600" />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Database Purge</h3>
+                                    <p className="text-sm text-muted-foreground font-medium">
+                                        You are about to permanently delete <span className="text-foreground font-black">{dbStatus?.redundant_tables?.length} redundant tables</span>. This action is irreversible.
+                                    </p>
+                                </div>
+
+                                <div className="w-full bg-rose-500/5 p-5 rounded-2xl border border-rose-500/10 text-left space-y-3">
+                                    <div className="flex items-center gap-2 text-[10px] font-black uppercase text-rose-600">
+                                        <ShieldAlert size={14} /> High Risk Operation
+                                    </div>
+                                    <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-tight leading-relaxed">
+                                        Dropped tables cannot be recovered. Ensure you have a recent backup if any of these tables contain important data.
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-3 w-full">
+                                    <button
+                                        onClick={() => setIsCleanupConfirmOpen(false)}
+                                        disabled={isCleaning}
+                                        className="flex-1 py-4 border border-border rounded-xl font-black uppercase text-xs tracking-widest hover:bg-muted transition-all disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        onClick={executeCleanup}
+                                        disabled={isCleaning}
+                                        className="flex-[1.5] py-4 bg-rose-600 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-rose-600/20 hover:bg-rose-700 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {isCleaning ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Purge'}
                                     </button>
                                 </div>
                             </div>

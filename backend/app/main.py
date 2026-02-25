@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from . import models, database
-from .routers import books, students, classes, streams, circulation, analytics, users, auth, config, logs, subjects, assignments, student_auth, student_portal, finance, student_features, timetable, attendance
+from .routers import books, students, classes, streams, circulation, analytics, users, auth, config, logs, subjects, assignments, student_auth, student_portal, finance, student_features, timetable, attendance, cbc, report_items, head_teacher_comments, admin_exams
 
 load_dotenv()
 
@@ -15,7 +15,12 @@ app = FastAPI(title="Library Star Pro API")
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Adjust in production
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "https://olabs-ten.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,6 +45,10 @@ app.include_router(finance.router, prefix="/api/finance", tags=["Finance"])
 app.include_router(student_features.router, prefix="/api/features", tags=["Student Features"])
 app.include_router(timetable.router, tags=["Timetable"])
 app.include_router(attendance.router, tags=["Attendance"])
+app.include_router(cbc.router, tags=["CBC Grading"])
+app.include_router(admin_exams.router, tags=["Admin Exam Management"])
+app.include_router(report_items.router, tags=["Report Items"])
+app.include_router(head_teacher_comments.router, tags=["Head Teacher Comments"])
 
 @app.get("/")
 async def root():

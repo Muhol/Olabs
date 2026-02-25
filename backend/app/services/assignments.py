@@ -64,3 +64,31 @@ def update_assignment(db: Session, assignment_id: str, update_data: schemas.Assi
     db.commit()
     db.refresh(db_assignment)
     return db_assignment
+
+def create_submission(db: Session, submission: schemas.AssignmentSubmissionCreate):
+    db_submission = models.AssignmentSubmission(
+        **submission.model_dump(),
+        status="submitted"
+    )
+    db.add(db_submission)
+    db.commit()
+    db.refresh(db_submission)
+    return db_submission
+
+def get_assignment_submissions(db: Session, assignment_id: str):
+    return db.query(models.AssignmentSubmission).filter(models.AssignmentSubmission.assignment_id == assignment_id).all()
+
+def update_submission(db: Session, submission_id: str, update_data: schemas.AssignmentSubmissionUpdate):
+    db_submission = db.query(models.AssignmentSubmission).filter(models.AssignmentSubmission.id == submission_id).first()
+    if not db_submission:
+        return None
+    
+    for key, value in update_data.model_dump(exclude_unset=True).items():
+        setattr(db_submission, key, value)
+    
+    if update_data.grade is not None or update_data.performance_level is not None:
+        db_submission.status = "graded"
+        
+    db.commit()
+    db.refresh(db_submission)
+    return db_submission

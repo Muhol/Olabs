@@ -13,6 +13,14 @@ cbc_level_enum = Enum(
     name="cbc_performance_level"
 )
 
+announcement_category_enum = Enum(
+    "SCHOOL",
+    "STREAM",
+    "SUBJECT",
+    "STAFF",
+    name="announcement_category"
+)
+
 class Class(Base):
     __tablename__ = "classes"
 
@@ -38,19 +46,7 @@ teacher_subjects = Table(
     Column("subject_id", UUID(as_uuid=True), ForeignKey("subjects.id"), primary_key=True),
 )
 
-subject_competencies = Table(
-    "subject_competencies",
-    Base.metadata,
-    Column("subject_id", UUID(as_uuid=True), ForeignKey("subjects.id"), primary_key=True),
-    Column("competency_id", UUID(as_uuid=True), ForeignKey("competencies.id"), primary_key=True),
-)
 
-class Competency(Base):
-    __tablename__ = "competencies"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String, index=True)  # e.g Critical Thinking
-    description = Column(Text, nullable=True)
 
 class Subject(Base):
     __tablename__ = "subjects"
@@ -69,7 +65,8 @@ class Subject(Base):
     teacher_assignments = relationship("TeacherSubjectAssignment", back_populates="subject", cascade="all, delete-orphan")
     assignments = relationship("Assignment", back_populates="subject", cascade="all, delete-orphan")
     attendance_sessions = relationship("AttendanceSession", back_populates="subject", cascade="all, delete-orphan")
-    competencies = relationship("Competency", secondary=subject_competencies)
+    competencies = relationship("Competency", back_populates="subject", cascade="all, delete-orphan")
+    exams = relationship("Exam", back_populates="subject", cascade="all, delete-orphan")
 
     @property
     def student_count(self):
@@ -165,7 +162,7 @@ class Student(Base):
     exam_results = relationship("ExamResult", back_populates="student", cascade="all, delete-orphan")
     fee_records = relationship("FeeRecord", back_populates="student", cascade="all, delete-orphan")
     competency_assessments = relationship("StudentCompetencyAssessment", back_populates="student", cascade="all, delete-orphan")
-    subject_summaries = relationship("StudentSubjectSummary", back_populates="student", cascade="all, delete-orphan")
+    subject_term_results = relationship("SubjectTermResult", back_populates="student", cascade="all, delete-orphan")
 
 class TimetableSlot(Base):
     __tablename__ = "timetable_slots"
@@ -240,10 +237,15 @@ class Announcement(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String)
     content = Column(Text)
+    category = Column(announcement_category_enum, default="SCHOOL")
+    class_id = Column(UUID(as_uuid=True), ForeignKey("classes.id", ondelete="CASCADE"), nullable=True)
+    stream_id = Column(UUID(as_uuid=True), ForeignKey("streams.id", ondelete="CASCADE"), nullable=True)
     subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
+    assigned_class = relationship("Class")
+    assigned_stream = relationship("Stream")
     subject = relationship("Subject")
     author = relationship("User")
 
@@ -272,15 +274,14 @@ class ExamResult(Base):
     subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
     term = Column(String) # e.g. "Term 1"
     year = Column(Integer) # e.g. 2024
-    exam_type = Column(String) # e.g. "Mid-term", "Final"
+    exam_id = Column(UUID(as_uuid=True), ForeignKey("exams.id", ondelete="CASCADE"), nullable=True)
     marks = Column(Float)
-    grade = Column(String, nullable=True)
-    performance_level = Column(cbc_level_enum, nullable=True)
-    competency_score = Column(Float, nullable=True)  # optional weighted computation
-    remarks = Column(Text, nullable=True)
+    max_score = Column(Float, nullable=True) # e.g. 50
+    weight = Column(Float, nullable=True) # e.g. 30 (%)
 
     student = relationship("Student", back_populates="exam_results")
     subject = relationship("Subject")
+    exam = relationship("Exam")
 
 class FeeRecord(Base):
     __tablename__ = "fee_records"
@@ -410,6 +411,57 @@ class Assignment(Base):
     subject = relationship("Subject", back_populates="assignments")
     teacher = relationship("User", back_populates="created_assignments")
 
+# --- CBC & Exams Association Tables ---
+
+exam_competencies = Table(
+    "exam_competencies",
+    Base.metadata,
+    Column("exam_id", UUID(as_uuid=True), ForeignKey("exams.id", ondelete="CASCADE"), primary_key=True),
+    Column("competency_id", UUID(as_uuid=True), ForeignKey("competencies.id", ondelete="CASCADE"), primary_key=True)
+)
+
+class TermExam(Base):
+    """Admin-defined global exams for a term/year"""
+    __tablename__ = "term_exams"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False) # e.g. "Mid-term", "End-term"
+    term = Column(String, nullable=False) # e.g. "Term 1"
+    year = Column(Integer, nullable=False)
+    edit_status = Column(String, default="current") # 'current' or 'completed'
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    # Relationships
+    exams = relationship("Exam", back_populates="term_exam")
+
+class Exam(Base):
+    __tablename__ = "exams"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String) # e.g Mid-term
+    term = Column(String)
+    year = Column(Integer)
+    term_exam_id = Column(UUID(as_uuid=True), ForeignKey("term_exams.id", ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    subject = relationship("Subject", back_populates="exams")
+    term_exam = relationship("TermExam", back_populates="exams")
+    competencies = relationship("Competency", secondary="exam_competencies", back_populates="exams")
+    assessments = relationship("StudentCompetencyAssessment", back_populates="exam", cascade="all, delete-orphan")
+
+class Competency(Base):
+    __tablename__ = "competencies"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String, index=True)  # e.g Critical Thinking
+    description = Column(Text, nullable=True)
+
+    subject = relationship("Subject", back_populates="competencies")
+    exams = relationship("Exam", secondary="exam_competencies", back_populates="competencies")
+    rubrics = relationship("Rubric", back_populates="competency", cascade="all, delete-orphan")
+
 class StudentCompetencyAssessment(Base):
     __tablename__ = "student_competency_assessments"
 
@@ -418,6 +470,7 @@ class StudentCompetencyAssessment(Base):
     student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"))
     subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"))
     competency_id = Column(UUID(as_uuid=True), ForeignKey("competencies.id", ondelete="CASCADE"))
+    exam_id = Column(UUID(as_uuid=True), ForeignKey("exams.id", ondelete="CASCADE"))
 
     term = Column(String)
     year = Column(Integer)
@@ -431,42 +484,104 @@ class StudentCompetencyAssessment(Base):
     student = relationship("Student", back_populates="competency_assessments")
     subject = relationship("Subject")
     competency = relationship("Competency")
+    exam = relationship("Exam", back_populates="assessments")
     assessor = relationship("User")
 
 class Rubric(Base):
+    """Stores qualitative descriptors for a competency at a specific performance level"""
     __tablename__ = "rubrics"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id"))
-    title = Column(String)
+    competency_id = Column(UUID(as_uuid=True), ForeignKey("competencies.id", ondelete="CASCADE"))
+    performance_level = Column(cbc_level_enum, nullable=False)
+    descriptor = Column(Text)
 
-    subject = relationship("Subject")
-    criteria = relationship("RubricCriteria", back_populates="rubric", cascade="all, delete-orphan")
+    competency = relationship("Competency", back_populates="rubrics")
 
-class RubricCriteria(Base):
-    __tablename__ = "rubric_criteria"
-
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    rubric_id = Column(UUID(as_uuid=True), ForeignKey("rubrics.id"))
-    competency_id = Column(UUID(as_uuid=True), ForeignKey("competencies.id"))
-    description = Column(Text)
-
-    rubric = relationship("Rubric", back_populates="criteria")
-    competency = relationship("Competency")
-
-class StudentSubjectSummary(Base):
-    __tablename__ = "student_subject_summaries"
+class SubjectTermResult(Base):
+    __tablename__ = "subject_term_results"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-
-    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id"))
-    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id"))
-
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    subject_id = Column(UUID(as_uuid=True), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False)
     term = Column(String)
     year = Column(Integer)
+    total_score = Column(Float, nullable=True)
+    grade = Column(String, nullable=True)
+    performance_level = Column(cbc_level_enum, nullable=True)
+    competency_score = Column(Float, nullable=True)
+    remarks = Column(Text, nullable=True)
 
-    overall_performance = Column(cbc_level_enum)
-    teacher_comment = Column(Text)
-
-    student = relationship("Student", back_populates="subject_summaries")
+    student = relationship("Student", back_populates="subject_term_results")
     subject = relationship("Subject")
+
+# ─── Admin-Configurable Report Items ────────────────────────────────────────
+report_item_type_enum = Enum(
+    "competency",
+    "value",
+    name="report_item_type"
+)
+
+class ReportItem(Base):
+    """School-admin–defined global items for competencies and values."""
+    __tablename__ = "report_items"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String, nullable=False, unique=True, index=True)
+    type = Column(report_item_type_enum, nullable=False)  # 'competency' | 'value'
+    description = Column(Text, nullable=True)
+    order = Column(Integer, default=0)  # display order
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    entries = relationship("TermReportEntry", back_populates="item", cascade="all, delete-orphan")
+
+
+class TermReport(Base):
+    """Stores term-level summary per student: attendance and narrative comments only."""
+    __tablename__ = "term_reports"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    student_id = Column(UUID(as_uuid=True), ForeignKey("students.id", ondelete="CASCADE"), nullable=False)
+    term = Column(String, nullable=False)
+    year = Column(Integer, nullable=False)
+
+    # Attendance
+    total_days = Column(Integer, nullable=True)
+    present_days = Column(Integer, nullable=True)
+
+    # Comments
+    teacher_comment = Column(Text, nullable=True)
+    head_teacher_comment = Column(Text, nullable=True)
+
+    student = relationship("Student")
+    entries = relationship("TermReportEntry", back_populates="report", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        UniqueConstraint('student_id', 'term', 'year', name='unique_student_term_report'),
+    )
+
+
+class TermReportEntry(Base):
+    """One row per (report, report_item) — the actual EE/ME/AE/BE level."""
+    __tablename__ = "term_report_entries"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    report_id = Column(UUID(as_uuid=True), ForeignKey("term_reports.id", ondelete="CASCADE"), nullable=False)
+    item_id = Column(UUID(as_uuid=True), ForeignKey("report_items.id", ondelete="CASCADE"), nullable=False)
+    level = Column(cbc_level_enum, nullable=True)
+
+    report = relationship("TermReport", back_populates="entries")
+    item = relationship("ReportItem", back_populates="entries")
+
+    __table_args__ = (
+        UniqueConstraint('report_id', 'item_id', name='unique_report_item_entry'),
+    )
+
+class HeadTeacherCommentTemplate(Base):
+    __tablename__ = "head_teacher_comment_templates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    level = Column(cbc_level_enum, nullable=False, unique=True, index=True)
+    comment = Column(Text, nullable=False)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+

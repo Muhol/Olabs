@@ -12,7 +12,7 @@ export function DashboardHeader({ role, userName, onRefresh }: DashboardHeaderPr
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="space-y-1">
                 <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
-                    <LayoutDashboard size={14} /> {role === 'teacher' ? 'Teacher' : 'Library'} Management
+                    <LayoutDashboard size={14} /> {role === 'teacher' ? 'Teacher' : role === "SUPER_ADMIN" || role === "ADMIN" ? 'School' : 'Library'} Management
                 </div>
                 <h1 className="text-3xl md:text-5xl font-black text-foreground tracking-tighter uppercase">
                     Welcome back, <span className="text-primary">{userName?.split(' ')[0] || 'Member'}</span>

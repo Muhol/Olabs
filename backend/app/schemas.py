@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from uuid import UUID
 import uuid
 import datetime
@@ -117,6 +117,7 @@ class SubjectUpdate(BaseModel):
     is_compulsory: Optional[bool] = None
     class_id: Optional[UUID] = None
     stream_id: Optional[UUID] = None
+    teacher_id: Optional[UUID] = None
 
 class SubjectAssign(BaseModel):
     subject_ids: List[str]
@@ -146,6 +147,14 @@ class TeacherSubjectAssignmentResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+class SubjectTeacherPair(BaseModel):
+    subject_id: UUID
+    teacher_id: Optional[UUID] = None # Optional to allow unassigning in batch
+
+class BatchTeacherAssignment(BaseModel):
+    assignments: List[SubjectTeacherPair]
+
 # Assignment schemas
 class AssignmentBase(BaseModel):
     title: str
@@ -209,6 +218,13 @@ class TimetableSlotUpdate(BaseModel):
     end_time: Optional[str] = None
     day_of_week: Optional[int] = None
     type: Optional[str] = None
+
+class TimetableSlotBulkUpdateItem(BaseModel):
+    id: UUID
+    subject_id: Optional[UUID] = None
+
+class TimetableSlotBulkUpdate(BaseModel):
+    updates: List[TimetableSlotBulkUpdateItem]
 
 # New Attendance Session schemas
 class AttendanceSessionBase(BaseModel):
@@ -291,6 +307,9 @@ class TimetableEntryResponse(TimetableEntryBase):
 class AnnouncementBase(BaseModel):
     title: str
     content: str
+    category: str # SCHOOL, STREAM, SUBJECT, STAFF
+    class_id: Optional[UUID] = None
+    stream_id: Optional[UUID] = None
     subject_id: Optional[UUID] = None
 
 class AnnouncementCreate(AnnouncementBase):
@@ -301,6 +320,10 @@ class AnnouncementResponse(AnnouncementBase):
     created_at: datetime.datetime
     created_by_id: UUID
     author_name: Optional[str] = None
+    target_name: Optional[str] = None
+    class_name: Optional[str] = None
+    stream_name: Optional[str] = None
+    subject_name: Optional[str] = None
     class Config:
         from_attributes = True
 
@@ -323,7 +346,106 @@ class AssignmentSubmissionResponse(AssignmentSubmissionBase):
     submitted_at: datetime.datetime
     status: str
     grade: Optional[float] = None
+    performance_level: Optional[str] = None
     feedback: Optional[str] = None
+    rubric_feedback: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+# --- CBC Schemas ---
+
+class RubricBase(BaseModel):
+    performance_level: str
+    descriptor: str
+
+class RubricCreate(RubricBase):
+    competency_id: UUID
+
+class RubricResponse(RubricBase):
+    id: UUID
+    class Config:
+        from_attributes = True
+
+class CompetencyBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+    subject_id: UUID
+
+class CompetencyCreate(CompetencyBase):
+    pass
+
+class CompetencyResponse(CompetencyBase):
+    id: UUID
+    rubrics: List[RubricResponse] = []
+    class Config:
+        from_attributes = True
+
+class CompetencyWithRubricsCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    subject_id: UUID
+    rubrics: List[RubricBase] # EE, ME, AE, BE descriptors
+
+class TermExamBase(BaseModel):
+    name: str
+    term: str
+    year: int
+    edit_status: Optional[str] = "current"
+
+class TermExamCreate(TermExamBase):
+    pass
+
+class TermExamBatchUpdate(BaseModel):
+    term: str
+    year: int
+    edit_status: str
+
+class TermExamResponse(TermExamBase):
+    id: UUID
+    created_at: datetime.datetime
+    class Config:
+        from_attributes = True
+
+class ExamBase(BaseModel):
+    name: str
+    term: str
+    year: int
+    subject_id: UUID
+    term_exam_id: Optional[UUID] = None
+
+class ExamCreate(ExamBase):
+    competency_ids: Optional[List[UUID]] = None
+
+class ExamCompetencyUpdate(BaseModel):
+    competency_ids: List[UUID]
+
+class ExamResponse(ExamBase):
+    id: UUID
+    # Inherits from ExamBase which has term_exam_id
+    created_at: datetime.datetime
+    competencies: List[CompetencyResponse] = []
+    term_exam: Optional[TermExamResponse] = None
+    class Config:
+        from_attributes = True
+
+class StudentCompetencyAssessmentBase(BaseModel):
+    student_id: UUID
+    subject_id: UUID
+    competency_id: UUID
+    exam_id: UUID
+    term: str
+    year: int
+    performance_level: str
+    remarks: Optional[str] = None
+
+class StudentCompetencyAssessmentCreate(StudentCompetencyAssessmentBase):
+    pass
+
+class StudentCompetencyAssessmentResponse(StudentCompetencyAssessmentBase):
+    id: UUID
+    assessed_by: Optional[UUID] = None
+    assessed_at: datetime.datetime
+    competency_name: Optional[str] = None
     class Config:
         from_attributes = True
 
@@ -333,10 +455,10 @@ class ExamResultBase(BaseModel):
     subject_id: UUID
     term: str
     year: int
-    exam_type: str
+    exam_id: Optional[UUID] = None
     marks: float
-    grade: Optional[str] = None
-    remarks: Optional[str] = None
+    max_score: Optional[float] = None
+    weight: Optional[float] = None
 
 class ExamResultCreate(ExamResultBase):
     pass
@@ -346,6 +468,46 @@ class ExamResultResponse(ExamResultBase):
     subject_name: Optional[str] = None
     class Config:
         from_attributes = True
+
+class SubjectTermResultBase(BaseModel):
+    student_id: UUID
+    subject_id: UUID
+    term: str
+    year: int
+    total_score: Optional[float] = None
+    grade: Optional[str] = None
+    performance_level: Optional[str] = None
+    competency_score: Optional[float] = None
+    remarks: Optional[str] = None
+
+class SubjectTermResultCreate(SubjectTermResultBase):
+    pass
+
+class SubjectTermResultResponse(SubjectTermResultBase):
+    id: UUID
+    class Config:
+        from_attributes = True
+
+class BulkExamResultCreate(BaseModel):
+    results: List[ExamResultCreate]
+    summaries: Optional[List[SubjectTermResultCreate]] = None
+    assessments: Optional[List[StudentCompetencyAssessmentCreate]] = None
+
+class SubjectInfo(BaseModel):
+    id: UUID
+    name: str
+
+class StudentScoreSummary(BaseModel):
+    id: UUID
+    full_name: str
+    admission_number: str
+    results: Dict[UUID, Optional[str]]  # SubjectId -> PerformanceLevel
+
+class ClassScoreSheetResponse(BaseModel):
+    students: List[StudentScoreSummary]
+    subjects: List[SubjectInfo]
+    term: str
+    year: int
 
 # Fee schemas
 class FeeRecordBase(BaseModel):
@@ -395,3 +557,79 @@ class CourseMaterialResponse(CourseMaterialBase):
     created_at: datetime.datetime
     class Config:
         from_attributes = True
+
+
+# ─── Report Items (admin-defined competencies & values) ──────────────────────
+class ReportItemBase(BaseModel):
+    name: str
+    type: str  # 'competency' | 'value'
+    description: Optional[str] = None
+    order: Optional[int] = 0
+
+class ReportItemCreate(ReportItemBase):
+    pass
+
+class ReportItemResponse(ReportItemBase):
+    id: UUID
+    class Config:
+        from_attributes = True
+
+# ─── Term Report (per-student per-term header) ─────────────────────────────
+class TermReportEntryCreate(BaseModel):
+    item_id: UUID
+    level: Optional[str] = None  # EE | ME | AE | BE | None
+
+class TermReportCreate(BaseModel):
+    student_id: UUID
+    term: str
+    year: int
+    total_days: Optional[int] = None
+    present_days: Optional[int] = None
+    teacher_comment: Optional[str] = None
+    head_teacher_comment: Optional[str] = None
+    entries: Optional[List[TermReportEntryCreate]] = []
+
+class TermReportEntryResponse(BaseModel):
+    id: UUID
+    item_id: UUID
+    item: ReportItemResponse
+    level: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+class TermReportResponse(BaseModel):
+    id: UUID
+    student_id: UUID
+    term: str
+    year: int
+    total_days: Optional[int] = None
+    present_days: Optional[int] = None
+    teacher_comment: Optional[str] = None
+    head_teacher_comment: Optional[str] = None
+    entries: List[TermReportEntryResponse] = []
+    class Config:
+        from_attributes = True
+
+class FullReportCardResponse(BaseModel):
+    student: Any
+    term: str
+    year: int
+    subjects: List[Any]
+    term_report: Optional[TermReportResponse] = None
+
+# Removed obsolete StudentSubjectSummary schemas in favor of SubjectTermResult
+
+# ─── Head Teacher Comment Templates ──────────────────────────────────────────
+class HeadTeacherCommentTemplateBase(BaseModel):
+    level: str  # EE | ME | AE | BE
+    comment: str
+
+class HeadTeacherCommentTemplateCreate(HeadTeacherCommentTemplateBase):
+    pass
+
+class HeadTeacherCommentTemplateResponse(HeadTeacherCommentTemplateBase):
+    id: UUID
+    updated_at: datetime.datetime
+    class Config:
+        from_attributes = True
+

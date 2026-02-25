@@ -17,9 +17,11 @@ import {
     Pencil,
     ChevronLeft,
     ChevronRight,
-    Users
+    Users,
+    AlertTriangle,
+    Layers
 } from 'lucide-react';
-import { fetchSubjects, createSubject, deleteSubject, updateSubject, fetchStaff, fetchStudents, assignSubjectsToStudent, assignSubjectsToTeacher, fetchClasses, fetchStreams, assignSubjectsToTeacherWithClasses, getTeacherSubjectAssignments, enrollStudentsToSubject, fetchEnrolledStudentIds } from '@/lib/api';
+import { fetchSubjects, fetchAllSubjects, createSubject, deleteSubject, updateSubject, fetchStaff, fetchStudents, assignSubjectsToStudent, assignSubjectsToTeacher, fetchClasses, fetchStreams, assignSubjectsToTeacherWithClasses, getTeacherSubjectAssignments, enrollStudentsToSubject, fetchEnrolledStudentIds, purgeAllSubjects, batchUpdateTeacherAssignments } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -27,8 +29,10 @@ export default function SubjectManagementPage() {
     const { getToken } = useAuth();
     const { userRole, systemUser } = useUserContext();
     const [subjects, setSubjects] = useState<any[]>([]);
+    const [allSubjects, setAllSubjects] = useState<any[]>([]); // For 'By Subject' teacher assignment tab
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [allSubjectsLoading, setAllSubjectsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
     // Pagination and Search for Subject List
     const [listCurrentPage, setListCurrentPage] = useState(0);
@@ -36,22 +40,48 @@ export default function SubjectManagementPage() {
     const [listLimit] = useState(10);
     const [listSearch, setListSearch] = useState('');
 
-    // Create Subject Modal
+    // Modal States
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-    const [newSubjectName, setNewSubjectName] = useState('');
-    const [newSubjectClass, setNewSubjectClass] = useState('');
-    const [newSubjectStreams, setNewSubjectStreams] = useState<string[]>([]);
-    const [selectAllStreams, setSelectAllStreams] = useState(false);
-    const [isCompulsory, setIsCompulsory] = useState(true);
-    const [newSubjectTeacher, setNewSubjectTeacher] = useState<string>('');
-    const [actionLoading, setActionLoading] = useState(false);
-
-    // Edit Subject Modal
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editingSubject, setEditingSubject] = useState<any>(null);
     const [applyToAllStreams, setApplyToAllStreams] = useState(false);
     const [createError, setCreateError] = useState<string | null>(null);
     const [editError, setEditError] = useState<string | null>(null);
+
+    // Create Subject Modal specific states
+    const [newSubjectName, setNewSubjectName] = useState('');
+    const [newSubjectClass, setNewSubjectClass] = useState('');
+    const [newSubjectStreams, setNewSubjectStreams] = useState<string[]>([]);
+    const [selectAllStreams, setSelectAllStreams] = useState(false);
+    const [isGlobalSubject, setIsGlobalSubject] = useState(false);
+    const [isCompulsory, setIsCompulsory] = useState(true);
+    const [newSubjectTeacher, setNewSubjectTeacher] = useState<string>('');
+    const [actionLoading, setActionLoading] = useState(false);
+
+    // Bulk Delete Modal States
+    const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
+    const [bulkDeleteName, setBulkDeleteName] = useState('');
+    const [bulkDeleteClass, setBulkDeleteClass] = useState('');
+    const [bulkDeleteStream, setBulkDeleteStream] = useState('');
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [isBulkDeleteLoading, setIsBulkDeleteLoading] = useState(false);
+    const [bulkDeleteError, setBulkDeleteError] = useState<string | null>(null);
+    const [allStreams, setAllStreams] = useState<any[]>([]);
+    const [bulkDeleteAllSubjects, setBulkDeleteAllSubjects] = useState<any[]>([]);
+    const [bulkDeleteConfirmed, setBulkDeleteConfirmed] = useState(false);
+
+    // Purge All Subjects Modal States
+    const [isPurgeModalOpen, setIsPurgeModalOpen] = useState(false);
+    const [purgeStep, setPurgeStep] = useState(1);
+    const [purgeConfirmationInput, setPurgeConfirmationInput] = useState('');
+    const PURGE_PHRASE = "PURGE ALL SUBJECT DATA";
+
+    // Teacher Batch Assignment States (Refactored)
+    const [isBulkTeacherEditMode, setIsBulkTeacherEditMode] = useState(false);
+    const [stagedTeacherAssignments, setStagedTeacherAssignments] = useState<Record<string, { teacher_id: string | null, teacher_name: string | null }>>({});
+    const [isBatchSaveModalOpen, setIsBatchSaveModalOpen] = useState(false);
+    const [isBatchUpdating, setIsBatchUpdating] = useState(false);
+    const [batchUpdateError, setBatchUpdateError] = useState<string | null>(null);
 
     // Assignment States
     const [activeTab, setActiveTab] = useState<'subjects' | 'teachers' | 'students'>('subjects');
@@ -70,6 +100,12 @@ export default function SubjectManagementPage() {
     const [assignmentTab, setAssignmentTab] = useState<'available' | 'assigned'>('available');
     const [assignmentsLoading, setAssignmentsLoading] = useState(false);
     const [assignmentSearch, setAssignmentSearch] = useState('');
+
+    // Teacher Assignment By-Subject States
+    const [teacherAssignmentViewMode, setTeacherAssignmentViewMode] = useState<'by_teacher' | 'by_subject'>('by_subject');
+    const [isAssignTeacherModalOpen, setIsAssignTeacherModalOpen] = useState(false);
+    const [selectedSubjectForTeacher, setSelectedSubjectForTeacher] = useState<any>(null);
+    const [assignTeacherSearch, setAssignTeacherSearch] = useState('');
 
     // Enrollment Modal State
     const [isEnrollModalOpen, setIsEnrollModalOpen] = useState(false);
@@ -101,8 +137,13 @@ export default function SubjectManagementPage() {
     }, [activeTab, listCurrentPage]);
 
     useEffect(() => {
-        if (activeTab === 'teachers') loadStaff();
-    }, [activeTab]);
+        if (activeTab === 'teachers') {
+            loadStaff();
+            if (teacherAssignmentViewMode === 'by_subject') {
+                loadAllSubjects();
+            }
+        }
+    }, [activeTab, teacherAssignmentViewMode]);
 
     useEffect(() => {
         if (!isCreateModalOpen) {
@@ -130,6 +171,50 @@ export default function SubjectManagementPage() {
             setError('Failed to load subjects.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadAllSubjects = async (searchOverride?: string) => {
+        setAllSubjectsLoading(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            const searchTerm = searchOverride !== undefined ? searchOverride : listSearch;
+            // Fetch all subjects unpaginated
+            const data = await fetchAllSubjects(token, searchTerm);
+            setAllSubjects(data || []);
+        } catch (err) {
+            setError('Failed to load all subjects.');
+        } finally {
+            setAllSubjectsLoading(false);
+        }
+    };
+
+    const handleBatchSaveTeacherAssignments = async () => {
+        if (Object.keys(stagedTeacherAssignments).length === 0) return;
+        setIsBatchUpdating(true);
+        setBatchUpdateError(null);
+        try {
+            const token = await getToken();
+            if (token) {
+                const assignmentsArray = Object.entries(stagedTeacherAssignments).map(([subject_id, data]) => ({
+                    subject_id,
+                    teacher_id: data.teacher_id
+                }));
+                
+                await batchUpdateTeacherAssignments(token, assignmentsArray);
+                
+                setIsBatchSaveModalOpen(false);
+                setStagedTeacherAssignments({});
+                setIsBulkTeacherEditMode(false);
+                loadAllSubjects();
+                // If we are currently in By Subject view, reload standard list too
+                loadData();
+            }
+        } catch (err: any) {
+            setBatchUpdateError(err.message || 'Failed to perform batch update');
+        } finally {
+            setIsBatchUpdating(false);
         }
     };
 
@@ -242,7 +327,7 @@ export default function SubjectManagementPage() {
 
     const handleAddSubject = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newSubjectName || !newSubjectClass) return;
+        if (!newSubjectName || (!isGlobalSubject && !newSubjectClass)) return;
 
         setCreateError(null);
         setActionLoading(true);
@@ -250,21 +335,65 @@ export default function SubjectManagementPage() {
             const token = await getToken();
             if (!token) return;
 
-            const streamIdsToCreate = selectAllStreams
-                ? streams.map(s => s.id)
-                : newSubjectStreams.length > 0
-                    ? newSubjectStreams
-                    : [undefined];
+            let promises: any[] = [];
 
-            const promises = streamIdsToCreate.map(streamId =>
-                createSubject(token, {
-                    name: newSubjectName,
-                    is_compulsory: isCompulsory,
-                    class_id: newSubjectClass,
-                    stream_id: streamId,
-                    teacher_id: newSubjectTeacher || undefined
-                })
-            );
+            if (isGlobalSubject) {
+                // Fetch all classes and streams
+                const [allClassesData, allStreamsData] = await Promise.all([
+                    fetchClasses(token),
+                    fetchStreams(token)
+                ]);
+
+                // Map streams by class_id
+                const streamsByClass: Record<string, any[]> = {};
+                allStreamsData.forEach((s: any) => {
+                    if (!streamsByClass[s.class_id]) streamsByClass[s.class_id] = [];
+                    streamsByClass[s.class_id].push(s);
+                });
+
+                allClassesData.forEach((c: any) => {
+                    const classStreams = streamsByClass[c.id] || [];
+                    if (classStreams.length > 0) {
+                        classStreams.forEach((stream: any) => {
+                            promises.push(
+                                createSubject(token, {
+                                    name: newSubjectName,
+                                    is_compulsory: isCompulsory,
+                                    class_id: stream.class_id,
+                                    stream_id: stream.id,
+                                    teacher_id: newSubjectTeacher || undefined
+                                })
+                            );
+                        });
+                    } else {
+                        promises.push(
+                            createSubject(token, {
+                                name: newSubjectName,
+                                is_compulsory: isCompulsory,
+                                class_id: c.id,
+                                stream_id: undefined,
+                                teacher_id: newSubjectTeacher || undefined
+                            })
+                        );
+                    }
+                });
+            } else {
+                const streamIdsToCreate = selectAllStreams
+                    ? streams.map(s => s.id)
+                    : newSubjectStreams.length > 0
+                        ? newSubjectStreams
+                        : [undefined];
+
+                promises = streamIdsToCreate.map(streamId =>
+                    createSubject(token, {
+                        name: newSubjectName,
+                        is_compulsory: isCompulsory,
+                        class_id: newSubjectClass,
+                        stream_id: streamId,
+                        teacher_id: newSubjectTeacher || undefined
+                    })
+                );
+            }
 
             await Promise.all(promises);
 
@@ -272,6 +401,7 @@ export default function SubjectManagementPage() {
             setNewSubjectClass('');
             setNewSubjectStreams([]);
             setSelectAllStreams(false);
+            setIsGlobalSubject(false);
             setNewSubjectTeacher('');
             setIsCompulsory(true);
             setIsCreateModalOpen(false);
@@ -361,6 +491,61 @@ export default function SubjectManagementPage() {
         }
     };
 
+    const getBulkDeleteMatches = () => {
+        return bulkDeleteAllSubjects.filter(s => {
+            const nameMatch = !bulkDeleteName || s.name.toLowerCase().includes(bulkDeleteName.toLowerCase());
+            const classMatch = !bulkDeleteClass || s.class_id === bulkDeleteClass;
+            const streamMatch = !bulkDeleteStream || s.stream_id === bulkDeleteStream;
+            return nameMatch && classMatch && streamMatch;
+        });
+    };
+
+    const handleBulkDelete = async () => {
+        const matches = getBulkDeleteMatches();
+        if (matches.length === 0) return;
+        setBulkDeleteError(null);
+        setIsBulkDeleting(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await Promise.all(matches.map(s => deleteSubject(token, s.id)));
+            setBulkDeleteName('');
+            setBulkDeleteClass('');
+            setBulkDeleteStream('');
+            setIsBulkDeleteModalOpen(false);
+            loadData();
+        } catch (err: any) {
+            setBulkDeleteError(err.message || 'Failed to delete subjects');
+        } finally {
+            setIsBulkDeleting(false);
+            openBulkDeleteModal();
+        }
+    };
+
+    const openBulkDeleteModal = async () => {
+        setBulkDeleteName('');
+        setBulkDeleteClass('');
+        setBulkDeleteStream('');
+        setBulkDeleteError(null);
+        setBulkDeleteAllSubjects([]);
+        setBulkDeleteConfirmed(false);
+        setIsBulkDeleteModalOpen(true);
+        setIsBulkDeleteLoading(true);
+        try {
+            const token = await getToken();
+            if (token) {
+                const [streamsData, subjectsData] = await Promise.all([
+                    fetchStreams(token),
+                    fetchAllSubjects(token)
+                ]);
+                setAllStreams(streamsData);
+                setBulkDeleteAllSubjects(subjectsData);
+            }
+        } catch { /* ignore */ } finally {
+            setIsBulkDeleteLoading(false);
+        }
+    };
+
     const openAssignModal = async (user: any) => {
         setSelectedUser(user);
         setModalSubjects([]);
@@ -382,7 +567,7 @@ export default function SubjectManagementPage() {
                         fetchSubjects(token, user.id)
                     ]);
                     setSubjectAssignments(assignments);
-                    setModalSubjects(availableSubjects);
+                    setModalSubjects(availableSubjects.items || []);
                 }
             } catch (err) {
                 console.error('Failed to load teacher assignments:', err);
@@ -428,6 +613,34 @@ export default function SubjectManagementPage() {
         );
     }
 
+    const openPurgeModal = () => {
+        setPurgeStep(1);
+        setPurgeConfirmationInput('');
+        setIsPurgeModalOpen(true);
+    };
+
+    const handlePurgeAllSubjectsAction = async () => {
+        if (purgeConfirmationInput !== PURGE_PHRASE) return;
+        
+        setIsPurgeModalOpen(false);
+
+        setLoading(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await purgeAllSubjects(token);
+            setListCurrentPage(0);
+            await loadData();
+            if (activeTab === 'teachers' && teacherAssignmentViewMode === 'by_subject') {
+                await loadAllSubjects();
+            }
+        } catch (err: any) {
+            setError(err.message || 'Purge failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header Area */}
@@ -440,9 +653,26 @@ export default function SubjectManagementPage() {
                     <p className="text-muted-foreground font-medium tracking-tight">Configure school subjects and assign them to staff & students.</p>
                 </div>
 
-                <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                    <Plus size={18} /> Create Subject
-                </button>
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={openBulkDeleteModal}
+                        className="flex items-center gap-2 px-6 py-4 bg-rose-500/10 text-rose-500 border border-border font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-rose-500/20 active:scale-95 transition-all"
+                    >
+                        <Trash2 size={18} /> Bulk Delete
+                    </button>
+                    {systemUser?.role === 'SUPER_ADMIN' && (
+                        <button
+                            onClick={openPurgeModal}
+                            disabled={loading}
+                            className="flex items-center gap-2 px-6 py-4 bg-rose-600/20 text-rose-600 border border-rose-600/30 font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-rose-600 hover:text-white active:scale-95 transition-all disabled:opacity-50"
+                        >
+                            <AlertTriangle size={18} /> Purge All
+                        </button>
+                    )}
+                    <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                        <Plus size={18} /> Create Subject
+                    </button>
+                </div>
             </div>
 
             {/* Tabs */}
@@ -493,83 +723,83 @@ export default function SubjectManagementPage() {
                         <div className="overflow-x-auto flex-1">
                             <table className="w-full text-left min-w-[600px]">
                                 <thead>
-                                <tr className="text-left border-b border-border">
-                                    <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Name</th>
-                                    <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Class</th>
-                                    <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Stream</th>
-                                    <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Students</th>
-                                    <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Type</th>
-                                    <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan={5} className="py-32 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <Loader2 className="animate-spin text-primary" size={48} />
-                                            <span className="text-slate-500 font-bold uppercase tracking-widest">Loading subjects...</span>
-                                        </div>
-                                    </td></tr>
-                                ) : subjects.length === 0 ? (
-                                    <tr><td colSpan={5} className="py-32 text-center text-slate-500 font-bold uppercase tracking-widest">No subjects defined yet</td></tr>
-                                ) : subjects.map((subj) => (
-                                    <tr key={subj.id} className="border-b border-border hover:bg-muted/30 transition-colors group">
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center font-bold">
-                                                    {subj.name.charAt(0)}
-                                                </div>
-                                                <span className="font-bold text-foreground text-sm">{subj.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="font-bold text-xs uppercase text-slate-600 dark:text-slate-400">
-                                                {subj.class_name || 'All Classes'}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className="font-bold text-xs uppercase text-slate-600 dark:text-slate-400">
-                                                {subj.stream_name || 'All Streams'}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <div className="flex items-center gap-2">
-                                                <Users size={14} className="text-muted-foreground" />
-                                                <span className="font-black text-xs text-foreground">{subj.student_count}</span>
-                                            </div>
-                                        </td>
-                                        <td className="px-8 py-6">
-                                            <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${subj.is_compulsory ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
-                                                {subj.is_compulsory ? 'Compulsory' : 'Optional'}
-                                            </span>
-                                        </td>
-                                        <td className="px-8 py-6 text-right flex justify-end gap-2">
-                                            <button
-                                                onClick={async () => {
-                                                    setEditingSubject({ ...subj });
-                                                    if (subj.class_id) {
-                                                        const token = await getToken();
-                                                        if (token) {
-                                                            const s = await fetchStreams(token, subj.class_id);
-                                                            setStreams(s);
-                                                        }
-                                                    } else {
-                                                        setStreams([]);
-                                                    }
-                                                    setIsEditModalOpen(true);
-                                                }}
-                                                className="p-3 text-primary hover:bg-primary/10 rounded-xl transition-all"
-                                            >
-                                                <Pencil size={20} />
-                                            </button>
-                                            <button onClick={() => handleDeleteSubject(subj.id)} className="p-3 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all">
-                                                <Trash2 size={20} />
-                                            </button>
-                                        </td>
+                                    <tr className="text-left border-b border-border">
+                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Name</th>
+                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Class</th>
+                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Stream</th>
+                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Students</th>
+                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Type</th>
+                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest text-right">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {loading ? (
+                                        <tr><td colSpan={5} className="py-32 text-center">
+                                            <div className="flex flex-col items-center gap-4">
+                                                <Loader2 className="animate-spin text-primary" size={48} />
+                                                <span className="text-slate-500 font-bold uppercase tracking-widest">Loading subjects...</span>
+                                            </div>
+                                        </td></tr>
+                                    ) : subjects.length === 0 ? (
+                                        <tr><td colSpan={5} className="py-32 text-center text-slate-500 font-bold uppercase tracking-widest">No subjects defined yet</td></tr>
+                                    ) : subjects.map((subj) => (
+                                        <tr key={subj.id} className="border-b border-border hover:bg-muted/30 transition-colors group">
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center font-bold">
+                                                        {subj.name.charAt(0)}
+                                                    </div>
+                                                    <span className="font-bold text-foreground text-sm">{subj.name}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className="font-bold text-xs uppercase text-slate-600 dark:text-slate-400">
+                                                    {subj.class_name || 'All Classes'}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className="font-bold text-xs uppercase text-slate-600 dark:text-slate-400">
+                                                    {subj.stream_name || 'All Streams'}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <div className="flex items-center gap-2">
+                                                    <Users size={14} className="text-muted-foreground" />
+                                                    <span className="font-black text-xs text-foreground">{subj.student_count}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-8 py-6">
+                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${subj.is_compulsory ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                                    {subj.is_compulsory ? 'Compulsory' : 'Optional'}
+                                                </span>
+                                            </td>
+                                            <td className="px-8 py-6 text-right flex justify-end gap-2">
+                                                <button
+                                                    onClick={async () => {
+                                                        setEditingSubject({ ...subj });
+                                                        if (subj.class_id) {
+                                                            const token = await getToken();
+                                                            if (token) {
+                                                                const s = await fetchStreams(token, subj.class_id);
+                                                                setStreams(s);
+                                                            }
+                                                        } else {
+                                                            setStreams([]);
+                                                        }
+                                                        setIsEditModalOpen(true);
+                                                    }}
+                                                    className="p-3 text-primary hover:bg-primary/10 rounded-xl transition-all"
+                                                >
+                                                    <Pencil size={20} />
+                                                </button>
+                                                <button onClick={() => handleDeleteSubject(subj.id)} className="p-3 text-rose-500 hover:bg-rose-500/10 rounded-xl transition-all">
+                                                    <Trash2 size={20} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
 
                         {/* Pagination Footer */}
@@ -605,59 +835,217 @@ export default function SubjectManagementPage() {
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
                                 <input
                                     type="text"
-                                    placeholder={`Search teachers...`}
+                                    placeholder={`Search...`}
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
-                                    onKeyDown={handleStaffSearchKeyDown}
                                     className="w-full pl-12 pr-4 py-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all"
                                 />
                             </div>
                             <button
-                                onClick={triggerStaffSearch}
+                                onClick={teacherAssignmentViewMode === 'by_teacher' ? triggerStaffSearch : triggerSearch}
                                 className="px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
                             >
                                 <Search size={18} /> Search
                             </button>
                         </div>
 
-                        {staffLoading ? (
-                            <div className="py-20 text-center flex flex-col items-center gap-4">
-                                <Loader2 className="animate-spin text-primary" size={32} />
-                                <span className="font-bold uppercase text-[10px] tracking-widest text-muted-foreground">Loading teacher data...</span>
+                        {/* View Toggles */}
+                        <div className="flex items-center justify-between gap-4">
+                            <div className="flex bg-muted/50 p-1 rounded-xl border border-border w-fit">
+                                <button
+                                    onClick={() => {
+                                        setTeacherAssignmentViewMode('by_subject');
+                                        loadData();
+                                    }}
+                                    className={`px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${teacherAssignmentViewMode === 'by_subject'
+                                        ? 'bg-card text-primary shadow-sm border border-border/50'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    By Subject
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setTeacherAssignmentViewMode('by_teacher');
+                                        loadStaff();
+                                    }}
+                                    className={`px-6 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${teacherAssignmentViewMode === 'by_teacher'
+                                        ? 'bg-card text-primary shadow-sm border border-border/50'
+                                        : 'text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    By Teacher
+                                </button>
                             </div>
-                        ) : staff.length === 0 ? (
-                            <div className="py-20 text-center text-muted-foreground italic">No teachers found.</div>
+
+                            {teacherAssignmentViewMode === 'by_subject' && (
+                                <button
+                                    onClick={() => {
+                                        if (isBulkTeacherEditMode && Object.keys(stagedTeacherAssignments).length > 0) {
+                                            if (confirm('Discard all staged changes?')) {
+                                                setIsBulkTeacherEditMode(false);
+                                                setStagedTeacherAssignments({});
+                                            }
+                                        } else {
+                                            setIsBulkTeacherEditMode(!isBulkTeacherEditMode);
+                                            setStagedTeacherAssignments({});
+                                        }
+                                    }}
+                                    className={`px-6 py-2.5 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all flex items-center gap-2 ${isBulkTeacherEditMode
+                                        ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20'
+                                        : 'bg-muted border border-border text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    {isBulkTeacherEditMode ? (
+                                        <>Cancel Bulk</>
+                                    ) : (
+                                        <><Layers size={14} /> Bulk Edit</>
+                                    )}
+                                </button>
+                            )}
+                        </div>
+
+                        {teacherAssignmentViewMode === 'by_teacher' ? (
+                            staffLoading ? (
+                                <div className="py-20 text-center flex flex-col items-center gap-4">
+                                    <Loader2 className="animate-spin text-primary" size={32} />
+                                    <span className="font-bold uppercase text-[10px] tracking-widest text-muted-foreground">Loading teacher data...</span>
+                                </div>
+                            ) : staff.length === 0 ? (
+                                <div className="py-20 text-center text-muted-foreground italic">No teachers found.</div>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {staff.map((user) => (
+                                        <motion.div key={user.id} whileHover={{ y: -5 }} className="p-6 bg-muted/30 border border-border rounded-3xl space-y-4 hover:border-primary/30 transition-all flex flex-col justify-between">
+                                            <div className="space-y-3">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                                                        <ShieldCheck size={24} />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-black tracking-tight text-foreground line-clamp-1">{user.full_name}</h3>
+                                                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{user.role}</p>
+                                                    </div>
+                                                </div>
+
+                                                <div className="flex flex-wrap gap-1.5 min-h-[40px]">
+                                                    {(user.assigned_subjects || []).length > 0 ? (
+                                                        (user.assigned_subjects).map((s: any) => (
+                                                            <span key={s.id} className="px-2 py-0.5 rounded-md bg-primary/5 text-primary text-[8px] font-black uppercase border border-primary/10">{s.name}</span>
+                                                        ))
+                                                    ) : (
+                                                        <span className="text-[9px] text-muted-foreground italic">No subjects assigned</span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <button onClick={() => openAssignModal(user)} className="w-full py-3 bg-card border border-border hover:border-primary/50 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95">
+                                                Assign Subjects
+                                            </button>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {staff.map((user) => (
-                                    <motion.div key={user.id} whileHover={{ y: -5 }} className="p-6 bg-muted/30 border border-border rounded-3xl space-y-4 hover:border-primary/30 transition-all flex flex-col justify-between">
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                                                    <ShieldCheck size={24} />
+                            // By Subject View
+                            <div className="space-y-12">
+                                {allSubjectsLoading ? (
+                                    <div className="py-20 text-center flex flex-col items-center gap-4">
+                                        <Loader2 className="animate-spin text-primary" size={32} />
+                                        <span className="font-bold uppercase text-[10px] tracking-widest text-muted-foreground">Loading subjects...</span>
+                                    </div>
+                                ) : (
+                                    (() => {
+                                        const grouped = allSubjects.reduce((acc: any, subj) => {
+                                            const className = subj.class_name || 'All Classes';
+                                            const streamName = subj.stream_name || 'Common / All Streams';
+                                            if (!acc[className]) acc[className] = {};
+                                            if (!acc[className][streamName]) acc[className][streamName] = [];
+                                            acc[className][streamName].push(subj);
+                                            return acc;
+                                        }, {});
+
+                                        if (allSubjects.length === 0) return <div className="py-20 text-center text-muted-foreground italic">No subjects found</div>;
+
+                                        return Object.entries(grouped).map(([className, streams]: [string, any]) => (
+                                            <div key={className} className="space-y-6">
+                                                <div className="flex items-center gap-4">
+                                                    <h2 className="text-xl font-black uppercase tracking-tight text-foreground truncate">{className}</h2>
+                                                    <div className="h-px flex-1 bg-border"></div>
                                                 </div>
-                                                <div>
-                                                    <h3 className="font-black tracking-tight text-foreground line-clamp-1">{user.full_name}</h3>
-                                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{user.role}</p>
+
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                                                    {Object.entries(streams).map(([streamName, streamSubjects]: [string, any]) => (
+                                                        <div key={streamName} className="space-y-4 bg-muted/10 p-5 rounded-3xl border border-border/60 shadow-sm">
+                                                            <div className="flex items-center gap-2 px-2">
+                                                                <div className="w-2 h-2 rounded-full bg-primary"></div>
+                                                                <span className="text-xs font-black uppercase text-foreground tracking-widest">{streamName}</span>
+                                                            </div>
+                                                            <div className="space-y-3">
+                                                                {streamSubjects.map((subj: any) => {
+                                                                    const staged = stagedTeacherAssignments[subj.id];
+                                                                    const isStaged = !!staged;
+                                                                    const teacherName = isStaged ? staged.teacher_name : (subj.assigned_teacher_name || 'No teacher assigned');
+                                                                    const teacherId = isStaged ? staged.teacher_id : subj.assigned_teacher_id;
+
+                                                                    return (
+                                                                        <div
+                                                                            key={subj.id}
+                                                                            className={`p-3 bg-card border rounded-2xl shadow-sm transition-all flex items-center justify-between group ${isStaged
+                                                                                    ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                                                                                    : 'border-border'
+                                                                                }`}
+                                                                        >
+                                                                            <div className="flex items-center gap-3 min-w-0 pr-2">
+                                                                                <div className="w-11 h-11 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold flex-shrink-0 text-sm border border-primary/20">
+                                                                                    {subj.name.charAt(0)}
+                                                                                </div>
+                                                                                <div className="min-w-0 flex-1">
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <h4 className="font-bold text-foreground text-sm line-clamp-1">{subj.name}</h4>
+                                                                                        {isStaged && (
+                                                                                            <span className="text-[8px] px-1.5 py-0.5 rounded border border-primary/20 bg-primary/10 text-primary uppercase font-black tracking-widest flex-shrink-0 animate-pulse">Pending</span>
+                                                                                        )}
+                                                                                        {subj.is_compulsory && (
+                                                                                            <span className="text-[8px] px-1.5 py-0.5 rounded border border-border/10 bg-muted/20 text-muted-foreground uppercase font-black tracking-widest flex-shrink-0">Compulsory</span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <div className="flex items-center mt-1">
+                                                                                        {teacherId ? (
+                                                                                            <div className={`flex items-center gap-1.5 min-w-0 ${isStaged ? 'text-primary' : 'text-foreground'}`}>
+                                                                                                <UserCircle2 size={12} className="flex-shrink-0" />
+                                                                                                <span className="text-[10px] font-bold line-clamp-1">{teacherName}</span>
+                                                                                            </div>
+                                                                                        ) : (
+                                                                                            <span className="text-[10px] font-bold text-rose-500/80 italic">No teacher assigned</span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {isBulkTeacherEditMode && (
+                                                                                <button
+                                                                                    onClick={() => {
+                                                                                        setSelectedSubjectForTeacher(subj);
+                                                                                        setIsAssignTeacherModalOpen(true);
+                                                                                        loadStaff();
+                                                                                    }}
+                                                                                    className={`px-4 py-2 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-sm active:scale-95 flex-shrink-0 ${teacherId ? 'border border-border hover:border-primary text-muted-foreground hover:text-foreground hover:bg-primary/5 bg-muted/30' : 'bg-primary hover:bg-primary/90 text-primary-foreground'}`}
+                                                                                >
+                                                                                    {teacherId ? 'Change' : 'Assign'}
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             </div>
-
-                                            <div className="flex flex-wrap gap-1.5 min-h-[40px]">
-                                                {(user.assigned_subjects || []).length > 0 ? (
-                                                    (user.assigned_subjects).map((s: any) => (
-                                                        <span key={s.id} className="px-2 py-0.5 rounded-md bg-primary/5 text-primary text-[8px] font-black uppercase border border-primary/10">{s.name}</span>
-                                                    ))
-                                                ) : (
-                                                    <span className="text-[9px] text-muted-foreground italic">No subjects assigned</span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <button onClick={() => openAssignModal(user)} className="w-full py-3 bg-card border border-border hover:border-primary/50 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95">
-                                            Assign Subjects
-                                        </button>
-                                    </motion.div>
-                                ))}
+                                        ));
+                                    })()
+                                )}
                             </div>
                         )}
                     </div>
@@ -692,7 +1080,7 @@ export default function SubjectManagementPage() {
 
                                 <div className="space-y-12">
                                     {(() => {
-                                        const grouped = subjects.reduce((acc: any, subj) => {
+                                        const grouped = allSubjects.reduce((acc: any, subj) => {
                                             const className = subj.class_name || 'All Classes';
                                             const streamName = subj.stream_name || 'Common / All Streams';
                                             if (!acc[className]) acc[className] = {};
@@ -701,7 +1089,7 @@ export default function SubjectManagementPage() {
                                             return acc;
                                         }, {});
 
-                                        if (subjects.length === 0) return <div className="py-20 text-center text-muted-foreground italic">No subjects found</div>;
+                                        if (allSubjects.length === 0) return <div className="py-20 text-center text-muted-foreground italic">No subjects found</div>;
 
                                         return Object.entries(grouped).map(([className, streams]: [string, any]) => (
                                             <div key={className} className="space-y-6">
@@ -758,6 +1146,152 @@ export default function SubjectManagementPage() {
                 )}
             </div>
 
+            {/* Bulk Delete Modal */}
+            <AnimatePresence>
+                {isBulkDeleteModalOpen && (() => {
+                    const matches = getBulkDeleteMatches();
+                    const hasAnyCriteria = !!(bulkDeleteName || bulkDeleteClass || bulkDeleteStream);
+                    return (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBulkDeleteModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-lg glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
+                                <div className="text-center space-y-2">
+                                    <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+                                        {/* {isBulkDeleteLoading ? <Loader2 className="animate-spin" size={32} /> : <Trash2 size={32} />} */}
+                                        <Trash2 size={32} />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Bulk Delete Subjects</h3>
+                                    <p className="text-muted-foreground font-medium text-sm">
+                                        {isBulkDeleteLoading ? `Fetching all ${bulkDeleteAllSubjects.length > 0 ? bulkDeleteAllSubjects.length : '...'} subjects from database...` : 'Filter subjects to delete by one or more criteria.'}
+                                    </p>
+                                </div>
+
+                                {bulkDeleteError && (
+                                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-500 text-xs font-bold">
+                                        <AlertTriangle size={16} />
+                                        {bulkDeleteError}
+                                    </motion.div>
+                                )}
+
+                                {isBulkDeleteLoading ?
+                                    <div className="flex flex-col items-center justify-center">
+                                        <Loader2 className="animate-spin" size={32} />
+                                        {/* <p>Loading... </p> */}
+                                    </div>
+                                    :
+                                    (<div className="space-y-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Subject Name (contains)</label>
+                                            <input
+                                                type="text"
+                                                value={bulkDeleteName}
+                                                onChange={(e) => setBulkDeleteName(e.target.value)}
+                                                placeholder='e.g. "Mathematics"'
+                                                disabled={isBulkDeleteLoading}
+                                                className="w-full p-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20 outline-none transition-all placeholder:text-muted-foreground/30 disabled:opacity-50"
+                                            />
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Class (optional)</label>
+                                            <select
+                                                value={bulkDeleteClass}
+                                                onChange={(e) => { setBulkDeleteClass(e.target.value); setBulkDeleteStream(''); }}
+                                                disabled={isBulkDeleteLoading}
+                                                className="w-full p-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20 outline-none transition-all appearance-none disabled:opacity-50"
+                                            >
+                                                <option value="">All Classes</option>
+                                                {classes.map((c) => (
+                                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Stream (optional)</label>
+                                            <select
+                                                value={bulkDeleteStream}
+                                                onChange={(e) => setBulkDeleteStream(e.target.value)}
+                                                disabled={isBulkDeleteLoading}
+                                                className="w-full p-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20 outline-none transition-all appearance-none disabled:opacity-50"
+                                            >
+                                                <option value="">All Streams</option>
+                                                {(bulkDeleteClass
+                                                    ? allStreams.filter((s: any) => s.class_id === bulkDeleteClass)
+                                                    : allStreams
+                                                ).map((s: any) => (
+                                                    <option key={s.id} value={s.id}>{s.full_name}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        {/* Match preview */}
+                                        <div className={`flex items-center gap-3 p-4 rounded-2xl border font-black text-sm uppercase tracking-widest ${hasAnyCriteria && matches.length > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-muted border-border text-muted-foreground'}`}>
+                                            <AlertTriangle size={18} />
+                                            {isBulkDeleteLoading
+                                                ? 'Loading subjects from database...'
+                                                : !hasAnyCriteria
+                                                    ? `${bulkDeleteAllSubjects.length} subjects loaded. Enter a filter to preview matches.`
+                                                    : matches.length === 0
+                                                        ? 'No subjects match these criteria.'
+                                                        : `${matches.length} of ${bulkDeleteAllSubjects.length} subjects will be permanently deleted.`}
+                                        </div>
+                                    </div>)
+                                }
+
+
+                                <div className="flex flex-col gap-3">
+                                    {/* Two-step confirmation: show warning before allowing deletion */}
+                                    {bulkDeleteConfirmed && hasAnyCriteria && matches.length > 0 && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 8 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="p-5 bg-rose-500 text-background rounded-2xl space-y-3"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <AlertTriangle size={22} className="flex-shrink-0" />
+                                                <p className="font-black uppercase text-sm tracking-widest">This action cannot be undone!</p>
+                                            </div>
+                                            <p className="text-xs font-bold text-background/90 leading-relaxed">
+                                                You are about to permanently delete <span className="text-background font-black">{matches.length} subject{matches.length > 1 ? 's' : ''}</span> from the database. All associated grades, enrollments, and exam results linked to these subjects will also be removed.
+                                            </p>
+                                            <p className="text-xs font-black uppercase tracking-widest text-background/70">Click the button below to confirm.</p>
+                                        </motion.div>
+                                    )}
+
+                                    {!bulkDeleteConfirmed ? (
+                                        <button
+                                            onClick={() => setBulkDeleteConfirmed(true)}
+                                            disabled={isBulkDeleting || isBulkDeleteLoading || !hasAnyCriteria || matches.length === 0}
+                                            className="w-full py-4 bg-rose-500/10 text-rose-500 border border-rose-500/40 font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:bg-rose-500/20 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-3"
+                                        >
+                                            <Trash2 size={18} />
+                                            Delete {hasAnyCriteria && matches.length > 0 ? `${matches.length} Subjects` : 'Subjects'}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={handleBulkDelete}
+                                            disabled={isBulkDeleting}
+                                            className="w-full py-4 bg-rose-500 text-background font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-rose-500/30 hover:bg-rose-600 active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-3 animate-pulse"
+                                        >
+                                            {isBulkDeleting ? <Loader2 className="animate-spin" size={18} /> : <AlertTriangle size={18} />}
+                                            {isBulkDeleting ? 'Deleting...' : `Yes, Delete ${matches.length} Subjects Permanently`}
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => { setIsBulkDeleteModalOpen(false); setBulkDeleteConfirmed(false); }}
+                                        disabled={isBulkDeleting}
+                                        className="w-full py-4 bg-muted text-muted-foreground font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:bg-muted/80 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </div>
+                    );
+                })()}
+            </AnimatePresence>
+
             {/* Create Subject Modal */}
             <AnimatePresence>
                 {isCreateModalOpen && (
@@ -793,89 +1327,114 @@ export default function SubjectManagementPage() {
                                 </div>
 
                                 <div className="space-y-4">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Class</label>
-                                        <select
-                                            value={newSubjectClass}
-                                            onChange={async (e) => {
-                                                setNewSubjectClass(e.target.value);
-                                                setNewSubjectStreams([]); // Reset streams
-                                                setSelectAllStreams(false);
-                                                if (e.target.value) {
-                                                    const token = await getToken();
-                                                    if (token) {
-                                                        const s = await fetchStreams(token, e.target.value);
-                                                        setStreams(s);
-                                                    }
-                                                } else {
-                                                    setStreams([]);
+                                    <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/20 rounded-2xl">
+                                        <input
+                                            type="checkbox"
+                                            checked={isGlobalSubject}
+                                            onChange={(e) => {
+                                                setIsGlobalSubject(e.target.checked);
+                                                if (e.target.checked) {
+                                                    setNewSubjectClass('');
+                                                    setNewSubjectStreams([]);
+                                                    setSelectAllStreams(false);
                                                 }
                                             }}
-                                            className="w-full p-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all appearance-none"
-                                            required
-                                        >
-                                            <option value="">Select Class</option>
-                                            {classes.map((c) => (
-                                                <option key={c.id} value={c.id}>{c.name}</option>
-                                            ))}
-                                        </select>
+                                            className="w-5 h-5 rounded bg-transparent border-2 border-primary focus:ring-0 focus:ring-offset-0 accent-primary"
+                                            id="global-subject"
+                                        />
+                                        <label htmlFor="global-subject" className="font-bold text-sm text-foreground cursor-pointer">
+                                            Create for all classes and streams
+                                        </label>
                                     </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Streams</label>
-                                        <div className="p-4 rounded-2xl bg-muted border border-border space-y-3 max-h-[200px] overflow-y-auto">
-                                            <div className="flex items-center gap-3">
-                                                <input
-                                                    type="checkbox"
-                                                    checked={selectAllStreams}
-                                                    onChange={(e) => setSelectAllStreams(e.target.checked)}
-                                                    className="w-4 h-4 rounded bg-transparent border-2 border-primary focus:ring-0 focus:ring-offset-0 accent-primary"
-                                                    disabled={!newSubjectClass || streams.length === 0}
-                                                />
-                                                <span className="font-bold text-xs uppercase text-foreground">All Streams</span>
-                                            </div>
 
-                                            {!selectAllStreams && (
-                                                <div className="pl-2 space-y-2 border-l-2 border-border ml-2">
-                                                    {streams.length === 0 ? (
-                                                        <p className="text-[10px] text-muted-foreground italic pl-2">Select a class to view streams</p>
-                                                    ) : (
-                                                        streams.map((s) => (
-                                                            <div key={s.id} className="flex items-center gap-3">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={newSubjectStreams.includes(s.id)}
-                                                                    onChange={(e) => {
-                                                                        if (e.target.checked) {
-                                                                            setNewSubjectStreams([...newSubjectStreams, s.id]);
-                                                                        } else {
-                                                                            setNewSubjectStreams(newSubjectStreams.filter(id => id !== s.id));
-                                                                        }
-                                                                    }}
-                                                                    className="w-4 h-4 rounded bg-transparent border-2 border-current focus:ring-0 focus:ring-offset-0 accent-primary"
-                                                                />
-                                                                <span className="font-bold text-xs text-foreground">{s.name}</span>
-                                                            </div>
-                                                        ))
+                                    {!isGlobalSubject && (
+                                        <>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Class</label>
+                                                <select
+                                                    value={newSubjectClass}
+                                                    onChange={async (e) => {
+                                                        setNewSubjectClass(e.target.value);
+                                                        setNewSubjectStreams([]); // Reset streams
+                                                        setSelectAllStreams(false);
+                                                        if (e.target.value) {
+                                                            const token = await getToken();
+                                                            if (token) {
+                                                                const s = await fetchStreams(token, e.target.value);
+                                                                setStreams(s);
+                                                            }
+                                                        } else {
+                                                            setStreams([]);
+                                                        }
+                                                    }}
+                                                    className="w-full p-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all appearance-none"
+                                                    required
+                                                >
+                                                    <option value="">Select Class</option>
+                                                    {classes.map((c) => (
+                                                        <option key={c.id} value={c.id}>{c.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Streams</label>
+                                                <div className="p-4 rounded-2xl bg-muted border border-border space-y-3 max-h-[200px] overflow-y-auto">
+                                                    <div className="flex items-center gap-3">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectAllStreams}
+                                                            onChange={(e) => setSelectAllStreams(e.target.checked)}
+                                                            className="w-4 h-4 rounded bg-transparent border-2 border-primary focus:ring-0 focus:ring-offset-0 accent-primary"
+                                                            disabled={!newSubjectClass || streams.length === 0}
+                                                        />
+                                                        <span className="font-bold text-xs uppercase text-foreground">All Streams</span>
+                                                    </div>
+
+                                                    {!selectAllStreams && (
+                                                        <div className="pl-2 space-y-2 border-l-2 border-border ml-2">
+                                                            {streams.length === 0 ? (
+                                                                <p className="text-[10px] text-muted-foreground italic pl-2">Select a class to view streams</p>
+                                                            ) : (
+                                                                streams.map((s) => (
+                                                                    <div key={s.id} className="flex items-center gap-3">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={newSubjectStreams.includes(s.id)}
+                                                                            onChange={(e) => {
+                                                                                if (e.target.checked) {
+                                                                                    setNewSubjectStreams([...newSubjectStreams, s.id]);
+                                                                                } else {
+                                                                                    setNewSubjectStreams(newSubjectStreams.filter(id => id !== s.id));
+                                                                                }
+                                                                            }}
+                                                                            className="w-4 h-4 rounded bg-transparent border-2 border-current focus:ring-0 focus:ring-offset-0 accent-primary"
+                                                                        />
+                                                                        <span className="font-bold text-xs text-foreground">{s.name}</span>
+                                                                    </div>
+                                                                ))
+                                                            )}
+                                                        </div>
                                                     )}
                                                 </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Teacher (Optional)</label>
-                                        <select
-                                            value={newSubjectTeacher}
-                                            onChange={(e) => setNewSubjectTeacher(e.target.value)}
-                                            className="w-full p-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all appearance-none"
-                                        >
-                                            <option value="">None (Assign later)</option>
-                                            {staff.map((teacher) => (
-                                                <option key={teacher.id} value={teacher.id}>
-                                                    {teacher.full_name}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Teacher (Optional)</label>
+                                    <select
+                                        value={newSubjectTeacher}
+                                        onChange={(e) => setNewSubjectTeacher(e.target.value)}
+                                        className="w-full p-4 rounded-2xl bg-muted border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all appearance-none"
+                                    >
+                                        <option value="">None (Assign later)</option>
+                                        {staff.map((teacher) => (
+                                            <option key={teacher.id} value={teacher.id}>
+                                                {teacher.full_name}
+                                            </option>
+                                        ))}
+                                    </select>
                                 </div>
 
                                 <div className="flex items-center justify-between p-4 bg-muted border border-border rounded-2xl">
@@ -929,8 +1488,8 @@ export default function SubjectManagementPage() {
                                             <button
                                                 onClick={() => setAssignmentTab('available')}
                                                 className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${assignmentTab === 'available'
-                                                        ? 'bg-card text-primary shadow-sm ring-1 ring-border'
-                                                        : 'text-muted-foreground hover:text-foreground'
+                                                    ? 'bg-card text-primary shadow-sm ring-1 ring-border'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                                     }`}
                                             >
                                                 Unassigned ({modalSubjects.filter(s => !s.assigned_teacher_id).length})
@@ -938,8 +1497,8 @@ export default function SubjectManagementPage() {
                                             <button
                                                 onClick={() => setAssignmentTab('assigned')}
                                                 className={`flex-1 py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${assignmentTab === 'assigned'
-                                                        ? 'bg-card text-primary shadow-sm ring-1 ring-border'
-                                                        : 'text-muted-foreground hover:text-foreground'
+                                                    ? 'bg-card text-primary shadow-sm ring-1 ring-border'
+                                                    : 'text-muted-foreground hover:text-foreground'
                                                     }`}
                                             >
                                                 Assigned ({modalSubjects.filter(s => s.assigned_teacher_id === selectedUser?.id).length})
@@ -1096,8 +1655,8 @@ export default function SubjectManagementPage() {
                                                                                 }
                                                                             }}
                                                                             className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${isSelected
-                                                                                    ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
-                                                                                    : 'bg-primary/10 text-primary hover:bg-primary/20'
+                                                                                ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                                                                                : 'bg-primary/10 text-primary hover:bg-primary/20'
                                                                                 }`}
                                                                         >
                                                                             {isSelected ? 'Remove' : 'Assign'}
@@ -1378,6 +1937,379 @@ export default function SubjectManagementPage() {
                                         Save Enrollment
                                     </button>
                                 </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            {/* Assign Teacher to Subject Modal */}
+            <AnimatePresence>
+                {isAssignTeacherModalOpen && selectedSubjectForTeacher && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAssignTeacherModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-lg glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl flex flex-col max-h-[90vh]">
+                            <div className="flex items-center justify-between mb-8">
+                                <div className="flex items-center gap-4">
+                                    <div className="w-14 h-14 bg-primary/10 text-primary rounded-2xl flex items-center justify-center border border-primary/20 flex-shrink-0">
+                                        <BookOpen size={28} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <h3 className="text-xl font-black text-foreground uppercase tracking-tight line-clamp-1">{selectedSubjectForTeacher.name}</h3>
+                                        <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-[0.2em]">Select Teacher • {selectedSubjectForTeacher.class_name} {selectedSubjectForTeacher.stream_name ? `• ${selectedSubjectForTeacher.stream_name}` : ''}</p>
+                                    </div>
+                                </div>
+                                <button onClick={() => setIsAssignTeacherModalOpen(false)} className="p-3 bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 rounded-xl transition-all">
+                                    <XCircle size={20} />
+                                </button>
+                            </div>
+
+                            <div className="relative mb-6">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Search teachers..."
+                                    value={assignTeacherSearch}
+                                    onChange={(e) => setAssignTeacherSearch(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-2xl text-sm font-bold placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary transition-all text-foreground"
+                                />
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-2 min-h-[300px]">
+                                {staffLoading ? (
+                                    <div className="py-20 flex flex-col items-center justify-center gap-4">
+                                        <Loader2 className="animate-spin text-primary" size={32} />
+                                        <p className="text-slate-500 font-black uppercase tracking-widest text-[10px]">Loading Teachers...</p>
+                                    </div>
+                                ) : (
+                                    <>
+                                        {/* Remove Teacher Option */}
+                                        {selectedSubjectForTeacher.assigned_teacher_id && (
+                                            <div
+                                                onClick={async () => {
+                                                    if (isBulkTeacherEditMode) {
+                                                        setStagedTeacherAssignments(prev => ({
+                                                            ...prev,
+                                                            [selectedSubjectForTeacher.id]: {
+                                                                teacher_id: null,
+                                                                teacher_name: 'Unassigned'
+                                                            }
+                                                        }));
+                                                        setIsAssignTeacherModalOpen(false);
+                                                        return;
+                                                    }
+
+                                                    if (actionLoading) return;
+                                                    setActionLoading(true);
+                                                    try {
+                                                        const token = await getToken();
+                                                        if (token) {
+                                                            await updateSubject(token, selectedSubjectForTeacher.id, {
+                                                                teacher_id: null as any // Clear teacher
+                                                            });
+                                                            loadData();
+                                                            loadAllSubjects();
+                                                            setIsAssignTeacherModalOpen(false);
+                                                        }
+                                                    } catch (err: any) {
+                                                        setError(err.message || 'Failed to remove teacher');
+                                                    } finally {
+                                                        setActionLoading(false);
+                                                    }
+                                                }}
+                                                className={`p-4 rounded-2xl border border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 hover:border-rose-500/40 transition-all cursor-pointer flex items-center gap-4 group mb-4 justify-between ${actionLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                                                        <XCircle size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <div className="text-sm font-black text-rose-500">Remove Teacher</div>
+                                                        <div className="text-[10px] text-rose-500/70 uppercase font-black tracking-wider">Leave this subject unassigned</div>
+                                                    </div>
+                                                </div>
+                                                {actionLoading && (
+                                                    <Loader2 size={16} className="animate-spin text-rose-500" />
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {staff.filter(u => u.full_name.toLowerCase().includes(assignTeacherSearch.toLowerCase())).length === 0 ? (
+                                            <p className="text-center text-muted-foreground text-xs py-10 italic">No matching teachers found.</p>
+                                        ) : (
+                                            staff.filter(u => u.full_name.toLowerCase().includes(assignTeacherSearch.toLowerCase())).map((teacher) => (
+                                                <div
+                                                    key={teacher.id}
+                                                    className={`relative p-4 rounded-2xl border transition-all cursor-pointer flex items-center justify-between group ${selectedSubjectForTeacher.assigned_teacher_id === teacher.id ? 'bg-primary/10 border-primary shadow-sm' : 'bg-muted/30 border-border hover:border-primary/40 hover:bg-muted/50'} ${actionLoading ? 'opacity-50 pointer-events-none' : ''}`}
+                                                    onClick={async () => {
+                                                        if (isBulkTeacherEditMode) {
+                                                            setStagedTeacherAssignments(prev => ({
+                                                                ...prev,
+                                                                [selectedSubjectForTeacher.id]: {
+                                                                    teacher_id: teacher.id,
+                                                                    teacher_name: teacher.full_name
+                                                                }
+                                                            }));
+                                                            setIsAssignTeacherModalOpen(false);
+                                                            return;
+                                                        }
+
+                                                        if (actionLoading) return;
+                                                        setActionLoading(true);
+                                                        try {
+                                                            const token = await getToken();
+                                                            if (token) {
+                                                                await updateSubject(token, selectedSubjectForTeacher.id, {
+                                                                    teacher_id: teacher.id
+                                                                });
+                                                                loadData();
+                                                                loadAllSubjects();
+                                                                setIsAssignTeacherModalOpen(false);
+                                                            }
+                                                        } catch (err: any) {
+                                                            setError(err.message || 'Failed to assign teacher');
+                                                        } finally {
+                                                            setActionLoading(false);
+                                                        }
+                                                    }}
+                                                >
+                                                    <div className="flex items-center gap-4 min-w-0">
+                                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 transition-colors ${selectedSubjectForTeacher.assigned_teacher_id === teacher.id ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary group-hover:bg-primary/20'}`}>
+                                                            {teacher.full_name.charAt(0)}
+                                                        </div>
+                                                        <div className="min-w-0">
+                                                            <div className="text-sm font-bold text-foreground line-clamp-1">{teacher.full_name}</div>
+                                                            <div className="text-[10px] text-muted-foreground uppercase font-black tracking-wider line-clamp-1">
+                                                                {/* {teacher.assigned_subjects?.length || 0} subjects assigned */}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-2">
+                                                        {actionLoading && selectedSubjectForTeacher.assigned_teacher_id !== teacher.id /* Simplified assuming the clicked one is loading, though all are disabled */ && (
+                                                            <Loader2 size={16} className="animate-spin text-primary" />
+                                                        )}
+                                                        {selectedSubjectForTeacher.assigned_teacher_id === teacher.id && (
+                                                            <CheckCircle2 size={20} className="text-primary flex-shrink-0 ml-4" />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        )}
+                                    </>
+                                )}
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            
+            {/* Purge All Subjects Confirmation Modal */}
+            <AnimatePresence>
+                {isPurgeModalOpen && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsPurgeModalOpen(false)} className="absolute inset-0 bg-slate-900/90 backdrop-blur-md" />
+                        <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }} className="relative w-full max-w-xl bg-card border-[3px] border-rose-500/30 rounded-[3rem] shadow-[0_0_50px_rgba(244,63,94,0.2)] overflow-hidden flex flex-col">
+                            {purgeStep === 1 ? (
+                                <div className="p-10 space-y-8">
+                                    <div className="flex flex-col items-center text-center space-y-4">
+                                        <div className="w-24 h-24 rounded-[2rem] bg-rose-500/10 text-rose-500 flex items-center justify-center animate-pulse border border-rose-500/20 shadow-inner">
+                                            <AlertTriangle size={48} />
+                                        </div>
+                                        <h3 className="text-3xl font-black uppercase tracking-tighter text-rose-500">System Decimation Warning</h3>
+                                        <p className="text-sm font-black uppercase tracking-widest text-muted-foreground max-w-md">
+                                            This action is <span className="text-rose-500 underline underline-offset-4 decoration-2">instantaneous and permanent</span>. You are about to initiate a full curriculum reset.
+                                        </p>
+                                    </div>
+
+                                    <div className="bg-rose-500/5 rounded-[2rem] p-8 border border-rose-500/10 space-y-6">
+                                        <h4 className="text-xs font-black uppercase tracking-[0.3em] text-rose-500/70 text-center">Data to be Destroyed</h4>
+                                        <ul className="space-y-4">
+                                            {[
+                                                "All Subjects and Curriculum Structures",
+                                                "All Global and Subject Exam Definitions",
+                                                "All Student Grades, Marks, and Transcripts",
+                                                "All Competency Assessments (CBC) Data",
+                                                "All Teacher Subject Assignments"
+                                            ].map((msg, i) => (
+                                                <li key={i} className="flex items-center gap-4 group">
+                                                    <div className="w-6 h-6 rounded-lg bg-rose-500/20 text-rose-500 flex items-center justify-center text-[10px] font-black shrink-0">
+                                                        {i + 1}
+                                                    </div>
+                                                    <span className="text-[11px] font-black uppercase tracking-wider text-muted-foreground group-hover:text-rose-400 transition-colors">{msg}</span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    <div className="flex flex-col gap-3">
+                                        <button 
+                                            onClick={() => setPurgeStep(2)}
+                                            className="w-full py-5 bg-rose-600 text-white font-black uppercase text-xs tracking-[0.3em] rounded-2xl shadow-xl shadow-rose-600/20 hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                                        >
+                                            I Understand the Consequences
+                                        </button>
+                                        <button 
+                                            onClick={() => setIsPurgeModalOpen(false)}
+                                            className="w-full py-4 text-muted-foreground font-black uppercase text-[10px] tracking-widest hover:text-foreground transition-all"
+                                        >
+                                            Abort Operation
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="p-10 space-y-8">
+                                    <div className="flex flex-col items-center text-center space-y-4">
+                                        <div className="w-24 h-24 rounded-[2rem] bg-rose-500 text-white flex items-center justify-center shadow-xl shadow-rose-500/40">
+                                            <GraduationCap size={48} />
+                                        </div>
+                                        <h3 className="text-3xl font-black uppercase tracking-tighter text-foreground">Final Confirmation</h3>
+                                        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground leading-relaxed">
+                                            To proceed, please type the confirmation phrase exactly as shown below:
+                                        </p>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div className="bg-muted/50 p-6 rounded-2xl border-2 border-dashed border-border text-center">
+                                            <span className="text-lg font-black tracking-[0.2em] text-foreground select-all">{PURGE_PHRASE}</span>
+                                        </div>
+
+                                        <input
+                                            type="text"
+                                            autoFocus
+                                            placeholder="Type phrase here..."
+                                            value={purgeConfirmationInput}
+                                            onChange={(e) => setPurgeConfirmationInput(e.target.value)}
+                                            className="w-full p-6 bg-muted border-2 border-border focus:border-rose-500 rounded-2xl text-center text-sm font-black uppercase tracking-widest outline-none transition-all"
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-3">
+                                        <button 
+                                            onClick={handlePurgeAllSubjectsAction}
+                                            disabled={purgeConfirmationInput !== PURGE_PHRASE || loading}
+                                            className="w-full py-5 bg-rose-600 text-white font-black uppercase text-xs tracking-[0.3em] rounded-2xl shadow-xl shadow-rose-600/20 hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale transition-all flex items-center justify-center gap-3"
+                                        >
+                                            {loading ? <Loader2 className="animate-spin" size={20} /> : <Trash2 size={20} />}
+                                            Finalize Decimation
+                                        </button>
+                                        <button 
+                                            onClick={() => setPurgeStep(1)}
+                                            className="w-full py-4 text-muted-foreground font-black uppercase text-[10px] tracking-widest hover:text-foreground transition-all"
+                                        >
+                                            Go Back
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            {/* Floating Batch Action Bar */}
+            <AnimatePresence>
+                {isBulkTeacherEditMode && Object.keys(stagedTeacherAssignments).length > 0 && (
+                    <motion.div
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[90] flex items-center gap-6 px-8 py-4 bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl shadow-primary/20 backdrop-blur-xl"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-primary/20 text-primary flex items-center justify-center font-black">
+                                {Object.keys(stagedTeacherAssignments).length}
+                            </div>
+                            <div className="text-left" style={{ minWidth: '120px' }}>
+                                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Staged Changes</p>
+                                <p className="text-white font-bold text-xs">Ready for batch save</p>
+                            </div>
+                        </div>
+
+                        <div className="h-10 w-px bg-slate-800"></div>
+
+                        <button
+                            onClick={() => {
+                                setIsBatchSaveModalOpen(true);
+                                setBatchUpdateError(null);
+                            }}
+                            className="px-6 py-3 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-primary/30 whitespace-nowrap"
+                        >
+                            <ShieldCheck size={18} /> Review & Save
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                if (confirm('Discard all staged assignments?')) {
+                                    setStagedTeacherAssignments({});
+                                }
+                            }}
+                            className="text-slate-400 hover:text-white transition-colors p-1"
+                        >
+                            <XCircle size={24} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Batch Save Confirmation Modal */}
+            <AnimatePresence>
+                {isBatchSaveModalOpen && (
+                    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBatchSaveModalOpen(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-2xl glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl flex flex-col max-h-[90vh]">
+                            <div className="text-center space-y-2 mb-8">
+                                <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
+                                    <ShieldCheck size={32} />
+                                </div>
+                                <h3 className="text-2xl font-black text-foreground uppercase tracking-tight text-center">Review Batch Changes</h3>
+                                <p className="text-muted-foreground font-medium text-sm text-center">Review the {Object.keys(stagedTeacherAssignments).length} staged assignments before saving.</p>
+                            </div>
+
+                            {batchUpdateError && (
+                                <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-500 text-sm font-bold">
+                                    <AlertTriangle size={20} />
+                                    {batchUpdateError}
+                                </div>
+                            )}
+
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-3 mb-8 custom-scrollbar">
+                                {Object.entries(stagedTeacherAssignments).map(([subject_id, data]) => {
+                                    const subject = allSubjects.find(s => s.id === subject_id);
+                                    return (
+                                        <div key={subject_id} className="p-4 rounded-2xl bg-muted/30 border border-border shadow-sm flex items-center justify-between group hover:border-primary/30 transition-all">
+                                            <div className="min-w-0 flex-1">
+                                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1.5">{subject?.class_name} • {subject?.stream_name}</div>
+                                                <div className="text-sm font-bold text-foreground">{subject?.name}</div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-8 w-px bg-border"></div>
+                                                <div className="text-right">
+                                                    <div className="text-[9px] font-black text-muted-foreground uppercase tracking-tighter mb-1">New Assignment</div>
+                                                    <div className={`px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest ${data.teacher_id ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
+                                                        {data.teacher_id ? data.teacher_name : 'Unassigned'}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button
+                                    onClick={() => setIsBatchSaveModalOpen(false)}
+                                    disabled={isBatchUpdating}
+                                    className="flex-1 py-4 bg-muted hover:bg-muted/70 text-muted-foreground font-black uppercase text-[10px] tracking-widest rounded-2xl transition-all disabled:opacity-50"
+                                >
+                                    Back to Editing
+                                </button>
+                                <button
+                                    onClick={handleBatchSaveTeacherAssignments}
+                                    disabled={isBatchUpdating}
+                                    className="flex-[2] py-4 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isBatchUpdating ? <Loader2 className="animate-spin" size={18} /> : <Check size={18} />}
+                                    {isBatchUpdating ? 'Saving Batch...' : 'Save All Changes'}
+                                </button>
                             </div>
                         </motion.div>
                     </div>

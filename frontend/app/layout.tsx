@@ -1,14 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { UserProvider } from "@/context/UserContext";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import Script from "next/script";
 
-const nunito = Nunito({
+const googleSans = Outfit({
   subsets: ['latin'],
-  variable: '--font-nunito',
+  variable: '--font-google-sans',
 });
 
 export const viewport: Viewport = {
@@ -58,7 +58,7 @@ export default function RootLayout({
             `}
           </Script>
         </head>
-        <body className={`${nunito.variable}  font-nunito antialiased`}>
+        <body className={`${googleSans.variable} font-google-sans antialiased`}>
           <UserProvider>
             <DashboardLayout>
               {children}

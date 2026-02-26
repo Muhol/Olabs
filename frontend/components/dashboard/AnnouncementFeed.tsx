@@ -128,7 +128,6 @@ export function AnnouncementFeed({ role }: { role: string }) {
                     })
                 )}
               <div className="w-full z-10 h-[100px] bg-gradient-to-t from-background to-transparent sticky -bottom-1 left-0 right-0"></div>
-
             </div>
 
             <Link

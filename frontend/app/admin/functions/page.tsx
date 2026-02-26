@@ -30,6 +30,7 @@ import {
     Settings2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useUserContext } from '@/context/UserContext';
 import {
     fetchClasses,
     fetchStreams,
@@ -58,7 +59,44 @@ const DAYS = [
 
 export default function AdminFunctionsPage() {
     const { getToken } = useAuth();
-    const [activeTab, setActiveTab] = useState<'timetabling' | 'account-management' | 'system-maintenance' | 'report-items'>('timetabling');
+    const { userRole, systemUser } = useUserContext();
+    const subroles = systemUser?.subroles || [];
+
+    const allowedTabs = React.useMemo(() => {
+        const tabs: ('timetabling' | 'account-management' | 'system-maintenance' | 'report-items')[] = [];
+        
+        // Timetabling: SUPER_ADMIN or Admin with 'all' or 'timetable_manager'
+        if (userRole === 'SUPER_ADMIN' || (userRole === 'admin' && (subroles.includes('all') || subroles.includes('timetable_manager')))) {
+            tabs.push('timetabling');
+        }
+        
+        // Account Management: SUPER_ADMIN, Admin, or Teacher
+        if (userRole === 'SUPER_ADMIN' || userRole === 'admin' || userRole === 'teacher') {
+            tabs.push('account-management');
+        }
+        
+        // System Maintenance: SUPER_ADMIN or Admin with 'all'
+        if (userRole === 'SUPER_ADMIN' || (userRole === 'admin' && subroles.includes('all'))) {
+            tabs.push('system-maintenance');
+        }
+        
+        // Report Items: SUPER_ADMIN or Admin with 'all'
+        if (userRole === 'SUPER_ADMIN' || (userRole === 'admin' && subroles.includes('all'))) {
+            tabs.push('report-items');
+        }
+        
+        return tabs;
+    }, [userRole, subroles]);
+
+    const [activeTab, setActiveTab] = useState<'timetabling' | 'account-management' | 'system-maintenance' | 'report-items'>(allowedTabs[0] || 'account-management');
+
+    // Navigation Guard: Ensure activeTab is always allowed
+    useEffect(() => {
+        if (!allowedTabs.includes(activeTab) && allowedTabs.length > 0) {
+            setActiveTab(allowedTabs[0]);
+        }
+    }, [allowedTabs, activeTab]);
+
     const [classes, setClasses] = useState<any[]>([]);
     const [streams, setStreams] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -116,8 +154,22 @@ export default function AdminFunctionsPage() {
     const [htcSaving, setHtcSaving] = useState<Record<string, boolean>>({});
 
     useEffect(() => {
-        loadInitialData();
-    }, []);
+        if (userRole !== 'librarian' && allowedTabs.length > 0) {
+            loadInitialData();
+        }
+    }, [userRole, allowedTabs]);
+
+    if (userRole === 'librarian') {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+                <XCircle size={64} className="text-rose-500" />
+                <h1 className="text-2xl font-black uppercase tracking-tight">Access Denied</h1>
+                <p className="text-muted-foreground font-medium text-center max-w-md">
+                    Librarians do not have access to administrative functions. Please contact a system administrator if you believe this is an error.
+                </p>
+            </div>
+        );
+    }
 
     const loadInitialData = async () => {
         setLoading(true);
@@ -450,30 +502,38 @@ export default function AdminFunctionsPage() {
 
             {/* Navigation Tabs */}
             <div className="flex flex-wrap bg-muted p-1.5 rounded-[1.4rem] border border-border self-start gap-1">
-                <button
-                    onClick={() => setActiveTab('timetabling')}
-                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'timetabling' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    Timetabling
-                </button>
-                <button
-                    onClick={() => setActiveTab('account-management')}
-                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'account-management' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    Account Management
-                </button>
-                <button
-                    onClick={() => setActiveTab('system-maintenance')}
-                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'system-maintenance' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    System Maintenance
-                </button>
-                <button
-                    onClick={() => setActiveTab('report-items')}
-                    className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'report-items' ? 'bg-secondary text-white shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
-                >
-                    Report Items
-                </button>
+                {allowedTabs.includes('timetabling') && (
+                    <button
+                        onClick={() => setActiveTab('timetabling')}
+                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'timetabling' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        Timetabling
+                    </button>
+                )}
+                {allowedTabs.includes('account-management') && (
+                    <button
+                        onClick={() => setActiveTab('account-management')}
+                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'account-management' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        Account Management
+                    </button>
+                )}
+                {allowedTabs.includes('system-maintenance') && (
+                    <button
+                        onClick={() => setActiveTab('system-maintenance')}
+                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'system-maintenance' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        System Maintenance
+                    </button>
+                )}
+                {allowedTabs.includes('report-items') && (
+                    <button
+                        onClick={() => setActiveTab('report-items')}
+                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'report-items' ? 'bg-secondary text-white shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                    >
+                        Report Items
+                    </button>
+                )}
             </div>
 
             {/* Main Content Area */}
@@ -491,32 +551,38 @@ export default function AdminFunctionsPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => {
-                                    setStatus({ type: 'none', message: '' });
-                                    setIsBulkModalOpen(true);
-                                }}
-                                className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
-                            >
-                                <Plus size={16} /> Global Bulk Create
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setStatus({ type: 'none', message: '' });
-                                    setIsDeleteModalOpen(true);
-                                }}
-                                className="flex items-center gap-2 px-6 py-3 bg-rose-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all"
-                            >
-                                <Filter size={16} /> Targeted Remove
-                            </button>
-                            <button
-                                onClick={handleClearAllTimetables}
-                                disabled={isClearing}
-                                className="flex items-center gap-2 px-6 py-3 bg-rose-500/10 text-rose-500 border border-rose-500/20 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50"
-                            >
-                                {isClearing ? <Loader2 size={16} className="animate-spin" /> : <Trash size={16} />}
-                                Wipe All Data
-                            </button>
+                            {(userRole === 'SUPER_ADMIN' || (userRole === 'admin' && (subroles.includes('all') || subroles.includes('timetable_manager')))) && (
+                                <>
+                                    <button
+                                        onClick={() => {
+                                            setStatus({ type: 'none', message: '' });
+                                            setIsBulkModalOpen(true);
+                                        }}
+                                        className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        <Plus size={16} /> Global Bulk Create
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setStatus({ type: 'none', message: '' });
+                                            setIsDeleteModalOpen(true);
+                                        }}
+                                        className="flex items-center gap-2 px-6 py-3 bg-rose-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all"
+                                    >
+                                        <Filter size={16} /> Targeted Remove
+                                    </button>
+                                </>
+                            )}
+                            {(userRole === 'SUPER_ADMIN' || (userRole === 'admin' && subroles.includes('all'))) && (
+                                <button
+                                    onClick={handleClearAllTimetables}
+                                    disabled={isClearing}
+                                    className="flex items-center gap-2 px-6 py-3 bg-rose-500/10 text-rose-500 border border-rose-500/20 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50"
+                                >
+                                    {isClearing ? <Loader2 size={16} className="animate-spin" /> : <Trash size={16} />}
+                                    Wipe All Data
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -738,14 +804,16 @@ export default function AdminFunctionsPage() {
                                                     </span>
                                                 ))}
                                             </div>
-                                            <div className="pt-4">
-                                                <button
-                                                    onClick={() => setIsCleanupConfirmOpen(true)}
-                                                    className="px-8 py-4 bg-rose-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition-all flex items-center gap-3"
-                                                >
-                                                    <Trash size={16} /> Sync Schema (Drop Redundant Tables)
-                                                </button>
-                                            </div>
+                                            {(userRole === 'SUPER_ADMIN' || (userRole === 'admin' && subroles.includes('all'))) && (
+                                                <div className="pt-4">
+                                                    <button
+                                                        onClick={() => setIsCleanupConfirmOpen(true)}
+                                                        className="px-8 py-4 bg-rose-600 text-white rounded-xl font-black uppercase text-[10px] tracking-widest shadow-xl shadow-rose-500/20 hover:bg-rose-700 transition-all flex items-center gap-3"
+                                                    >
+                                                        <Trash size={16} /> Sync Schema (Drop Redundant Tables)
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 ) : (
@@ -939,7 +1007,7 @@ export default function AdminFunctionsPage() {
             <AnimatePresence>
                 {isBulkModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBulkModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBulkModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
                             <div className="text-center space-y-2">
                                 <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
@@ -1040,7 +1108,7 @@ export default function AdminFunctionsPage() {
             <AnimatePresence>
                 {isDeleteModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsDeleteModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsDeleteModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
                             <div className="text-center space-y-2">
                                 <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
@@ -1159,7 +1227,7 @@ export default function AdminFunctionsPage() {
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setIsWipeModalOpen(false)}
-                            className="absolute inset-0 bg-red-950/40 backdrop-blur-sm"
+                            className="absolute inset-0 bg-red-950/40"
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -1226,7 +1294,7 @@ export default function AdminFunctionsPage() {
                         <motion.div
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             onClick={() => setConfirmingResetStudent(null)}
-                            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
+                            className="absolute inset-0 bg-black/60 "
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}

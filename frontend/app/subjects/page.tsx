@@ -122,8 +122,10 @@ export default function SubjectManagementPage() {
     const [staffLoading, setStaffLoading] = useState(false);
     const [studentsTabLoading, setStudentsTabLoading] = useState(false);
 
-    const isAuthorized = userRole === 'SUPER_ADMIN' ||
-        (userRole === 'admin' && (systemUser?.subroles?.includes('timetable_manager') || systemUser?.subroles?.includes('all')));
+    const canView = userRole === 'SUPER_ADMIN' || userRole === 'admin' || userRole === 'teacher';
+    const canEdit = userRole === 'SUPER_ADMIN' ||
+        ((userRole === 'admin' || userRole === 'teacher') &&
+            (systemUser?.subroles?.includes('all') || systemUser?.subroles?.includes('timetable_manager')));
 
     useEffect(() => {
         loadData();
@@ -201,9 +203,9 @@ export default function SubjectManagementPage() {
                     subject_id,
                     teacher_id: data.teacher_id
                 }));
-                
+
                 await batchUpdateTeacherAssignments(token, assignmentsArray);
-                
+
                 setIsBatchSaveModalOpen(false);
                 setStagedTeacherAssignments({});
                 setIsBulkTeacherEditMode(false);
@@ -603,12 +605,12 @@ export default function SubjectManagementPage() {
         }
     };
 
-    if (!isAuthorized) {
+    if (!canView) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                 <XCircle size={64} className="text-rose-500" />
-                <h1 className="text-2xl font-black uppercase">Access Denied</h1>
-                <p className="text-muted-foreground">You do not have permission to manage subjects.</p>
+                <h1 className="text-2xl font-black uppercase tracking-tight">Access Denied</h1>
+                <p className="text-muted-foreground font-medium">You do not have permission to view this page.</p>
             </div>
         );
     }
@@ -621,7 +623,7 @@ export default function SubjectManagementPage() {
 
     const handlePurgeAllSubjectsAction = async () => {
         if (purgeConfirmationInput !== PURGE_PHRASE) return;
-        
+
         setIsPurgeModalOpen(false);
 
         setLoading(true);
@@ -992,8 +994,8 @@ export default function SubjectManagementPage() {
                                                                         <div
                                                                             key={subj.id}
                                                                             className={`p-3 bg-card border rounded-2xl shadow-sm transition-all flex items-center justify-between group ${isStaged
-                                                                                    ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                                                                                    : 'border-border'
+                                                                                ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
+                                                                                : 'border-border'
                                                                                 }`}
                                                                         >
                                                                             <div className="flex items-center gap-3 min-w-0 pr-2">
@@ -1153,7 +1155,7 @@ export default function SubjectManagementPage() {
                     const hasAnyCriteria = !!(bulkDeleteName || bulkDeleteClass || bulkDeleteStream);
                     return (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBulkDeleteModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBulkDeleteModalOpen(false)} className="absolute inset-0 bg-black/80" />
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-lg glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
                                 <div className="text-center space-y-2">
                                     <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
@@ -1296,7 +1298,7 @@ export default function SubjectManagementPage() {
             <AnimatePresence>
                 {isCreateModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreateModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreateModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
                             <div className="text-center space-y-2">
                                 <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
@@ -1467,7 +1469,7 @@ export default function SubjectManagementPage() {
             <AnimatePresence>
                 {isAssignModalOpen && selectedUser && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAssignModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAssignModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-lg glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
                             <div className="flex items-center gap-4">
                                 <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center border border-primary/20 flex-shrink-0">
@@ -1687,7 +1689,7 @@ export default function SubjectManagementPage() {
             <AnimatePresence>
                 {isEditModalOpen && editingSubject && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
                             <div className="text-center space-y-2">
                                 <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
@@ -1805,7 +1807,7 @@ export default function SubjectManagementPage() {
             <AnimatePresence>
                 {isEnrollModalOpen && (
                     <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEnrollModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEnrollModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-2xl glass-card rounded-[2.5rem] border border-border bg-card p-0 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
 
                             {/* Modal Header */}
@@ -1946,7 +1948,7 @@ export default function SubjectManagementPage() {
             <AnimatePresence>
                 {isAssignTeacherModalOpen && selectedSubjectForTeacher && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAssignTeacherModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsAssignTeacherModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-lg glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl flex flex-col max-h-[90vh]">
                             <div className="flex items-center justify-between mb-8">
                                 <div className="flex items-center gap-4">
@@ -2102,7 +2104,7 @@ export default function SubjectManagementPage() {
                     </div>
                 )}
             </AnimatePresence>
-            
+
             {/* Purge All Subjects Confirmation Modal */}
             <AnimatePresence>
                 {isPurgeModalOpen && (
@@ -2142,13 +2144,13 @@ export default function SubjectManagementPage() {
                                     </div>
 
                                     <div className="flex flex-col gap-3">
-                                        <button 
+                                        <button
                                             onClick={() => setPurgeStep(2)}
                                             className="w-full py-5 bg-rose-600 text-white font-black uppercase text-xs tracking-[0.3em] rounded-2xl shadow-xl shadow-rose-600/20 hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98] transition-all"
                                         >
                                             I Understand the Consequences
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => setIsPurgeModalOpen(false)}
                                             className="w-full py-4 text-muted-foreground font-black uppercase text-[10px] tracking-widest hover:text-foreground transition-all"
                                         >
@@ -2184,7 +2186,7 @@ export default function SubjectManagementPage() {
                                     </div>
 
                                     <div className="flex flex-col gap-3">
-                                        <button 
+                                        <button
                                             onClick={handlePurgeAllSubjectsAction}
                                             disabled={purgeConfirmationInput !== PURGE_PHRASE || loading}
                                             className="w-full py-5 bg-rose-600 text-white font-black uppercase text-xs tracking-[0.3em] rounded-2xl shadow-xl shadow-rose-600/20 hover:bg-rose-500 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 disabled:grayscale transition-all flex items-center justify-center gap-3"
@@ -2192,7 +2194,7 @@ export default function SubjectManagementPage() {
                                             {loading ? <Loader2 className="animate-spin" size={20} /> : <Trash2 size={20} />}
                                             Finalize Decimation
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => setPurgeStep(1)}
                                             className="w-full py-4 text-muted-foreground font-black uppercase text-[10px] tracking-widest hover:text-foreground transition-all"
                                         >

@@ -257,7 +257,7 @@ export default function HistoryPage() {
             <AnimatePresence>
                 {isReturnModalOpen && selectedRecord && (
                     <div className="fixed inset-0 h-screen z-[110] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsReturnModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsReturnModalOpen(false)} className="absolute inset-0 bg-black/80 " />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2rem] border border-border bg-card p-6 md:p-10 shadow-2xl">
                             <div className="text-center mb-8">
                                 <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 border border-emerald-500/20 mx-auto mb-4"><CheckCircle2 size={32} /></div>

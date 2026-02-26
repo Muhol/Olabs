@@ -208,6 +208,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     {sidebarItems.map((item, idx) => {
                         // While loading, we show items that are common to all staff
                         if (!isLoading && !item.roles.includes(userRole)) return null;
+
+                        // Granular check for Settings: only SUPER_ADMIN or Admin with 'all' subrole
+                        if (item.label === 'Settings' && !isLoading) {
+                            const subroles = systemUser?.subroles || [];
+                            const canAccessSettings = userRole === 'SUPER_ADMIN' || (userRole === 'admin' && subroles.includes('all'));
+                            if (!canAccessSettings) return null;
+                        }
+
                         return (
                             <Link
                                 key={idx}
@@ -224,12 +232,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     }`}
                             >
                                 <div className="relative">
-                                    <item.icon size={22} className={`${pathname === item.href ? 'text-primary' : 'text-slate-400 group-hover:text-primary'} transition-colors`} />
+                                    <item.icon size={22} className={`${pathname === item.href ? 'text-primary' : 'text-slate-400 group-hover:text-primary'} transition-colors ${isNavigating && targetHref === item.href && 'animate-bounce'}`} />
                                     {isNavigating && targetHref === item.href && (
-                                        <motion.div
-                                            layoutId="nav-loader"
-                                            className="absolute -inset-1 border-2 border-primary border-t-transparent rounded-full animate-spin"
-                                        />
+                                        <></>
+                                        // <motion.div
+                                        //     layoutId="nav-loader"
+                                        //     className="absolute -inset-1 border-2 border-primary border-t-transparent rounded-full animate-spin"
+                                        // />
                                     )}
                                 </div>
                                 <span className={`font-bold tracking-wide ${!isSidebarOpen && 'lg:hidden'}`}>

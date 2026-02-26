@@ -128,7 +128,7 @@ export default function AnnouncementsPage() {
                         </div>
                         <input
                             type="text"
-                            placeholder="Search dispatches..."
+                            placeholder="Search announcements..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-sm font-bold focus:border-primary outline-none transition-all"
@@ -140,7 +140,7 @@ export default function AnnouncementsPage() {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-muted/30 rounded-2xl border border-border">
                                 <div className="text-2xl font-black">{announcements.length}</div>
-                                <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Total sent</div>
+                                <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Total Announcements</div>
                             </div>
                             <div className="p-4 bg-muted/30 rounded-2xl border border-border">
                                 <div className="text-2xl font-black text-emerald-500">

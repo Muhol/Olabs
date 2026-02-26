@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-nunito: "Nunito", sans-serif;
+  --font-google-sans: "Outfit", sans-serif;
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -44,7 +44,7 @@
     --input: #e2e8f0;
     --ring: #10b981;
     --radius: 1rem;
-    --font-nunito: "Nunito", sans-serif;
+    --font-google-sans: "Outfit", sans-serif;
   }
 
   .dark {
@@ -73,7 +73,7 @@
     background-color: var(--background);
     color: var(--foreground);
     transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    font-family: var(--font-nunito);
+    font-family: var(--font-google-sans);
   }
 }
 

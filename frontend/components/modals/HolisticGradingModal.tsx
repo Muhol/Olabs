@@ -595,14 +595,14 @@ export default function HolisticGradingModal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={handleCloseAttempt}
-                className="absolute inset-0 bg-background/80"
+                className="absolute inset-0 bg-black/80"
             />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-6xl h-[90vh] bg-card border border-border rounded-[3rem] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-full max-w-6xl h-[90vh] bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
                 <div className="p-8 border-b border-border bg-muted/20 flex justify-between relative">
@@ -708,7 +708,7 @@ export default function HolisticGradingModal({
                                                                         setExamToEdit(exam);
                                                                         setShowEditCompetenciesModal(true);
                                                                     }}
-                                                                    className="opacity-0 group-hover:opacity-100 text-indigo-500 hover:text-indigo-600 transition-all"
+                                                                    className="opacity-0 group-hover:opacity-100 text-secondary hover:text-indigo-600 transition-all"
                                                                     title="Edit Competencies"
                                                                 >
                                                                     <Pencil size={12} />
@@ -818,7 +818,7 @@ export default function HolisticGradingModal({
                                                         {competencies.length > 0 && (
                                                             <div
                                                                 className={`absolute -bottom-1 left-1/2 -translate-x-1/2 p-1 rounded-lg shadow-lg border transition-all z-10 ${assessments[student.id]?.[exam.id]
-                                                                    ? 'bg-indigo-500 border-indigo-500 text-white'
+                                                                    ? 'bg-secondary border-secondary text-white'
                                                                     : 'bg-card border-border text-muted-foreground opacity-0 group-hover:opacity-100'
                                                                     }`}
                                                             >
@@ -841,7 +841,7 @@ export default function HolisticGradingModal({
                                                     const level = calculateOverallCompetency(student.id);
                                                     const levelColors: Record<string, string> = {
                                                         'EE': 'bg-emerald-500 text-white',
-                                                        'ME': 'bg-indigo-500 text-white',
+                                                        'ME': 'bg-secondary text-white',
                                                         'AE': 'bg-amber-500 text-white',
                                                         'BE': 'bg-rose-500 text-white',
                                                         '-': 'bg-muted text-muted-foreground'
@@ -956,17 +956,17 @@ export default function HolisticGradingModal({
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 onClick={() => setActiveCBC(null)}
-                                className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/60"
                             />
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="relative w-full max-w-xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden shadow-indigo-500/10"
+                                className="relative w-full max-w-xl bg-card border border-border rounded-3xl shadow-2xl overflow-hidden shadow-secondary/10"
                             >
                                 <div className="p-6 border-b border-border bg-muted/20 flex items-center justify-between">
                                     <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                                        <div className="w-10 h-10 rounded-2xl bg-secondary/30 border border-secondary/50 text-secondary flex items-center justify-center shadow-lg shadow-secondary/20">
                                             <TrendingUp size={20} />
                                         </div>
                                         <div>
@@ -1012,8 +1012,8 @@ export default function HolisticGradingModal({
                                                                     disabled={isExamReadOnly(activeCBC.examId)}
                                                                     onClick={() => handleAssessmentChange(activeCBC.studentId, activeCBC.examId, comp.id, level)}
                                                                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all ${currentLevel === level
-                                                                        ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 scale-110'
-                                                                        : 'bg-muted text-muted-foreground hover:bg-indigo-500/10'
+                                                                        ? 'bg-secondary text-white shadow-lg shadow-secondary/20 scale-110'
+                                                                        : 'bg-muted text-muted-foreground hover:bg-secondary/10'
                                                                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                                                                 >
                                                                     {level}
@@ -1022,7 +1022,7 @@ export default function HolisticGradingModal({
                                                         </div>
                                                     </div>
                                                     {activeRubric && (
-                                                        <div className="p-3 bg-indigo-500/5 rounded-xl border border-indigo-500/10 animate-in fade-in slide-in-from-top-1 duration-300">
+                                                        <div className="p-3 bg-secondary/5 rounded-xl border border-secondary/10 animate-in fade-in slide-in-from-top-1 duration-300">
                                                             <p className="text-[8px] font-black text-indigo-600 uppercase mb-1 tracking-widest">Descriptor:</p>
                                                             <p className="text-[10px] text-muted-foreground italic leading-relaxed">
                                                                 {activeRubric.descriptor || 'No descriptor defined for this level.'}
@@ -1043,7 +1043,7 @@ export default function HolisticGradingModal({
                                 <div className="p-6 bg-muted/20 border-t border-border flex justify-end">
                                     <button
                                         onClick={() => setActiveCBC(null)}
-                                        className="px-8 py-3 rounded-2xl bg-indigo-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/10"
+                                        className="px-8 py-3 rounded-2xl bg-secondary text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 transition-all shadow-lg shadow-secondary/10"
                                     >
                                         Done Evaluation
                                     </button>
@@ -1062,13 +1062,13 @@ export default function HolisticGradingModal({
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 onClick={() => setExamToDelete(null)}
-                                className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/60 "
                             />
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="relative w-full max-w-md bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden shadow-rose-500/10"
+                                className="relative w-full max-w-md bg-card border border-border rounded-3xl shadow-2xl overflow-hidden shadow-rose-500/10"
                             >
                                 <div className="p-8 text-center space-y-6">
                                     <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto shadow-inner">
@@ -1111,13 +1111,13 @@ export default function HolisticGradingModal({
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 onClick={() => setShowCloseConfirmation(false)}
-                                className="absolute inset-0 bg-background/60 backdrop-blur-sm"
+                                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                             />
                             <motion.div
                                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                className="relative w-full max-w-md bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden shadow-rose-500/10"
+                                className="relative w-full max-w-md bg-card border border-border rounded-3xl shadow-2xl overflow-hidden shadow-rose-500/10"
                             >
                                 <div className="p-8 text-center space-y-6">
                                     <div className="w-20 h-20 rounded-[2.5rem] bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto shadow-inner">

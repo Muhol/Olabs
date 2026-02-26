@@ -267,7 +267,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={Object.keys(pendingChanges).length > 0 ? undefined : onClose}
-                className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/80"
             />
 
             <motion.div
@@ -341,7 +341,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                             exit={{ height: 0, opacity: 0 }}
                             className="bg-muted/30 border-b border-border"
                         >
-                            <div className="p-4 space-y-3">
+                            <div className="p-4 space-y-2">
                                 <div className="flex items-center justify-between">
                                     <h4 className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground mr-4">Subject Palette</h4>
                                     <p className="text-[8px] font-bold text-primary uppercase tracking-widest">Select subject then click slots</p>
@@ -383,7 +383,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                             <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Retrieving Schedule...</p>
                         </div>
                     ) : (
-                        <div className="space-y-8">
+                        <div className="space-y-0">
                             {DAYS.map(day => {
                                 const daySlots = timetable.filter(s => s.day_of_week === day.id)
                                     .sort((a, b) => a.start_time.padStart(5, '0').localeCompare(b.start_time.padStart(5, '0')));

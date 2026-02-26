@@ -99,6 +99,7 @@ export default function TeacherAssignmentsPage() {
                 formData.append('file', selectedFile);
             }
 
+            console.log("selectedFile...--->>>" ,selectedFile)
             await createAssignment(token, formData);
 
             setNewAssignment({ title: '', description: '', due_date: '' });
@@ -230,9 +231,8 @@ export default function TeacherAssignmentsPage() {
                                                     {subjects.map((sub: any) => {
                                                         const subjectAssignments = assignments.filter(a => a.subject_id === sub.subject_id);
                                                         return (
-                                                            <div key={`${sub.subject_id}-${sub.class_id}`} className="glass-card rounded-xl border border-border bg-card p-4 flex flex-col shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
+                                                            <div key={`${sub.subject_id}-${sub.class_id}`} className="glass-card rounded-xl border border-border bg-card p-3 flex flex-col shadow-sm hover:shadow-md transition-all group overflow-hidden relative">
                                                                 <div className="absolute top-0 right-0 w-20 h-20 bg-primary/5 rounded-full -translate-y-10 translate-x-10 group-hover:scale-150 transition-transform duration-500" />
-
                                                                 <div className="flex items-start justify-between mb-3">
                                                                     <div className="w-8 h-8 rounded-lg bg-secondary/10 text-secondary flex items-center justify-center border border-secondary/20 font-black text-sm">
                                                                         {sub.subject_name.charAt(0)}
@@ -244,7 +244,7 @@ export default function TeacherAssignmentsPage() {
 
                                                                 <h3 className="text-sm font-black text-foreground uppercase mb-2 line-clamp-1 group-hover:text-primary transition-colors">{sub.subject_name}</h3>
 
-                                                                <div className="space-y-1.5 mb-3 min-h-[60px]">
+                                                                <div className=" min-h-[40px]">
                                                                     {subjectAssignments.slice(0, 2).map((a) => (
                                                                         <div key={a.id} className="flex items-center justify-between group/item">
                                                                             <div className="flex items-center gap-1.5 overflow-hidden">
@@ -293,8 +293,8 @@ export default function TeacherAssignmentsPage() {
             {/* Create Assignment Modal */}
             <AnimatePresence>
                 {isCreateModalOpen && (
-                    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreateModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                    <div className="fixed inset-0 z-[120] flex items-center justify-center h-screen">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsCreateModalOpen(false)} className="absolute inset-0 bg-black/50" />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -305,7 +305,7 @@ export default function TeacherAssignmentsPage() {
                                 <div className="p-8 pb-4 border-b border-border bg-muted/20">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">
+                                            <div className="w-14 h-14 rounded-2xl bg-primary/30 border border-primary/50 text-primary flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">
                                                 <Plus size={28} />
                                             </div>
                                             <div>
@@ -393,7 +393,7 @@ export default function TeacherAssignmentsPage() {
                                         className="w-full py-5 bg-primary text-white rounded-3xl font-black uppercase text-sm tracking-[.25em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                                     >
                                         {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
-                                        {isSubmitting ? 'Uploading to Cloudinary...' : 'Broadcast Assignment'}
+                                        {isSubmitting ? 'Uploading Assignment...' : 'Broadcast Assignment'}
                                     </button>
                                 </div>
                             </form>
@@ -443,9 +443,9 @@ export default function TeacherAssignmentsPage() {
                                                 href={a.file_url}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                download={a.file_name || 'assignment-file'}
+                                                download={a.title || 'assignment-file'}
                                                 className="flex items-center gap-2 px-3 py-2 bg-secondary/10 text-secondary rounded-xl hover:bg-secondary/20 transition-all text-[10px] font-black uppercase tracking-widest"
-                                                title={a.file_name}
+                                                title={a.title}
                                             >
                                                 <Download size={14} />
                                                 Download

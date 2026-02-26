@@ -17,8 +17,23 @@ def upload_file(file, folder="assignments", filename=None):
     """
     Uploads a file to Cloudinary.
     'file' can be a file-like object, a path, or a URL.
+    To preserve filename and extension, we can pass (filename, file) as a tuple.
     """
     try:
+        # If we have a filename, wrap the file in a tuple so Cloudinary uploader
+        # knows the filename and extension. This prevents 'stream' as the name.
+        upload_data = file
+        if filename:
+            # If it's a file-like object (has 'read' method), read it as bytes
+            # to ensure compatibility with Cloudinary's tuple format.
+            if hasattr(file, "read"):
+                # Seek to beginning just in case
+                if hasattr(file, "seek"):
+                    file.seek(0)
+                upload_data = (filename, file.read())
+            else:
+                upload_data = (filename, file)
+
         options = {
             "folder": f"olabs/{folder}",
             "resource_type": "auto",
@@ -26,12 +41,14 @@ def upload_file(file, folder="assignments", filename=None):
             "unique_filename": True
         }
         
-        # For 'raw' files like .docx, having the extension in the public_id 
-        # is critical for browsers to recognize the file type upon download.
+        # public_id should not include extension for Cloudinary's internal ID,
+        # but Cloudinary will append the extension to the secure_url if resource_type is 'raw'.
         if filename:
-            options["public_id"] = filename
+            # Strip extension for public_id to avoid double extension .pdf.pdf
+            base_name = os.path.splitext(filename)[0]
+            options["public_id"] = base_name
 
-        result = cloudinary.uploader.upload(file, **options)
+        result = cloudinary.uploader.upload(upload_data, **options)
         
         # Add fl_attachment to the URL to force download with original filename
         url = result.get("secure_url")
@@ -41,7 +58,7 @@ def upload_file(file, folder="assignments", filename=None):
         return {
             "url": url,
             "public_id": result.get("public_id"),
-            "original_name": result.get("original_filename")
+            "original_name": result.get("original_filename") or filename
         }
     except Exception as e:
         print(f"Cloudinary upload error: {e}")

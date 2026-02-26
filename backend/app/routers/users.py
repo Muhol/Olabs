@@ -16,7 +16,22 @@ def get_staff(
 ):
     return service.get_staff(db, search, role_filter)
 
+@router.patch("/users/{user_uuid}/role")
+def update_user_role(
+    user_uuid: str,
+    role_update: schemas.UserRoleUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.require_role(["admin", "SUPER_ADMIN"]))
+):
     return service.update_user_role(db, user_uuid, role_update, current_user)
+    return service.update_user_role(db, user_uuid, role_update, current_user)
+
+@router.post("/users/appoint-director")
+def appoint_self_as_director(
+    db: Session = Depends(database.get_db),
+    current_user: dict = Depends(auth.get_current_user)
+):
+    return service.appoint_self_as_director(db, current_user)
 
 @router.get("/users/{user_uuid}")
 def get_user_details(

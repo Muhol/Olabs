@@ -18,7 +18,7 @@ export function ActivityLedger({ role, recentActivity, recentAssignments, teache
                     {role === 'teacher' ? (
                         <><BookOpen className="text-primary" /> My Curriculum</>
                     ) : (
-                        <><History className="text-primary" /> Recent Activity</>
+                        <><History className="text-primary" /> Recent Library Activity</>
                     )}
                 </h3>
                 <div className="flex items-center gap-2 px-4 py-2 bg-muted rounded-xl border border-border">
@@ -27,7 +27,7 @@ export function ActivityLedger({ role, recentActivity, recentAssignments, teache
                 </div>
             </div>
 
-            <div className="space-y-6 relative z-10">
+            <div className="space-y-6 relative z-10 max-h-[400px] overflow-y-auto">
                 {role === 'teacher' ? (
                     (!recentAssignments || recentAssignments.length === 0) ? (
                         <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-40">
@@ -95,6 +95,7 @@ export function ActivityLedger({ role, recentActivity, recentAssignments, teache
                         ))
                     )
                 )}
+              <div className="w-full z-10 h-[100px] bg-gradient-to-t from-background to-transparent sticky -bottom-1 left-0 right-0"></div>
             </div>
         </div>
     );

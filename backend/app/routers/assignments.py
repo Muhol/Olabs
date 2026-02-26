@@ -30,9 +30,6 @@ async def create_assignment(
         file_data = cloudinary.upload_file(file.file, filename=file.filename)
         if not file_data:
             raise HTTPException(status_code=500, detail="Failed to upload file to Cloudinary")
-        # Add original name from upload file object if missing
-        if not file_data.get("original_name"):
-            file_data["original_name"] = file.filename
 
     # Prepare assignment data
     assignment_data = schemas.AssignmentCreate(

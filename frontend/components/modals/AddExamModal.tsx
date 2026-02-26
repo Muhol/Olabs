@@ -198,14 +198,14 @@ export default function AddExamModal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-background/80 backdrop-blur-md"
+                className="absolute inset-0 bg-black/80 "
             />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-4xl h-[85vh] bg-card border border-border rounded-[3rem] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-full max-w-4xl h-[85vh] bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
                 <div className="p-8 border-b border-border bg-muted/20 relative">

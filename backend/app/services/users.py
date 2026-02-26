@@ -41,6 +41,36 @@ def get_staff(db: Session, search: Optional[str] = None, role_filter: Optional[s
         } for u in users
     ]
 
+
+def appoint_self_as_director(db: Session, current_user: dict):
+    # Only a SUPER_ADMIN can appoint themselves
+    if current_user["role"] != "SUPER_ADMIN":
+        raise HTTPException(status_code=403, detail="Only Super Admins can use this feature")
+        
+    # Check if a director already exists
+    director_exists = db.query(models.UserSubrole).filter(models.UserSubrole.subrole_name == "director").first()
+    if director_exists:
+        raise HTTPException(status_code=400, detail="A Director already exists.")
+        
+    # Grant current user the director subrole
+    user_id = current_user["id"]
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    db_subrole = models.UserSubrole(user_id=db_user.id, subrole_name="director")
+    db.add(db_subrole)
+    db.commit()
+    
+    log_action(
+        db, 
+        "info",
+        "director appointment",
+        current_user["email"],
+        f"{current_user['full_name']} appointed themselves as Director"
+    )
+    return {"message": "Successfully appointed as Director"}
+
 def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleUpdate, current_user: dict):
     target_user = db.query(models.User).filter(models.User.id == user_uuid).first()
     if not target_user:
@@ -49,22 +79,55 @@ def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleU
     new_role = role_update.role
     allowed_roles = ["librarian", "teacher", "none"]
     
+    # Identify Director status
+    is_director = "director" in current_user.get("subroles", [])
+    is_admin_all = current_user["role"] == "admin" and "all" in current_user.get("subroles", [])
+    
+    # Target User Role/Subroles
+    target_subroles = [sr.subrole_name for sr in target_user.subroles]
+    is_target_director = "director" in target_subroles
+
+    # 1. NO ONE can change the role of the director, not even themselves
+    if is_target_director:
+        raise HTTPException(
+            status_code=403, 
+            detail="The Director role is immutable. No modifications are allowed for this user."
+        )
+
     # RBAC Logic
     if current_user["role"] == "SUPER_ADMIN":
         # Check if target user is currently a SUPER_ADMIN
         if target_user.role == "SUPER_ADMIN":
-            raise HTTPException(status_code=403, detail="The SUPER_ADMIN role cannot be modified by anyone.")
+            # Only a Director can modify (or demote) a SUPER_ADMIN
+            if not is_director:
+                raise HTTPException(status_code=403, detail="Only the Director can modify other Super Admins.")
+            
+            # Director cannot demote themselves if they are the only Super Admin (optional safety)
             
         allowed_roles.append("admin")
+        # Only Director can promote a user to SUPER_ADMIN
+        if is_director:
+            allowed_roles.append("SUPER_ADMIN")
     
     # Prevent Admins from creating other Admins or Super Admins
     if current_user["role"] == "admin":
-        # Admins cannot modify other Admins or Super Admins
-        if target_user.role in ["admin", "SUPER_ADMIN"]:
-             raise HTTPException(status_code=403, detail="Insufficient permissions to modify this user's role.")
+        # Admins cannot modify Super Admins
+        if target_user.role == "SUPER_ADMIN":
+             raise HTTPException(status_code=403, detail="Insufficient permissions to modify a Super Admin.")
              
+        # Normal admins cannot modify other Admins
+        # Admin 'all' can modify other admins EXCEPT other Admin 'all'
+        if target_user.role == "admin":
+            if not is_admin_all:
+                raise HTTPException(status_code=403, detail="Only Admins with 'all' subrole can manage other staff.")
+            
+            # Check if target is also an Admin 'all'
+            target_subroles = [sr.subrole_name for sr in target_user.subroles]
+            if "all" in target_subroles:
+                raise HTTPException(status_code=403, detail="You cannot modify another Admin with the 'all' subrole.")
+
         if new_role not in allowed_roles:
-            raise HTTPException(status_code=403, detail="Admins can only assign 'librarian', 'teacher', or 'none' roles.")
+            raise HTTPException(status_code=403, detail=f"Insufficient permissions to assign the '{new_role}' role.")
     
     if new_role not in ["admin", "librarian", "teacher", "SUPER_ADMIN", "none"]:
         raise HTTPException(status_code=400, detail="Invalid role specified")
@@ -89,6 +152,19 @@ def update_user_role(db: Session, user_uuid: str, role_update: schemas.UserRoleU
         for sr_name in role_update.subroles:
             db_subrole = models.UserSubrole(user_id=target_user.id, subrole_name=sr_name)
             db.add(db_subrole)
+        db.commit()
+    elif is_admin_all and new_role == "admin" and role_update.subroles is not None:
+        # Admin 'all' can assign subroles EXCEPT 'all'
+        if "all" in role_update.subroles:
+             raise HTTPException(status_code=403, detail="Admins cannot assign the 'all' subrole to others.")
+        
+        # Clear existing subroles
+        db.query(models.UserSubrole).filter(models.UserSubrole.user_id == target_user.id).delete()
+        # Add new subroles
+        for sr_name in role_update.subroles:
+            db_subrole = models.UserSubrole(user_id=target_user.id, subrole_name=sr_name)
+            db.add(db_subrole)
+        db.commit()
     elif new_role != "admin":
         # Clear subroles if no longer an admin
         db.query(models.UserSubrole).filter(models.UserSubrole.user_id == target_user.id).delete()

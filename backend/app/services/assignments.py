@@ -13,7 +13,7 @@ def create_assignment(db: Session, assignment: schemas.AssignmentCreate, file_da
         teacher_id=assignment.teacher_id,
         file_url=file_data.get("url") if file_data else None,
         file_public_id=file_data.get("public_id") if file_data else None,
-        file_name=file_data.get("original_name") if file_data else None
+        file_name=assignment.title if file_data else None
     )
     db.add(db_assignment)
     db.commit()

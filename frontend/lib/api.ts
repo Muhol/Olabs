@@ -1316,3 +1316,15 @@ export async function deleteAnnouncement(token: string, announcementId: string) 
   }
   return response.json();
 }
+
+export async function appointDirector(token: string) {
+  const response = await fetch(`${API_BASE_URL}/users/appoint-director`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const data = await response.json();
+    throw new Error(data.detail || 'Appointment failed');
+  }
+  return response.json();
+}

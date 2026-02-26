@@ -372,18 +372,16 @@ export default function MyClassPage() {
                         Class Timetable
                     </button>
                 )}
-                {selectedSubject && (
-                    <button
-                        onClick={() => setActiveTab('grading')}
-                        className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'grading'
-                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                            : 'text-muted-foreground hover:text-foreground'
-                            }`}
-                    >
-                        <GraduationCap size={16} />
-                        Grading (CBC)
-                    </button>
-                )}
+                <button
+                    onClick={() => setActiveTab('grading')}
+                    className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'grading'
+                        ? 'bg-primary text-white shadow-lg shadow-primary/20'
+                        : 'text-muted-foreground hover:text-foreground'
+                        }`}
+                >
+                    <GraduationCap size={16} />
+                    Grading 
+                </button>
             </div>
 
             {/* Selected Subject Filter Badge */}
@@ -807,11 +805,11 @@ export default function MyClassPage() {
             )}
 
             {/* Grading Tab */}
-            {activeTab === 'grading' && selectedSubject && (
+            {activeTab === 'grading' && (
                 <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
                     <GradingView
-                        subjectId={selectedSubject}
-                        subject={teacherSubjects.find(s => s.subject_id === selectedSubject)}
+                        teacherSubjects={teacherSubjects}
+                        loading={subjectsLoading}
                         tokenGetter={getToken}
                     />
                 </div>

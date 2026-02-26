@@ -29,7 +29,7 @@ export default function SettingsPage() {
     const [actionLoading, setActionLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const isSuperAdmin = systemUser?.role === 'SUPER_ADMIN';
+    const canAccess = systemUser?.role === 'SUPER_ADMIN' || (systemUser?.role === 'admin' && systemUser?.subroles?.includes('all'));
 
     useEffect(() => {
         if (isLoaded && user && !loadingSystemUser) {
@@ -43,8 +43,8 @@ export default function SettingsPage() {
         const token = await getToken();
         if (!token) return;
 
-        // Only if super admin, fetch system configs
-        if (systemUser?.role === 'SUPER_ADMIN') {
+        // Only if authorized, fetch system configs
+        if (canAccess) {
             const configData = await fetchConfig(token);
             setConfig(configData);
         }
@@ -79,15 +79,15 @@ export default function SettingsPage() {
         }
     };
 
-    if (!isSuperAdmin) {
+    if (!canAccess) {
         return (
             <div className="p-8 h-full flex flex-col items-center justify-center text-center space-y-6">
                 <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center text-rose-500 border border-rose-500/20">
                     <Shield size={40} />
                 </div>
                 <div className="space-y-2">
-                    <h2 className="text-2xl font-black uppercase tracking-tight text-white">Access Denied</h2>
-                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Section restricted to Level 5 Personnel (SUPER_ADMIN)</p>
+                    <h2 className="text-2xl font-black uppercase tracking-tight text-foreground">Access Denied</h2>
+                    <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Section restricted to Level 5 Personnel (SUPER_ADMIN / Admin FULL)</p>
                 </div>
             </div>
         );

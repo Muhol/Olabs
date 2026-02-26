@@ -378,7 +378,7 @@ export default function InventoryPage() {
             <AnimatePresence>
                 {isBorrowModalOpen && (
                     <div className="fixed inset-0 h-screen z-[110] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBorrowModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBorrowModalOpen(false)} className="absolute inset-0 bg-black/80 " />
                         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2rem] md:rounded-[3rem] border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
                             <div className="text-center mb-10">
                                 <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center text-primary border border-primary/20 mx-auto mb-6"><Clock size={40} className="animate-pulse" /></div>
@@ -418,7 +418,7 @@ export default function InventoryPage() {
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 h-screen z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/80" />
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-lg glass-card rounded-[2rem] md:rounded-[3rem] border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
                             <h3 className="text-3xl font-black text-foreground uppercase text-center mb-10">{editingBook ? 'Edit Book' : 'Add New Book'}</h3>
                             {modalError && (

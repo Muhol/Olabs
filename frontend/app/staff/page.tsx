@@ -12,9 +12,10 @@ import {
     RefreshCw,
     ShieldCheck,
     Briefcase,
-    Check
+    Check,
+    Crown
 } from 'lucide-react';
-import { fetchStaff, updateUserRole, fetchClasses, fetchStreams } from '@/lib/api';
+import { fetchStaff, updateUserRole, fetchClasses, fetchStreams, appointDirector } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -54,6 +55,17 @@ export default function StaffPage() {
 
     const isSuperAdmin = userRole === 'SUPER_ADMIN';
     const isAdmin = userRole === 'admin';
+    const isDirector = systemUser?.subroles?.includes('director');
+    const isAdminAll = userRole === 'admin' && systemUser?.subroles?.includes('all');
+
+    // Director related
+    const [directorExists, setDirectorExists] = useState(false);
+
+    useEffect(() => {
+        // Look for director in the verified staff list
+        const director = users.find(u => u.subroles?.includes('director'));
+        setDirectorExists(!!director);
+    }, [users]);
 
     useEffect(() => {
         loadData();
@@ -151,11 +163,28 @@ export default function StaffPage() {
         { value: 'librarian', label: 'Librarian' },
         { value: 'teacher', label: 'Teacher' },
         { value: 'none', label: 'None / Deactivated' },
-        ...(isSuperAdmin ? [
-            { value: 'admin', label: 'Admin' },
+        ...(isSuperAdmin || isAdminAll ? [
+            { value: 'admin', label: 'Admin' }
+        ] : []),
+        ...(isDirector ? [
             { value: 'SUPER_ADMIN', label: 'Super Admin' }
         ] : [])
     ];
+
+    const handleAppointDirector = async () => {
+        if (!confirm("Are you sure you want to appoint yourself as Director? This will give you ultimate control over all Super Admins.")) return;
+        setActionLoading(true);
+        try {
+            const token = await getToken();
+            if (!token) return;
+            await appointDirector(token);
+            loadData();
+        } catch (err: any) {
+            setError(err.message || "Failed to appoint Director");
+        } finally {
+            setActionLoading(false);
+        }
+    };
 
     const filteredUsers = users;
 
@@ -172,6 +201,16 @@ export default function StaffPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {isSuperAdmin && !directorExists && !loading && (
+                        <button 
+                            onClick={handleAppointDirector} 
+                            disabled={actionLoading}
+                            className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg flex items-center gap-2 border border-primary/20"
+                        >
+                            {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Crown size={14} />}
+                            Appoint Director
+                        </button>
+                    )}
                     <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                     </button>
@@ -261,10 +300,11 @@ export default function StaffPage() {
                                                 {user.role === 'SUPER_ADMIN' && <ShieldCheck size={10} className="mr-1" />}
                                                 {user.role.replace('_', ' ')}
                                             </span>
-                                            {user.role === 'admin' && user.subroles && user.subroles.length > 0 && (
+                                            {user.subroles && user.subroles.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mt-2">
                                                     {user.subroles.map((sr: string) => (
-                                                        <span key={sr} className="px-2 py-0.5 rounded-md bg-muted text-[8px] font-black uppercase tracking-tighter text-slate-500 border border-border">
+                                                        <span key={sr} className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter border ${sr === 'director' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted text-slate-500 border-border'}`}>
+                                                            {sr === 'director' && <Crown size={8} className="inline mr-1" />}
                                                             {sr.replace('_', ' ')}
                                                         </span>
                                                     ))}
@@ -272,11 +312,17 @@ export default function StaffPage() {
                                             )}
                                         </td>
                                         <td className="px-8 py-4 text-right">
-                                            {/* Logic: 
-                                                - Super Admin can edit anyone (except maybe themselves if separate logic, but here allowed).
-                                                - Admin can edit anyone EXCEPT Super Admin and other Admins.
+                                            {/* Tiered RBAC Logic: 
+                                                - Director role is IMMUTABLE (cannot manage them).
+                                                - Director can manage ANYONE ELSE.
+                                                - Super Admin (non-director) can manage teachers, librarians, and admins, but NOT other Super Admins.
+                                                - Admin (all) can manage teachers, librarians, and other admins EXCEPT other Admin (all).
                                             */}
-                                            {(isSuperAdmin || (isAdmin && user.role !== 'SUPER_ADMIN' && user.role !== 'admin')) && (
+                                            {!(user.subroles?.includes('director')) && (
+                                               (isDirector) || 
+                                               (isSuperAdmin && user.role !== 'SUPER_ADMIN') || 
+                                               (isAdminAll && user.role !== 'SUPER_ADMIN' && !(user.role === 'admin' && user.subroles?.includes('all')))
+                                            ) && (
                                                 <button onClick={() => openEditModal(user)} className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 border border-border">
                                                     Manage Role
                                                 </button>
@@ -294,8 +340,8 @@ export default function StaffPage() {
             <AnimatePresence>
                 {isEditModalOpen && editingUser && (
                     <div className="fixed inset-0 h-screen z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0  bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card max-h-[80vh] overflow-y-scroll rounded-[2rem] border border-border bg-card p-8 shadow-2xl">
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsEditModalOpen(false)} className="absolute inset-0 bg-black/80 " />
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card max-h-[80vh] overflow-y-scroll rounded-3xl border border-border bg-card p-8 shadow-2xl">
                             <h3 className="text-2xl font-black text-foreground uppercase mb-6 flex items-center gap-2">
                                 <Briefcase className="text-primary" /> Update Role
                             </h3>
@@ -407,6 +453,7 @@ export default function StaffPage() {
                                                         <input
                                                             type="checkbox"
                                                             checked={selectedSubroles.includes(subrole.value)}
+                                                            disabled={subrole.value === 'all' && isAdminAll}
                                                             onChange={(e) => {
                                                                 if (e.target.checked) {
                                                                     setSelectedSubroles([...selectedSubroles, subrole.value]);
@@ -414,7 +461,7 @@ export default function StaffPage() {
                                                                     setSelectedSubroles(selectedSubroles.filter(s => s !== subrole.value));
                                                                 }
                                                             }}
-                                                            className="w-3.5 h-3.5 rounded bg-transparent border-amber-500 focus:ring-0 accent-amber-500"
+                                                            className={`w-3.5 h-3.5 rounded bg-transparent border-amber-500 focus:ring-0 accent-amber-500 ${subrole.value === 'all' && isAdminAll ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         />
                                                         <span className="text-[9px] font-black uppercase tracking-tight">{subrole.label}</span>
                                                     </label>

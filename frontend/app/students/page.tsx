@@ -602,8 +602,8 @@ export default function StudentsPage() {
 
             {isStudentModalOpen && (
                 <div className="fixed inset-0 h-screen z-[100] flex items-center justify-center p-4">
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsStudentModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-lg glass-card rounded-[2rem] md:rounded-[3rem] border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsStudentModalOpen(false)} className="absolute inset-0 bg-black/80 " />
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-lg glass-card rounded-[2rem] md:rounded-3xl border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
 
                         <div className="text-center mb-8">
                             <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center text-secondary border border-secondary/20 mx-auto mb-4"><GraduationCap size={30} /></div>
@@ -641,7 +641,7 @@ export default function StudentsPage() {
             {
                 isClassModalOpen && (
                     <div className="fixed inset-0 h-screen z-[100] flex items-center justify-center p-4">
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsClassModalOpen(false)} className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm" />
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsClassModalOpen(false)} className="absolute inset-0 bg-black/80 " />
                         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-md glass-card rounded-[2rem] md:rounded-[3rem] border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
                             <h3 className="text-3xl font-black text-foreground uppercase text-center mb-10">Create New Class</h3>
                             {classError && (
@@ -761,7 +761,7 @@ function StreamsModal({ className_, classId, onClose, tokenGetter }: any) {
 
     return (
         <div className="fixed inset-0 h-screen z-[110] flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-slate-200/80 dark:bg-black/90 backdrop-blur-xl" />
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/90 backdrop-blur-xl" />
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-lg glass-card rounded-[2rem] md:rounded-[3rem] border border-border bg-card p-6 md:p-10 overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-secondary to-transparent opacity-50" />
                 <div className="flex items-center justify-between mb-8">

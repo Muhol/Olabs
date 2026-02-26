@@ -125,6 +125,14 @@ async def get_current_user(
                 try:
                     db.commit()
                     db.refresh(db_user)
+                    
+                    # If this is the FIRST user, also assign the 'director' subrole
+                    if assigned_role == "SUPER_ADMIN":
+                        db_subrole = models.UserSubrole(user_id=db_user.id, subrole_name="director")
+                        db.add(db_subrole)
+                        db.commit()
+                        print(f"[AUTH] Assigned 'director' subrole to first user: {email}")
+
                     newly_created = True
                     print(f"[AUTH] New local user created with ID: {db_user.id}, Role: {db_user.role}")
                 except Exception as commit_err:

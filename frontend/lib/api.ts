@@ -298,7 +298,7 @@ export async function fetchAnalytics(token: string) {
 
 export async function checkAuthPolicy(email?: string) {
   const query = email ? `?email=${encodeURIComponent(email)}` : '';
-  const response = await fetch(`${API_BASE_URL}/auth/check-policy${query}`);
+  const response = await fetch(`${API_BASE_URL}/config/check-policy${query}`);
   if (!response.ok) throw new Error('Policy check failed');
   return response.json();
 }

@@ -101,7 +101,7 @@ export default function AnnouncementsPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Megaphone size={14} /> Communication Hub
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Announcements</h1>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Announcements</h1>
                     <p className="text-muted-foreground font-medium tracking-tight">Broadcast updates to classes, subjects, or the whole school.</p>
                 </div>
 
@@ -113,7 +113,7 @@ export default function AnnouncementsPage() {
                         onClick={() => setIsModalOpen(true)}
                         className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                     >
-                        <Plus size={18} /> New Dispatch
+                        <Plus size={18} /> New Announcement
                     </button>
                 </div>
             </div>

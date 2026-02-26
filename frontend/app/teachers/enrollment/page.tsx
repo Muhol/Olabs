@@ -171,10 +171,10 @@ export default function ClassEnrollmentPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+                    <div className="flex items-center gap-2 text-primary uppercase tracking-[0.3em] text-[10px]">
                         <Building2 size={14} /> Subject Enrollment Portal
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">
                         Enroll Students
                     </h1>
                     <p className="text-muted-foreground font-medium tracking-tight">

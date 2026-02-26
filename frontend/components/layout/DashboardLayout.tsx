@@ -270,7 +270,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <div className="flex items-center gap-6">
                         <div className="hidden md:flex flex-col items-end">
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Logged in as</span>
-                            <span className="text-sm font-black text-primary">{isLoading ? 'Authenticating...' : userRole.replace('_', ' ')}</span>
+                            <span className="capitalize text-sm font-black text-primary">{isLoading ? 'Authenticating...' : userRole.replace('_', ' ')}</span>
                         </div>
                         <UserButton afterSignOutUrl="/" />
                     </div>

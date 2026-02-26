@@ -80,7 +80,7 @@ export default function ReportsPage() {
                     <div className="flex items-center gap-2 text-indigo-500 font-black uppercase tracking-[0.3em] text-[10px]">
                         <BarChart2 size={14} /> Reports & Statistics
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Library Statistics</h1>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Library Statistics</h1>
                     <p className="text-muted-foreground font-medium tracking-tight">Overview of library usage and student engagement.</p>
                 </div>
 

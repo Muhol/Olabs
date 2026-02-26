@@ -5,16 +5,15 @@ import { useSignIn, useSignUp } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { 
-    Mail, 
-    Lock, 
-    ArrowRight, 
-    ShieldCheck, 
-    AlertCircle, 
-    Loader2, 
-    Zap, 
-    Layers,
-    ChevronLeft
+import {
+    Mail,
+    Lock,
+    ArrowRight,
+    ShieldCheck,
+    AlertCircle,
+    Loader2,
+    UserPlus,
+    LogIn,
 } from 'lucide-react';
 import { checkAuthPolicy } from '@/lib/api';
 
@@ -26,6 +25,7 @@ export default function AuthPage() {
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
     const [code, setCode] = useState('');
     const [verifying, setVerifying] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ export default function AuthPage() {
     const signInWithGoogle = async () => {
         try {
             const activeStrategy = isLogin ? (isSignInLoaded ? signIn : null) : (isSignUpLoaded ? signUp : null);
-            
+
             if (!activeStrategy) {
                 setError('Authentication engine not yet initialized. Please wait.');
                 return;
@@ -45,7 +45,6 @@ export default function AuthPage() {
             setLoadingSocial(true);
             setError('');
 
-            // If registering, check general policy first
             if (!isLogin) {
                 const policy = await checkAuthPolicy();
                 if (!policy.allowed) {
@@ -54,14 +53,13 @@ export default function AuthPage() {
                     return;
                 }
             }
-            
+
             await activeStrategy.authenticateWithRedirect({
                 strategy: 'oauth_google',
                 redirectUrl: `${window.location.origin}/sso-callback`,
                 redirectUrlComplete: window.location.origin,
             });
         } catch (err: any) {
-            console.error("[AUTH] Google Redirect Error:", err);
             const detail = err.errors?.[0]?.message || err.message || 'Unknown initialization error';
             setError(`Security protocol failed: ${detail}. Please refresh and try again.`);
             setLoadingSocial(false);
@@ -74,18 +72,11 @@ export default function AuthPage() {
         if (!isSignInLoaded) return;
         setLoading(true);
         setError('');
-
         try {
-            const result = await signIn.create({
-                identifier: email,
-                password,
-            });
-
+            const result = await signIn.create({ identifier: email, password });
             if (result.status === 'complete') {
                 await setSignInActive({ session: result.createdSessionId });
                 router.push('/');
-            } else {
-                console.log(result);
             }
         } catch (err: any) {
             setError(err.errors?.[0]?.message || 'Authentication failed');
@@ -98,23 +89,22 @@ export default function AuthPage() {
     const handleSignUp = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!isSignUpLoaded) return;
+
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+
         setLoading(true);
         setError('');
-
         try {
-            // Check policy before creating Clerk account
             const policy = await checkAuthPolicy(email);
             if (!policy.allowed) {
                 setError(policy.reason || 'Registration is currently restricted.');
                 setLoading(false);
                 return;
             }
-
-            await signUp.create({
-                emailAddress: email,
-                password,
-            });
-
+            await signUp.create({ emailAddress: email, password });
             await signUp.prepareEmailAddressVerification({ strategy: 'email_code' });
             setVerifying(true);
         } catch (err: any) {
@@ -130,12 +120,8 @@ export default function AuthPage() {
         if (!isSignUpLoaded) return;
         setLoading(true);
         setError('');
-
         try {
-            const completeSignUp = await signUp.attemptEmailAddressVerification({
-                code,
-            });
-
+            const completeSignUp = await signUp.attemptEmailAddressVerification({ code });
             if (completeSignUp.status === 'complete') {
                 await setSignUpActive({ session: completeSignUp.createdSessionId });
                 router.push('/');
@@ -148,262 +134,384 @@ export default function AuthPage() {
     };
 
     return (
-        <div className="min-h-screen bg-black flex items-center justify-center p-4 overflow-hidden font-google-sans relative">
-            {/* Background Animated Glows (Project specific) */}
-            <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/10 rounded-full blur-[120px] animate-pulse delay-700" />
-            
-            {/* Main Container */}
-            <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative w-full max-w-[1000px] h-[750px] glass-card rounded-[3rem] border border-white/10 shadow-2xl overflow-hidden flex flex-col md:flex-row shadow-[0_0_100px_rgba(16,185,129,0.05)] bg-white/5 backdrop-blur-3xl"
+        <div className="min-h-screen flex font-google-sans overflow-hidden" style={{ backgroundColor: 'var(--background)' }}>
+
+            {/* ── LEFT PANEL: Image (2/3 width, desktop only) ── */}
+            <div className="hidden lg:block lg:w-2/3 relative overflow-hidden">
+                <Image
+                    src="/loginbg.jpg"
+                    alt="School environment"
+                    fill
+                    priority
+                    className="object-cover"
+                />
+                {/* Gradient overlay for depth */}
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background: 'linear-gradient(135deg, color-mix(in srgb, black, transparent 30%) 0%, color-mix(in srgb, var(--secondary), transparent 50%) 100%)',
+                    }}
+                />
+
+                {/* Branding overlay on image */}
+                <div className="absolute inset-0 flex flex-col justify-between p-12 z-10">
+                    {/* Top logo */}
+                    <div className="flex items-center gap-4">
+                        {/* <div
+                            className="w-12 h-12 rounded-2xl flex items-center justify-center overflow-hidden shadow-2xl"
+                            style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.3)' }}
+                        >
+                            <Image src="/icon.png" alt="Logo" width={36} height={36} className="object-contain" />
+                        </div> */}
+                        <span className=" tracking-[0.2em] uppercase text-sm text-white/90">
+                            Admin Portal
+                        </span>
+                    </div>
+
+                    {/* Bottom tagline */}
+                    <div className="space-y-3">
+                        <h1 className="text-5xl tracking-tight text-white leading-tight">
+                            Academic<br />
+                            <span style={{ color: 'var(--primary-foreground)', textShadow: '0 0 40px rgba(255,255,255,0.4)' }}>
+                                Management
+                            </span>
+                        </h1>
+                        <p className="text-white/70 text-base font-medium max-w-xs leading-relaxed">
+                            Authorized access for academic staff to manage students, classes, and school operations.
+                        </p>
+                        <div className="flex items-center gap-2 pt-2">
+                            <div className="w-8 h-0.5 rounded-full" style={{ backgroundColor: 'var(--primary)' }} />
+                            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/50">
+                                Authorized Staff Only
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── RIGHT PANEL: Auth Section (1/3 width desktop, full on mobile) ── */}
+            <div
+                className="flex-1 lg:w-1/3 flex flex-col items-center justify-center min-h-screen relative overflow-hidden"
+                style={{ backgroundColor: 'var(--card)', borderLeft: '1px solid var(--border)' }}
             >
-                {/* 1. Login Half */}
-                <div className={`w-full md:w-1/2 h-full flex items-center justify-center p-8 transition-opacity duration-300 ${!isLogin && !verifying ?'opacity-0 pointer-events-none md:opacity-50' : 'opacity-100'}`}>
-                    <div className="w-full max-w-sm">
+                {/* Subtle background glow for right panel */}
+                <div
+                    className="absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl opacity-20 pointer-events-none"
+                    style={{ background: 'var(--primary)' }}
+                />
+                <div
+                    className="absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none"
+                    style={{ background: 'var(--secondary)' }}
+                />
+
+                {/* Mobile-only logo */}
+                <div className="lg:hidden flex items-center gap-3 mb-8">
+                    {/* <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
+                        style={{ background: 'var(--primary)', boxShadow: '0 0 20px color-mix(in srgb, var(--primary), transparent 40%)' }}
+                    >
+                        <Image src="/icon.png" alt="Logo" width={30} height={30} className="object-contain" />
+                    </div> */}
+                    <span className="tracking-widest uppercase text-3xl" style={{ color: 'var(--foreground)' }}>
+                        Admin Portal
+                    </span>
+                </div>
+
+                {/* Auth Card */}
+                <div className="w-full max-w-sm px-6 relative z-10">
+
+                    <AnimatePresence mode="wait">
                         {verifying ? (
-                            <VerificationForm 
-                                code={code} 
-                                setCode={setCode} 
-                                error={error} 
-                                loading={loading} 
-                                handleVerification={handleVerification}
-                                setVerifying={setVerifying}
-                            />
-                        ) : (
-                            <>
-                                <div className="mb-10 text-center md:text-left">
-                                    <h3 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">Systems Access</h3>
-                                    <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Protocol Delta-V • Verify ID</p>
+                            <motion.div
+                                key="verify"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -16 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                <VerificationForm
+                                    code={code}
+                                    setCode={setCode}
+                                    error={error}
+                                    loading={loading}
+                                    handleVerification={handleVerification}
+                                    setVerifying={setVerifying}
+                                />
+                            </motion.div>
+                        ) : isLogin ? (
+                            <motion.div
+                                key="login"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -16 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {/* Header */}
+                                <div className="mb-8 flex flex-col items-center">
+                                    {/* <div
+                                        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                                        style={{ background: 'color-mix(in srgb, var(--primary), transparent 85%)', border: '1px solid color-mix(in srgb, var(--primary), transparent 60%)' }}
+                                    >
+                                        <LogIn size={22} style={{ color: 'var(--primary)' }} />
+                                    </div> */}
+                                    {/* <h2 className="text-4xl uppercase tracking-tight " style={{ color: 'var(--foreground)' }}>
+                                       Login
+                                    </h2> */}
+                                    {/* <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                                        Authorized Academic Portal
+                                    </p> */}
                                 </div>
 
-                                <form onSubmit={handleSignIn} className="space-y-6">
-                                    <Input 
-                                        label="Archive Email"
+                                <form onSubmit={handleSignIn} className="space-y-5">
+                                    <AuthInput
+                                        label="Email Address"
                                         type="email"
-                                        icon={<Mail size={18} />}
+                                        icon={<Mail size={16} />}
                                         value={email}
                                         onChange={(e: any) => setEmail(e.target.value)}
-                                        placeholder="admin@arch.org"
+                                        placeholder="teacher@school.org"
                                     />
-                                    <Input 
-                                        label="Security Key"
+                                    <AuthInput
+                                        label="Password"
                                         type="password"
-                                        icon={<Lock size={18} />}
+                                        icon={<Lock size={16} />}
                                         value={password}
                                         onChange={(e: any) => setPassword(e.target.value)}
                                         placeholder="••••••••"
                                     />
 
-                                    {error && isLogin && <ErrorMessage message={error} />}
+                                    {error && <ErrorMessage message={error} />}
 
-                                    <button 
-                                        type="submit" 
-                                        disabled={loading || !isLogin}
-                                        className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full py-4 font-black uppercase text-xs tracking-[0.2em] rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:-translate-y-0.5 active:scale-95"
+                                        style={{
+                                            background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                            color: 'var(--primary-foreground)',
+                                            boxShadow: '0 4px 24px color-mix(in srgb, var(--primary), transparent 50%)',
+                                        }}
                                     >
-                                        {loading && isLogin ? <Loader2 className="animate-spin" size={18} /> : <>Initialize Access <ArrowRight size={16} /></>}
+                                        {loading ? <Loader2 className="animate-spin" size={18} /> : <>Sign In <ArrowRight size={16} /></>}
                                     </button>
                                 </form>
 
-                                <div className="mt-8 mb-8 flex items-center gap-4">
-                                    <div className="flex-1 h-px bg-white/5" />
-                                    <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest text-center">or use biometric profile</span>
-                                    <div className="flex-1 h-px bg-white/5" />
+                                <div className="my-6 flex items-center gap-4">
+                                    <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border)' }} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
+                                        or
+                                    </span>
+                                    <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border)' }} />
                                 </div>
 
                                 <GoogleButton loading={loadingSocial} onClick={signInWithGoogle} />
-                                
-                                <button onClick={() => setIsLogin(false)} className="md:hidden w-full mt-6 text-primary font-black uppercase text-[10px] tracking-widest text-center">
-                                    Need New Access? Register Protocol
+
+                                <button
+                                    onClick={() => { setIsLogin(false); setError(''); }}
+                                    className="w-full mt-6 text-center text-xs font-bold uppercase tracking-widest transition-colors hover:opacity-80"
+                                    style={{ color: 'var(--muted-foreground)' }}
+                                >
+                                    No account?{' '}
+                                    <span style={{ color: 'var(--primary)' }}>Register here</span>
                                 </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-
-                {/* 2. Signup Half */}
-                <div className={`w-full md:w-1/2 h-full flex items-center justify-center p-8 transition-opacity duration-300 ${isLogin || verifying ? 'opacity-0 pointer-events-none md:opacity-50' : 'opacity-100'}`}>
-                    <div className="w-full max-w-sm">
-                        <div className="mb-10 text-center md:text-left">
-                            <h3 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">Archive Entry</h3>
-                            <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Protocol Omega • Enrollment</p>
-                        </div>
-
-                        <form onSubmit={handleSignUp} className="space-y-6">
-                            <Input 
-                                label="New ID Identifier"
-                                type="email"
-                                icon={<Mail size={18} />}
-                                value={email}
-                                onChange={(e: any) => setEmail(e.target.value)}
-                                placeholder="cadet@arch.org"
-                            />
-                            <Input 
-                                label="Establish Security Key"
-                                type="password"
-                                icon={<Lock size={18} />}
-                                value={password}
-                                onChange={(e: any) => setPassword(e.target.value)}
-                                placeholder="Min 8 characters"
-                            />
-
-                            {error && !isLogin && !verifying && <ErrorMessage message={error} />}
-
-                            <button 
-                                type="submit" 
-                                disabled={loading || isLogin}
-                                className="w-full py-4 bg-gradient-to-r from-primary to-secondary text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="signup"
+                                initial={{ opacity: 0, y: 16 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -16 }}
+                                transition={{ duration: 0.3 }}
                             >
-                                {loading && !isLogin ? <Loader2 className="animate-spin" size={18} /> : <>Generate Protocol <ArrowRight size={16} /></>}
-                            </button>
-                        </form>
+                                {/* Header */}
+                                {/* <div className="mb-8">
+                                    <div
+                                        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                                        style={{ background: 'color-mix(in srgb, var(--secondary), transparent 85%)', border: '1px solid color-mix(in srgb, var(--secondary), transparent 60%)' }}
+                                    >
+                                        <UserPlus size={22} style={{ color: 'var(--secondary)' }} />
+                                    </div>
+                                    <h2 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--foreground)' }}>
+                                        Account Setup
+                                    </h2>
+                                    <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                                        Staff Enrollment Portal
+                                    </p>
+                                </div> */}
 
-                        <div className="mt-8 mb-8 flex items-center gap-4">
-                            <div className="flex-1 h-px bg-white/5" />
-                            <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">external intake</span>
-                            <div className="flex-1 h-px bg-white/5" />
-                        </div>
+                                <form onSubmit={handleSignUp} className="space-y-5">
+                                    <AuthInput
+                                        label="Email Address"
+                                        type="email"
+                                        icon={<Mail size={16} />}
+                                        value={email}
+                                        onChange={(e: any) => setEmail(e.target.value)}
+                                        placeholder="new-staff@school.org"
+                                    />
+                                    <AuthInput
+                                        label="Create Password"
+                                        type="password"
+                                        icon={<Lock size={16} />}
+                                        value={password}
+                                        onChange={(e: any) => setPassword(e.target.value)}
+                                        placeholder="Min 8 characters"
+                                    />
+                                    <AuthInput
+                                        label="Confirm Password"
+                                        type="password"
+                                        icon={<Lock size={16} />}
+                                        value={confirmPassword}
+                                        onChange={(e: any) => setConfirmPassword(e.target.value)}
+                                        placeholder="Re-enter your password"
+                                        matchError={confirmPassword.length > 0 && password !== confirmPassword}
+                                    />
 
-                        <GoogleButton loading={loadingSocial} onClick={signInWithGoogle} isRegister />
+                                    {error && <ErrorMessage message={error} />}
 
-                        <button onClick={() => setIsLogin(true)} className="md:hidden w-full mt-6 text-primary font-black uppercase text-[10px] tracking-widest text-center">
-                            Already Authorized? Return to Command
-                        </button>
-                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={loading}
+                                        className="w-full py-4 font-black uppercase text-xs tracking-[0.2em] rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:-translate-y-0.5 active:scale-95"
+                                        style={{
+                                            background: 'linear-gradient(135deg, var(--secondary), var(--primary))',
+                                            color: 'var(--primary-foreground)',
+                                            boxShadow: '0 4px 24px color-mix(in srgb, var(--secondary), transparent 50%)',
+                                        }}
+                                    >
+                                        {loading ? <Loader2 className="animate-spin" size={18} /> : <>Complete Enrollment <ArrowRight size={16} /></>}
+                                    </button>
+                                </form>
+
+                                <div className="my-6 flex items-center gap-4">
+                                    <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border)' }} />
+                                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--muted-foreground)' }}>
+                                        or
+                                    </span>
+                                    <div className="flex-1 h-px" style={{ backgroundColor: 'var(--border)' }} />
+                                </div>
+
+                                <GoogleButton loading={loadingSocial} onClick={signInWithGoogle} isRegister />
+
+                                <button
+                                    onClick={() => { setIsLogin(true); setError(''); }}
+                                    className="w-full mt-6 text-center text-xs font-bold uppercase tracking-widest transition-colors hover:opacity-80"
+                                    style={{ color: 'var(--muted-foreground)' }}
+                                >
+                                    Already authorized?{' '}
+                                    <span style={{ color: 'var(--primary)' }}>Sign in</span>
+                                </button>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
-                {/* 3. Toggle Panel (Desktop Overlay) */}
-                <motion.div 
-                    initial={false}
-                    animate={{ x: isLogin ? '100%' : '0%' }}
-                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
-                    className="hidden md:flex absolute top-0 left-0 w-1/2 h-full bg-gradient-to-br from-primary to-secondary z-30 flex-col items-center justify-center p-12 text-white text-center shadow-2xl"
-                    style={{ borderRadius: isLogin ? '0 3rem 3rem 0' : '3rem 0 0 3rem' }}
+                {/* Footer */}
+                <p
+                    className="absolute bottom-6 text-[9px] font-black uppercase tracking-[0.3em] px-4 text-center"
+                    style={{ color: 'var(--muted-foreground)' }}
                 >
-                    <div className="space-y-8 max-w-xs">
-                        <div className="w-24 h-24 bg-white/20 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center mx-auto border border-white/30 animate-float shadow-2xl overflow-hidden p-2">
-                             <Image 
-                                src="/icon.png" 
-                                alt="Logo" 
-                                width={80} 
-                                height={80} 
-                                className="object-contain"
-                             />
-                        </div>
-                        
-                        <div className="space-y-3">
-                            <h2 className="text-4xl font-black tracking-tighter uppercase leading-none">
-                                {isLogin ? 'Ready to Deploy?' : 'Join the Archives'}
-                            </h2>
-                            <p className="text-white/80 font-bold text-sm tracking-wide leading-relaxed">
-                                {isLogin 
-                                    ? 'Initialize your credentials and access the quantum library archives.' 
-                                    : 'Establish your digital identity and become a part of the professional network.'}
-                            </p>
-                        </div>
-
-                        <button 
-                            onClick={() => {
-                                setIsLogin(!isLogin);
-                                setVerifying(false);
-                                setError('');
-                            }}
-                            className="w-full py-4 bg-white text-primary font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:bg-slate-50 transition-all hover:scale-105 active:scale-95 shadow-2xl"
-                        >
-                            {isLogin ? 'Register New Access' : 'Return to Security Gate'}
-                        </button>
-                    </div>
-                    
-                    {/* Branding footer in panel */}
-                    <div className="absolute bottom-10 flex items-center gap-3">
-                        <div className="w-8 h-8 flex items-center justify-center overflow-hidden">
-                             <Image 
-                                src="/icon.png" 
-                                alt="Icon" 
-                                width={32} 
-                                height={32} 
-                                className="object-contain"
-                             />
-                        </div>
-                        <span className="font-black tracking-widest text-[10px]">SECURITY V4</span>
-                    </div>
-                </motion.div>
-            </motion.div>
-
-            {/* Global Logo & Footer */}
-            <div className="absolute top-8 left-8 flex items-center gap-3 z-50">
-                <div className="w-10 h-10 flex items-center justify-center overflow-hidden">
-                    <Image 
-                        src="/icon.png" 
-                        alt="Logo" 
-                        width={40} 
-                        height={40} 
-                        className="object-contain"
-                    />
-                </div>
-                {/* <span className="font-black tracking-tight text-xl text-white">STAR PRO</span> */}
+                    Authorized Academic Staff Only • Access Logged
+                </p>
             </div>
-            
-            <p className="absolute bottom-8 text-[10px] font-black text-slate-600 uppercase tracking-[0.5em] z-50 px-4 text-center">
-                Authorized Personnel Only • Digital Fingerprint Logged
-            </p>
         </div>
     );
 }
 
 // --- Sub-components ---
 
-function Input({ label, icon, ...props }: any) {
+function AuthInput({ label, icon, matchError, ...props }: any) {
     return (
-        <div className="space-y-2 text-left">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1">{label}</label>
+        <div className="space-y-1.5 text-left">
+            <label
+                className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 block"
+                style={{ color: 'var(--muted-foreground)' }}
+            >
+                {label}
+            </label>
             <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors">
+                <div
+                    className="absolute left-4 top-1/2 -translate-y-1/2 transition-colors group-focus-within:text-[var(--primary)]"
+                    style={{ color: 'var(--muted-foreground)' }}
+                >
                     {icon}
                 </div>
-                <input 
+                <input
                     {...props}
-                    className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 text-white font-bold focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-800"
+                    className="w-full pl-11 pr-4 py-3.5 rounded-xl font-bold text-sm outline-none transition-all"
+                    style={{
+                        backgroundColor: 'var(--muted)',
+                        border: matchError ? '1px solid var(--destructive)' : '1px solid var(--border)',
+                        color: 'var(--foreground)',
+                    }}
+                    onFocus={(e) => {
+                        e.currentTarget.style.borderColor = matchError ? 'var(--destructive)' : 'var(--primary)';
+                        e.currentTarget.style.boxShadow = matchError
+                            ? '0 0 0 3px color-mix(in srgb, var(--destructive), transparent 80%)'
+                            : '0 0 0 3px color-mix(in srgb, var(--primary), transparent 80%)';
+                    }}
+                    onBlur={(e) => {
+                        e.currentTarget.style.borderColor = matchError ? 'var(--destructive)' : 'var(--border)';
+                        e.currentTarget.style.boxShadow = 'none';
+                    }}
                 />
             </div>
+            {matchError && (
+                <p className="text-[10px] font-bold ml-1 animate-slide-in" style={{ color: 'var(--destructive)' }}>
+                    Passwords do not match
+                </p>
+            )}
         </div>
     );
 }
 
 function ErrorMessage({ message }: { message: string }) {
     return (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-500 text-xs font-bold animate-in fade-in slide-in-from-top-2">
-            <AlertCircle size={16} />
+        <div
+            className="p-3.5 rounded-xl flex items-center gap-3 text-xs font-bold animate-slide-in"
+            style={{
+                backgroundColor: 'color-mix(in srgb, var(--destructive), transparent 88%)',
+                border: '1px solid color-mix(in srgb, var(--destructive), transparent 60%)',
+                color: 'var(--destructive)',
+            }}
+        >
+            <AlertCircle size={15} />
             {message}
         </div>
     );
 }
 
-function GoogleButton({ loading, onClick, isRegister }: { loading: boolean, onClick: () => void, isRegister?: boolean }) {
+function GoogleButton({ loading, onClick, isRegister }: { loading: boolean; onClick: () => void; isRegister?: boolean }) {
     return (
-        <button 
+        <button
             type="button"
             disabled={loading}
             onClick={onClick}
-            className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold rounded-2xl hover:bg-white/10 transition-all flex items-center justify-center gap-3 group relative overflow-hidden"
+            className="w-full py-3.5 font-bold rounded-xl transition-all flex items-center justify-center gap-3 group"
+            style={{
+                backgroundColor: 'var(--muted)',
+                border: '1px solid var(--border)',
+                color: 'var(--foreground)',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--ring)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--border)'; }}
         >
             {loading ? (
-                <div className="flex items-center gap-3">
-                    <Loader2 className="animate-spin text-primary" size={18} />
-                    <span className="uppercase text-[10px] tracking-[0.2em] font-black text-slate-400">Verifying Protocol...</span>
+                <div className="flex items-center gap-2">
+                    <Loader2 className="animate-spin" size={16} style={{ color: 'var(--primary)' }} />
+                    <span className="uppercase text-[10px] tracking-[0.2em] font-black" style={{ color: 'var(--muted-foreground)' }}>
+                        Verifying Identity...
+                    </span>
                 </div>
             ) : (
                 <>
-                    <svg className="w-5 h-5 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.24.81-.6z" fill="#FBBC05"/>
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    <svg className="w-4 h-4 group-hover:scale-110 transition-transform flex-shrink-0" viewBox="0 0 24 24">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.24.81-.6z" fill="#FBBC05" />
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
                     <span className="uppercase text-[10px] tracking-[0.2em] font-black">
-                        {isRegister ? 'Register with Google Security' : 'Verify Archive Google ID'}
+                        {isRegister ? 'Register with Google' : 'Sign in with Google'}
                     </span>
                 </>
             )}
@@ -413,45 +521,76 @@ function GoogleButton({ loading, onClick, isRegister }: { loading: boolean, onCl
 
 function VerificationForm({ code, setCode, error, loading, handleVerification, setVerifying }: any) {
     return (
-        <div className="animate-in zoom-in-95 duration-500">
-            <div className="mb-10 text-center md:text-left">
-                <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center text-primary mb-4 border border-primary/20">
-                    <ShieldCheck size={24} />
+        <div>
+            <div className="mb-8">
+                <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+                    style={{ background: 'color-mix(in srgb, var(--primary), transparent 85%)', border: '1px solid color-mix(in srgb, var(--primary), transparent 60%)' }}
+                >
+                    <ShieldCheck size={22} style={{ color: 'var(--primary)' }} />
                 </div>
-                <h3 className="text-3xl font-black tracking-tight text-white mb-2 uppercase">Identity Check</h3>
-                <p className="text-slate-500 text-sm font-bold uppercase tracking-widest">Verification code sent to email</p>
+                <h2 className="text-2xl font-black tracking-tight uppercase" style={{ color: 'var(--foreground)' }}>
+                    Identity Check
+                </h2>
+                <p className="text-xs font-bold uppercase tracking-widest mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                    Security code sent to your email
+                </p>
             </div>
 
-            <form onSubmit={handleVerification} className="space-y-6">
-                <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 ml-1 text-left block">Enter Verification Vector</label>
-                    <input 
-                        type="text" 
+            <form onSubmit={handleVerification} className="space-y-5">
+                <div className="space-y-1.5">
+                    <label
+                        className="text-[10px] font-black uppercase tracking-[0.2em] ml-1 block"
+                        style={{ color: 'var(--muted-foreground)' }}
+                    >
+                        Verification Code
+                    </label>
+                    <input
+                        type="text"
                         required
                         maxLength={6}
                         value={code}
                         onChange={(e: any) => setCode(e.target.value)}
                         placeholder="· · · · · ·"
-                        className="w-full py-6 rounded-2xl bg-white/5 border border-white/10 text-white font-black text-3xl tracking-[0.5em] text-center focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-slate-800"
+                        className="w-full py-5 rounded-xl font-black text-3xl tracking-[0.5em] text-center outline-none transition-all"
+                        style={{
+                            backgroundColor: 'var(--muted)',
+                            border: '1px solid var(--border)',
+                            color: 'var(--foreground)',
+                        }}
+                        onFocus={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--primary)';
+                            e.currentTarget.style.boxShadow = '0 0 0 3px color-mix(in srgb, var(--primary), transparent 80%)';
+                        }}
+                        onBlur={(e) => {
+                            e.currentTarget.style.borderColor = 'var(--border)';
+                            e.currentTarget.style.boxShadow = 'none';
+                        }}
                     />
                 </div>
 
                 {error && <ErrorMessage message={error} />}
 
-                <button 
-                    type="submit" 
+                <button
+                    type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-primary text-white font-black uppercase text-xs tracking-[0.2em] rounded-2xl hover:shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:-translate-y-1 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                    className="w-full py-4 font-black uppercase text-xs tracking-[0.2em] rounded-2xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 hover:-translate-y-0.5 active:scale-95"
+                    style={{
+                        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                        color: 'var(--primary-foreground)',
+                        boxShadow: '0 4px 24px color-mix(in srgb, var(--primary), transparent 50%)',
+                    }}
                 >
-                    {loading ? <Loader2 className="animate-spin" size={18} /> : <>Verify Archive Identity <ShieldCheck size={16} /></>}
+                    {loading ? <Loader2 className="animate-spin" size={18} /> : <>Complete Enrollment <ShieldCheck size={16} /></>}
                 </button>
-                
-                <button 
+
+                <button
                     type="button"
                     onClick={() => setVerifying(false)}
-                    className="w-full text-slate-500 text-[10px] uppercase font-black tracking-widest hover:text-white transition-colors"
+                    className="w-full text-center text-xs font-bold uppercase tracking-widest transition-colors hover:opacity-70"
+                    style={{ color: 'var(--muted-foreground)' }}
                 >
-                    Back to initial configuration
+                    Return to Registration
                 </button>
             </form>
         </div>

@@ -250,7 +250,7 @@ export default function InventoryPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <BookOpen size={14} /> Library Management
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Library Books</h1>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Library Books</h1>
                     <p className="text-muted-foreground font-medium tracking-tight">Manage your library catalog and monitor book availability.</p>
                 </div>
 

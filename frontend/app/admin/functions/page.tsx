@@ -495,7 +495,7 @@ export default function AdminFunctionsPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Wrench size={14} /> System Operations
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Admin Functions</h1>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Admin Functions</h1>
                     <p className="text-muted-foreground font-medium tracking-tight">Advanced tools for institutional management and automation.</p>
                 </div>
             </div>

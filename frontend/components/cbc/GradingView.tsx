@@ -63,7 +63,7 @@ export default function GradingView({ teacherSubjects, loading, tokenGetter }: G
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 px-4">
                 <div className="space-y-2">
-                    <h2 className="text-3xl font-black text-foreground uppercase tracking-tight flex items-center gap-3">
+                    <h2 className="text-3xl  text-foreground uppercase tracking-tight flex items-center gap-3">
                         <GraduationCap className="w-8 h-8 text-primary" /> Grading Console
                     </h2>
                     <p className="text-xs text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2">

@@ -259,7 +259,7 @@ export default function MyClassPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Building2 size={14} /> My Assigned Class
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">
                         {classId ? (
                             <>
                                 {assignmentInfo?.className} <span className="text-muted-foreground/30 font-normal">/</span> {assignmentInfo?.streamName}

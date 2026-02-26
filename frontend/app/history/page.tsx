@@ -150,7 +150,7 @@ export default function HistoryPage() {
                     <div className="flex items-center gap-2 text-amber-500 font-black uppercase tracking-[0.3em] text-[10px]">
                         <History size={14} /> Borrow History
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">History</h1>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">History</h1>
                     <p className="text-muted-foreground font-medium tracking-tight">View all borrowing and return records.</p>
                 </div>
 

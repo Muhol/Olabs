@@ -97,7 +97,7 @@ export default function LogsPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Terminal size={14} /> System Audit Trail
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight  uppercase">System Audit</h1>
+                    <h1 className="text-4xl tracking-tight  uppercase">System Audit</h1>
                     <p className="text-slate-400 font-medium tracking-tight">Review school library operations, user actions, and security events.</p>
                 </div>
                 <div className="flex gap-3">

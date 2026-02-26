@@ -110,7 +110,7 @@ export default function SettingsPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <ShieldCheck size={14} /> System Core Settings
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight uppercase">Access Control</h1>
+                    <h1 className="text-4xl tracking-tight uppercase">Access Control</h1>
                     <p className="text-slate-400 font-medium tracking-tight">Manage user registration policies and system protocols.</p>
                 </div>
                 <button

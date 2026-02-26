@@ -196,7 +196,7 @@ export default function StaffPage() {
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Briefcase size={14} /> Staff Management
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight text-foreground uppercase">Staff & Roles</h1>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Staff & Roles</h1>
                     <p className="text-muted-foreground font-medium tracking-tight">Manage user roles and permissions.</p>
                 </div>
 

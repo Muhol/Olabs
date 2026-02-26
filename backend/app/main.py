@@ -16,10 +16,10 @@ app = FastAPI(title="Library Star Pro API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
+        "https://olabs-ten.vercel.app",
         "http://localhost:3001",
         "http://localhost:3002",
-        "https://olabs-ten.vercel.app"
+        "http://localhost:3000",
         "https://olabs-student-portal.vercel.app/"
     ],
     allow_credentials=True,

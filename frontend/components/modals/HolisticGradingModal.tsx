@@ -605,32 +605,29 @@ export default function HolisticGradingModal({
                 className="relative w-full max-w-6xl h-[90vh] bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-6 md:p-8 border-b border-border bg-muted/20 relative">
+                <div className="p-8 border-b border-border bg-muted/20 flex justify-between relative">
                     {!isEditable && !loading && (
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 bg-amber-500 text-white text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] rounded-b-2xl shadow-lg flex items-center gap-2 whitespace-nowrap">
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 px-6 py-1 bg-amber-500 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-b-2xl shadow-lg flex items-center gap-2">
                             <Lock size={12} />
                             Read Only Mode – Term Session Closed
                         </div>
                     )}
 
-                    <button
-                        onClick={handleCloseAttempt}
-                        className="absolute top-4 right-4 md:top-8 md:right-8 p-2 hover:bg-red-500 rounded-full transition-colors text-muted-foreground hover:text-white"
-                    >
-                        <X size={24} />
-                    </button>
 
-                    <div className="flex flex-col gap-6">
-                        <div className="space-y-1 text-center md:text-left pt-4 md:pt-0">
-                            <h3 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter">Grading</h3>
-                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">
+                    <div className="flex flex-col md:flex-row md:items-center gap-6">
+                        {/* <div className="w-16 h-16 rounded-[2rem]  text-white flex items-center justify-center shadow-xl shadow-primary/20">
+                            <TrendingUp size={32} />
+                        </div> */}
+                        <div className="space-y-1">
+                            <h3 className="text-3xl font-black text-foreground tracking-tighter"> Grading</h3>
+                            <p className="text-xs font-black uppercase tracking-[0.3em] text-primary">
                                 {subject?.subject_name} • {subject?.class_name} {subject?.stream_name}
                             </p>
                         </div>
 
-                        <div className="flex flex-col lg:flex-row flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-2xl border border-border w-full lg:w-auto overflow-x-auto no-scrollbar">
-                                <Calendar size={14} className="text-primary ml-2 flex-shrink-0" />
+                        <div className="flex flex-col sm:flex-row flex-wrap sm:items-center gap-4 ml-auto">
+                            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-2xl border border-border">
+                                <Calendar size={14} className="text-primary ml-2" />
                                 <select
                                     value={term}
                                     onChange={e => setTerm(e.target.value)}
@@ -654,21 +651,21 @@ export default function HolisticGradingModal({
                                 </select>
                             </div>
 
-                            <div className="relative w-full lg:w-48">
+                            <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                                 <input
                                     type="text"
                                     placeholder="Search student..."
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    className="pl-9 pr-4 py-2 bg-muted/50 border border-border rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-primary transition-all w-full"
+                                    className="pl-9 pr-4 py-2 bg-muted/50 border border-border rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-primary transition-all w-48"
                                 />
                             </div>
 
                             <button
                                 onClick={exportToPDF}
                                 disabled={loading || students.length === 0}
-                                className="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-secondary hover:text-white transition-all disabled:opacity-50"
+                                className=" flex items-center gap-2 px-6 py-2 bg-secondary/10 text-secondary border border-secondary/20 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-secondary hover:text-white transition-all disabled:opacity-50"
                                 title="Download PDF Score Sheet"
                             >
                                 <FileText size={14} />
@@ -676,17 +673,24 @@ export default function HolisticGradingModal({
                             </button>
                         </div>
                     </div>
+
+                    <button
+                        onClick={handleCloseAttempt}
+                        className=" top-8 right-8 p-2 h-10 w-10 ml-10 hover:bg-red-500 rounded-full transition-colors text-muted-foreground hover:text-foreground"
+                    >
+                        <X size={24} />
+                    </button>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-auto p-4 md:p-8">
+                <div className="flex-1 overflow-auto p-8">
                     {loading ? (
                         <div className="h-full flex flex-col items-center justify-center space-y-4">
                             <Loader2 className="animate-spin text-primary" size={48} />
                             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Loading ...</p>
                         </div>
                     ) : (
-                        <div className="inline-block min-w-full align-middle border border-border rounded-2xl overflow-hidden shadow-sm overflow-x-auto">
+                        <div className="inline-block min-w-full align-middle">
                             <table className="min-w-full divide-y divide-border">
                                 <thead>
                                     <tr>

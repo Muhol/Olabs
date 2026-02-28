@@ -245,47 +245,47 @@ export default function InventoryPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header Area */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <BookOpen size={14} /> Library Management
                     </div>
-                    <h1 className="text-3xl md:text-4xl tracking-tight text-foreground uppercase">Library Books</h1>
-                    <p className="text-muted-foreground font-medium tracking-tight text-sm">Manage your library catalog and monitor availability.</p>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Library Books</h1>
+                    <p className="text-muted-foreground font-medium tracking-tight">Manage your library catalog and monitor book availability.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <button onClick={loadBooks} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                     </button>
-                    <button onClick={() => { resetForm(); setEditingBook(null); setIsModalOpen(true); setModalError(''); }} className="flex items-center gap-2 px-4 md:px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
-                        <Plus size={18} /> <span className="hidden xs:inline">Add New Book</span><span className="xs:hidden">Add</span>
+                    <button onClick={() => { resetForm(); setEditingBook(null); setIsModalOpen(true); setModalError(''); }} className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95">
+                        <Plus size={18} /> Add New Book
                     </button>
                 </div>
             </div>
 
             {/* Filter & Search Bar */}
-            <div className="flex flex-col xl:flex-row gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1 group">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors z-10">
                         <Search size={20} />
                     </div>
                     <input
                         type="text"
-                        placeholder="Search books..."
+                        placeholder="Search by title, ID, or author..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && loadBooks()}
-                        className="w-full pl-12 pr-12 md:pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50"
+                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50"
                     />
                     <button
                         onClick={loadBooks}
-                        className="absolute hidden md:flex right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 items-center gap-2"
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
                     >
                         <Search size={14} /> Search
                     </button>
                 </div>
-                <button className="flex items-center justify-center gap-3 px-6 py-4 bg-muted border border-border text-muted-foreground font-black uppercase text-[10px] tracking-widest rounded-2xl hover:text-foreground hover:bg-muted/80 transition-all w-full xl:w-auto">
+                <button className="flex items-center gap-3 px-6 py-4 bg-muted border border-border text-muted-foreground font-black uppercase text-[10px] tracking-widest rounded-2xl hover:text-foreground hover:bg-muted/80 transition-all">
                     <Filter size={18} /> Advanced Filters
                 </button>
             </div>
@@ -301,14 +301,14 @@ export default function InventoryPage() {
                 <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card transition-colors">
                     <AnimatePresence mode="wait">
                         <motion.div key={skip} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="overflow-x-auto">
-                            <table className="w-full text-left min-w-[700px]">
+                            <table className="w-full text-left min-w-[800px]">
                                 <thead>
                                     <tr className="bg-muted/50 border-b border-border">
-                                        <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">Book ID</th>
-                                        <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">Book Details</th>
-                                        <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">Category</th>
-                                        <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">Availability</th>
-                                        <th className="px-4 md:px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground whitespace-nowrap">Actions</th>
+                                        <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Book ID</th>
+                                        <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Book Details</th>
+                                        <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Category</th>
+                                        <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Availability</th>
+                                        <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
@@ -328,37 +328,37 @@ export default function InventoryPage() {
                                     ) : (
                                         filteredBooks.map((book) => (
                                             <tr key={book.id} className="hover:bg-muted/30 transition-colors group border-b border-border/50">
-                                                <td className="px-4 md:px-8 py-4">
-                                                    <span className="font-black text-[10px] text-primary bg-primary/10 px-2 md:px-3 py-1.5 rounded-lg border border-primary/20 whitespace-nowrap">{book.book_id}</span>
+                                                <td className="px-8 py-4">
+                                                    <span className="font-black text-xs text-primary bg-primary/10 px-3 py-1.5 rounded-lg border border-primary/20">{book.book_id}</span>
                                                 </td>
-                                                <td className="px-4 md:px-8 py-4">
+                                                <td className="px-8 py-4">
                                                     <div className="space-y-1">
-                                                        <div className="font-black text-foreground text-sm md:text-base leading-none group-hover:text-primary transition-colors truncate max-w-[150px] md:max-w-none">{book.title}</div>
-                                                        <div className="text-[9px] md:text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate max-w-[120px] md:max-w-none">{book.author}</div>
+                                                        <div className="font-black text-foreground text-base leading-none group-hover:text-primary transition-colors">{book.title}</div>
+                                                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">{book.author}</div>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 md:px-8 py-4">
+                                                <td className="px-8 py-4">
                                                     <div className="space-y-1">
-                                                        <div className="text-xs md:text-sm font-bold text-foreground/80 truncate max-w-[100px] md:max-w-none">{book.category}</div>
-                                                        {book.subject && <div className="text-[8px] md:text-[10px] font-black text-secondary uppercase tracking-widest">{book.subject}</div>}
+                                                        <div className="text-sm font-bold text-foreground/80">{book.category}</div>
+                                                        {book.subject && <div className="text-[10px] font-black text-secondary uppercase tracking-widest">{book.subject}</div>}
                                                     </div>
                                                 </td>
-                                                <td className="px-4 md:px-8 py-4">
+                                                <td className="px-8 py-4">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="hidden sm:block flex-1 max-w-[100px] h-1.5 bg-muted rounded-full overflow-hidden">
+                                                        <div className="flex-1 max-w-[100px] h-1.5 bg-muted rounded-full overflow-hidden">
                                                             <div className={`h-full transition-all duration-1000 ${book.available ? 'bg-primary' : 'bg-rose-500'}`} style={{ width: `${(book.total_copies - book.borrowed_copies) / book.total_copies * 100}%` }} />
                                                         </div>
-                                                        <span className={`text-[8px] md:text-[10px] font-black uppercase tracking-widest ${book.available ? 'text-primary' : 'text-rose-500'} whitespace-nowrap`}>{book.total_copies - book.borrowed_copies} <span className="hidden sm:inline">/ {book.total_copies}</span> Available</span>
+                                                        <span className={`text-[10px] font-black uppercase tracking-widest ${book.available ? 'text-primary' : 'text-rose-500'}`}>{book.total_copies - book.borrowed_copies} / {book.total_copies} Available</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 md:px-8 py-4 text-right">
-                                                    <div className="flex items-center justify-end gap-1 md:gap-2">
+                                                <td className="px-8 py-4 text-right">
+                                                    <div className="flex items-center justify-end gap-2">
                                                         {book.available && (
-                                                            <button onClick={() => { setSelectedBookForBorrow(book); setIsBorrowModalOpen(true); setBorrowError(''); setFoundStudent(null); setAdmissionNumberSearch(''); setBookNumberInput(''); }} className="px-3 md:px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground font-black uppercase text-[8px] md:text-[10px] tracking-widest rounded-xl border border-primary/20 transition-all active:scale-95">Borrow</button>
+                                                            <button onClick={() => { setSelectedBookForBorrow(book); setIsBorrowModalOpen(true); setBorrowError(''); setFoundStudent(null); setAdmissionNumberSearch(''); setBookNumberInput(''); }} className="px-4 py-2 bg-primary/10 hover:bg-primary text-primary hover:text-primary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl border border-primary/20 transition-all active:scale-95">Borrow</button>
                                                         )}
-                                                        <div className="flex items-center gap-1">
-                                                            <button onClick={() => { setEditingBook(book); setFormData(book); setIsModalOpen(true); setModalError(''); }} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all active:scale-90"><Edit size={16} /></button>
-                                                            {canManage && <button onClick={() => handleDelete(book.id)} className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all active:scale-90"><Trash2 size={16} /></button>}
+                                                        <div className="flex items-center gap-2">
+                                                            <button onClick={() => { setEditingBook(book); setFormData(book); setIsModalOpen(true); setModalError(''); }} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all"><Edit size={16} /></button>
+                                                            {canManage && <button onClick={() => handleDelete(book.id)} className="p-2 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 rounded-lg transition-all"><Trash2 size={16} /></button>}
                                                         </div>
                                                     </div>
                                                 </td>

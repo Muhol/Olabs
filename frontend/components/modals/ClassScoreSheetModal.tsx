@@ -162,25 +162,28 @@ export default function ClassScoreSheetModal({
                 className="relative w-full max-w-7xl h-[90vh] bg-card border border-border rounded-[3rem] shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-6 md:p-8 flex flex-col border-b border-border bg-muted/20 relative">
+                <div className="p-8 flex flex-col border-b border-border bg-muted/20 relative">
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 md:top-8 md:right-8 p-1 hover:bg-red-500 rounded-full transition-colors text-muted-foreground hover:text-white"
+                        className="self-end p-1 hover:bg-red-500 rounded-full transition-colors text-muted-foreground hover:text-foreground"
                     >
                         <X size={24} />
                     </button>
 
-                    <div className="flex flex-col gap-6 pt-6 md:pt-0">
-                        <div className="space-y-1 text-center md:text-left">
-                            <h3 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tighter">Class Score Sheet</h3>
-                            <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] text-secondary">
+                    <div className="flex flex-col md:flex-row flex-wrap md:items-center gap-6">
+                        {/* <div className="w-16 h-16 rounded-[2rem] bg-indigo-500 text-white flex items-center justify-center shadow-xl shadow-indigo-500/20">
+                            <FileText size={32} />
+                        </div> */}
+                        <div className="space-y-1">
+                            <h3 className="text-3xl font-black text-foreground uppercase tracking-tighter">Class Score Sheet</h3>
+                            <p className="text-xs font-black uppercase tracking-[0.3em] text-secondary">
                                 Consolidated Academic Records
                             </p>
                         </div>
 
-                        <div className="flex flex-col lg:flex-row flex-wrap items-center gap-4">
-                            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-2xl border border-border w-full lg:w-auto overflow-x-auto no-scrollbar">
-                                <Calendar size={14} className="text-secondary ml-2 flex-shrink-0" />
+                        <div className="flex items-center flex-wrap gap-4 ml-auto">
+                            <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-2xl border border-border">
+                                <Calendar size={14} className="text-secondary ml-2" />
                                 <select
                                     value={term}
                                     onChange={e => setTerm(e.target.value)}
@@ -204,21 +207,21 @@ export default function ClassScoreSheetModal({
                                 </select>
                             </div>
 
-                            <div className="relative w-full lg:w-48">
+                            <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
                                 <input
                                     type="text"
                                     placeholder="Search student..."
                                     value={searchQuery}
                                     onChange={e => setSearchQuery(e.target.value)}
-                                    className="pl-9 pr-4 py-2 bg-muted/50 border border-border rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-secondary transition-all w-full"
+                                    className="pl-9 pr-4 py-2 bg-muted/50 border border-border rounded-xl text-[10px] font-black uppercase tracking-widest outline-none focus:border-secondary transition-all w-48"
                                 />
                             </div>
 
                             <button
                                 onClick={exportToPDF}
                                 disabled={loading || data.students.length === 0}
-                                className="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-2 bg-secondary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-secondary/20"
+                                className="flex items-center gap-2 px-6 py-2 bg-secondary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 shadow-lg shadow-secondary/20"
                             >
                                 <Download size={14} />
                                 Export Master Sheet
@@ -259,9 +262,9 @@ export default function ClassScoreSheetModal({
                             </div>
                         </div>
                     ) : (
-                        <div className="p-4 md:p-8">
-                            <div className="border border-border rounded-2xl overflow-hidden bg-muted/10 shadow-sm overflow-x-auto">
-                                <table className="w-full border-collapse min-w-[800px]">
+                        <div className="p-8">
+                            <div className="border border-border rounded-[2rem] overflow-hidden bg-muted/10 shadow-sm overflow-x-auto">
+                                <table className="w-full border-collapse">
                                     <thead>
                                         <tr className="bg-muted/50 border-b border-border">
                                             <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground sticky left-0 bg-muted/50 z-10">
@@ -308,29 +311,29 @@ export default function ClassScoreSheetModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-6 md:p-8 border-t border-border bg-muted/20 flex flex-col xl:flex-row items-center justify-between gap-6">
-                    <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6">
+                <div className="p-8 border-t border-border bg-muted/20 flex items-center justify-between">
+                    <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/20" />
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Exceeding Expectation</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Exceeding Expectation</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-secondary shadow-sm shadow-secondary/20" />
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Meeting Expectation</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Meeting Expectation</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-amber-500 shadow-sm shadow-amber-500/20" />
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Approaching Expectation</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Approaching Expectation</span>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-rose-500 shadow-sm shadow-rose-500/20" />
-                            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground">Below Expectation</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Below Expectation</span>
                         </div>
                     </div>
 
                     <button
                         onClick={onClose}
-                        className="w-full xl:w-auto px-10 py-4 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all shadow-lg"
+                        className="px-10 py-4 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all shadow-lg"
                     >
                         Close Portal
                     </button>

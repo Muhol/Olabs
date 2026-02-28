@@ -152,20 +152,20 @@ export default function ExamSettingsPage() {
     return (
         <div className="p-4 md:p-8 space-y-12 max-w-5xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="space-y-1 text-center lg:text-left">
-                    <Link href="/settings" className="inline-flex items-center gap-1 text-slate-500 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest mb-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <Link href="/settings" className="flex items-center gap-1 text-slate-500 hover:text-primary transition-colors text-[10px] font-black uppercase tracking-widest mb-4">
                         <ChevronLeft size={14} /> Back to Settings
                     </Link>
-                    <div className="flex items-center justify-center lg:justify-start gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+                    <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <GraduationCap size={14} /> Global Assessment Protocols
                     </div>
-                    <h1 className="text-3xl md:text-4xl tracking-tight uppercase">Uniform Exams</h1>
-                    <p className="text-slate-400 font-medium tracking-tight text-sm">Define standard exam types for institutional uniformity.</p>
+                    <h1 className="text-4xl font-black tracking-tight uppercase">Uniform Exams</h1>
+                    <p className="text-slate-400 font-medium tracking-tight">Define standard exam types for institutional uniformity.</p>
                 </div>
                 <button
                     onClick={() => setShowBatchModal(true)}
-                    className="w-full lg:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition-colors rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                    className="flex items-center gap-2 px-6 py-3 bg-secondary/10 text-secondary hover:bg-secondary hover:text-white transition-colors rounded-2xl font-black uppercase tracking-widest text-[10px]"
                 >
                     <RefreshCw size={14} />
                     Batch Update Status
@@ -181,8 +181,8 @@ export default function ExamSettingsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Create Form */}
-                <div className="lg:col-span-1">
-                    <div className="glass-card bg-foreground/5 rounded-3xl border border-foreground/15 overflow-hidden lg:sticky lg:top-8 shadow-sm">
+                <div className="lg:col-span-1 ">
+                    <div className="glass-card bg-foreground/5 rounded-3xl border border-foreground/15 overflow-hidden sticky top-8">
                         <div className="p-6 border-b border-white/5 bg-white/5">
                             <h3 className="font-black uppercase tracking-widest text-xs text-primary">Deploy New Protocol</h3>
                         </div>
@@ -194,7 +194,7 @@ export default function ExamSettingsPage() {
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
                                     placeholder="e.g. Mid-term"
-                                    className="w-full bg-background border border-foreground/15 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 transition-all font-medium"
+                                    className="w-full bg-background border border-foreground/15 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-primary/50 transition-all"
                                 />
                             </div>
 
@@ -269,12 +269,12 @@ export default function ExamSettingsPage() {
                             ).sort(([a], [b]) => Number(b) - Number(a)).map(([year, yearExams]) => (
                                 <div key={year} className="space-y-8">
                                     <div className="flex items-center gap-4">
-                                        <div className="hidden sm:block h-[1px] flex-1 bg-foreground/10" />
-                                        <h4 className="w-full sm:w-auto flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-secondary bg-secondary/5 px-6 py-3 rounded-full border border-secondary/10 whitespace-nowrap">
+                                        <div className="h-[1px] flex-1 bg-foreground/10" />
+                                        <h4 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.4em] text-secondary bg-secondary/5 px-6 py-3 rounded-full border border-secondary/10">
                                             <Calendar size={14} />
-                                            Year {year}
+                                            Academic Year {year}
                                         </h4>
-                                        <div className="hidden sm:block h-[1px] flex-1 bg-foreground/10" />
+                                        <div className="h-[1px] flex-1 bg-foreground/10" />
                                     </div>
 
                                     <div className="space-y-12">

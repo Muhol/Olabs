@@ -96,22 +96,22 @@ export default function AnnouncementsPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="space-y-1 text-center lg:text-left">
-                    <div className="flex items-center justify-center lg:justify-start gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Megaphone size={14} /> Communication Hub
                     </div>
-                    <h1 className="text-3xl md:text-4xl tracking-tight text-foreground uppercase">Announcements</h1>
-                    <p className="text-muted-foreground font-medium tracking-tight text-sm">Broadcast updates to classes, subjects, or the whole school.</p>
+                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Announcements</h1>
+                    <p className="text-muted-foreground font-medium tracking-tight">Broadcast updates to classes, subjects, or the whole school.</p>
                 </div>
 
-                <div className="flex items-center justify-center gap-3">
-                    <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95 shadow-sm">
+                <div className="flex items-center gap-3">
+                    <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                     </button>
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95 whitespace-nowrap"
+                        className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105 active:scale-95"
                     >
                         <Plus size={18} /> New Announcement
                     </button>
@@ -121,7 +121,7 @@ export default function AnnouncementsPage() {
             {/* Content Area */}
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
                 {/* Search & Filters */}
-                <div className="lg:col-span-1 space-y-6">
+                <div className="xl:col-span-1 space-y-6">
                     <div className="relative group">
                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
                             <Search size={20} />
@@ -131,29 +131,29 @@ export default function AnnouncementsPage() {
                             placeholder="Search announcements..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-sm font-bold focus:border-primary outline-none transition-all shadow-sm"
+                            className="w-full pl-12 pr-4 py-4 rounded-2xl bg-card border border-border text-sm font-bold focus:border-primary outline-none transition-all"
                         />
                     </div>
 
-                    <div className="glass-card p-6 rounded-[2rem] border border-border bg-card space-y-4 shadow-sm">
+                    <div className="glass-card p-6 rounded-[2rem] border border-border bg-card space-y-4">
                         <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Quick Stats</h4>
-                        <div className="grid grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-muted/30 rounded-2xl border border-border">
-                                <div className="text-xl md:text-2xl font-black">{announcements.length}</div>
-                                <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Total Logs</div>
+                                <div className="text-2xl font-black">{announcements.length}</div>
+                                <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Total Announcements</div>
                             </div>
                             <div className="p-4 bg-muted/30 rounded-2xl border border-border">
-                                <div className="text-xl md:text-2xl font-black text-emerald-500">
+                                <div className="text-2xl font-black text-emerald-500">
                                     {announcements.filter(a => a.category === 'SCHOOL').length}
                                 </div>
-                                <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Global</div>
+                                <div className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">School-wide</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Main List */}
-                <div className="lg:col-span-3 space-y-4">
+                <div className="xl:col-span-3 space-y-4">
                     {loading ? (
                         <div className="py-20 flex flex-col items-center justify-center gap-4 opacity-40">
                             <Loader2 size={40} className="animate-spin text-primary" />
@@ -184,7 +184,7 @@ export default function AnnouncementsPage() {
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.05 }}
-                                        className="group p-5 md:p-8 rounded-[2.5rem] bg-card border border-border hover:border-primary/30 transition-all relative overflow-hidden flex flex-col sm:flex-row sm:items-center gap-4 md:gap-6 shadow-sm"
+                                        className="group p-6 md:p-8 rounded-[2.5rem] bg-card border border-border hover:border-primary/30 transition-all relative overflow-hidden flex flex-col md:flex-row md:items-center gap-6"
                                     >
                                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border shrink-0 transition-transform group-hover:scale-110 duration-500 ${getCategoryColor(announcement.category)}`}>
                                             <Icon size={24} />

@@ -185,17 +185,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </AnimatePresence>
 
             {/* Sidebar */}
-            <aside className={`fixed lg:sticky top-0 lg:top-4 h-full lg:h-[calc(100vh-2rem)] z-50 transform ${isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'} transition-all duration-300 backdrop-blur lg:m-4 rounded-r-2xl lg:rounded-2xl bg-white dark:bg-slate-900 lg:bg-white/50 dark:lg:bg-slate-700/0 border-r border-border lg:border-none shadow-2xl lg:shadow-none flex flex-col`}>
+            <aside className={`fixed lg:sticky top-0 lg:top-4 h-full lg:h-[calc(100vh-2rem)] z-50 transform ${isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'} transition-all duration-300 backdrop-blur lg:m-4 rounded-r-2xl lg:rounded-2xl bg-background/80 lg:bg-white/50 dark:lg:bg-slate-700/0 border-r border-border lg:border-none shadow-2xl lg:shadow-none flex flex-col`}>
                 <div className="p-6 flex items-center justify-between overflow-hidden">
-                    <div className={`w-[100px] h-[55px] relative flex items-center ${!isSidebarOpen && 'lg:hidden'}`}>
-                        <span className="font-black text-primary text-xl tracking-tighter">OLABS</span>
+                    <div className={`w-[100px] h-[55px] relative  ${!isSidebarOpen && 'hidden'}`}>
+                        {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-black">
+                            L
+                        </div> */}
+                        {/* <Image
+                            src="/icon.png"
+                            alt="Logo"
+                            fill
+                            objectFit='cover'
+                        // className="rounded-lg object-cover"
+                        /> */}
                     </div>
-                    <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg lg:hidden">
+                    <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg lg:hidden">
                         <X size={20} />
                     </button>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-2 py-4 overflow-y-auto overflow-x-hidden custom-scrollbar">
+                <nav className="flex-1 px-4 space-y-2 py-4">
                     {sidebarItems.map((item, idx) => {
                         // While loading, we show items that are common to all staff
                         if (!isLoading && !item.roles.includes(userRole)) return null;
@@ -212,7 +221,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 key={idx}
                                 href={item.href}
                                 onClick={() => {
-                                    if (window.innerWidth < 1024) setIsSidebarOpen(false);
                                     if (pathname !== item.href) {
                                         setIsNavigating(true);
                                         setTargetHref(item.href);
@@ -223,10 +231,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     : 'hover:bg-slate-100 dark:hover:bg-white/5 text-slate-500'
                                     }`}
                             >
-                                <div className="relative shrink-0">
+                                <div className="relative">
                                     <item.icon size={22} className={`${pathname === item.href ? 'text-primary' : 'text-slate-400 group-hover:text-primary'} transition-colors ${isNavigating && targetHref === item.href && 'animate-bounce'}`} />
+                                    {isNavigating && targetHref === item.href && (
+                                        <></>
+                                        // <motion.div
+                                        //     layoutId="nav-loader"
+                                        //     className="absolute -inset-1 border-2 border-primary border-t-transparent rounded-full animate-spin"
+                                        // />
+                                    )}
                                 </div>
-                                <span className={`font-bold tracking-wide transition-opacity duration-200 ${!isSidebarOpen ? 'lg:opacity-0' : 'opacity-100'}`}>
+                                <span className={`font-bold tracking-wide ${!isSidebarOpen && 'lg:hidden'}`}>
                                     {item.label}
                                 </span>
                                 {!isSidebarOpen && (
@@ -242,29 +257,27 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-                <header className="h-16 lg:h-20 sticky top-0 lg:top-4 z-40 flex items-center justify-between px-4 lg:px-8 lg:m-4 lg:rounded-2xl backdrop-blur-xl bg-white/70 dark:bg-slate-900/50 lg:bg-white/50 dark:lg:bg-slate-700/5 shadow-sm border-b lg:border-none border-border">
-                    <div className="flex items-center gap-2 lg:gap-4">
+                <header className="h-16 lg:h-20 sticky top-0 lg:top-4 z-40 flex items-center justify-between px-4 lg:px-8 lg:m-4 lg:rounded-2xl backdrop-blur-xl bg-white/50 dark:bg-slate-700/5 shadow-sm border-b lg:border-none border-border">
+                    <div className="flex items-center gap-4">
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-100 dark:hover:bg-white/5 rounded-lg">
                             <Menu size={24} />
                         </button>
-                        <h2 className="text-lg lg:text-xl font-black tracking-wide hidden xs:block truncate max-w-[150px] sm:max-w-none">
+                        <h2 className="text-xl font-black tracking-wide hidden sm:block">
                             {sidebarItems.find(item => item.href === pathname)?.label.toUpperCase() || 'DASHBOARD'}
                         </h2>
                     </div>
 
-                    <div className="flex items-center gap-3 lg:gap-6">
+                    <div className="flex items-center gap-6">
                         <div className="hidden md:flex flex-col items-end">
                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Logged in as</span>
                             <span className="capitalize text-sm font-black text-primary">{isLoading ? 'Authenticating...' : userRole.replace('_', ' ')}</span>
                         </div>
-                        <div className="scale-90 lg:scale-100">
-                            <UserButton afterSignOutUrl="/" />
-                        </div>
+                        <UserButton afterSignOutUrl="/" />
                     </div>
                 </header>
 
                 <main className="flex-1 p-4 lg:p-8 overflow-y-auto overflow-x-hidden">
-                    <div className="max-w-[1600px] mx-auto">
+                    <div>
                         {children}
                     </div>
                 </main>

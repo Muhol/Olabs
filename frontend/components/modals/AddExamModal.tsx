@@ -208,17 +208,22 @@ export default function AddExamModal({
                 className="relative w-full max-w-4xl h-[85vh] bg-card border border-border rounded-3xl shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-6 md:p-8 border-b border-border bg-muted/20 relative">
+                <div className="p-8 border-b border-border bg-muted/20 relative">
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 md:top-8 md:right-8 p-3 hover:bg-muted rounded-full transition-colors text-muted-foreground"
+                        className="absolute top-8 right-8 p-3 hover:bg-muted rounded-full transition-colors"
                     >
                         <X size={20} />
                     </button>
 
-                    <div className="flex flex-col gap-2 pt-4 md:pt-0 text-center md:text-left">
-                        <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter">Add New Assessment</h3>
-                        <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-primary">Subject Examination & Competency Builder</p>
+                    <div className="flex items-center gap-6">
+                        {/* <div className="w-14 h-14 rounded-2xl bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20">
+                            <Plus size={32} />
+                        </div> */}
+                        <div>
+                            <h3 className="text-2xl font-black uppercase tracking-tighter ">Add New Assessment</h3>
+                            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary">Subject Examination & Competency Builder</p>
+                        </div>
                     </div>
                 </div>
 
@@ -417,28 +422,29 @@ export default function AddExamModal({
                     </section>
                 </div>
 
-                <div className="p-6 md:p-8 border-t border-border bg-muted/10 flex flex-col sm:flex-row items-center justify-between gap-6">
-                    <div className="w-full sm:flex-1">
+                {/* Footer */}
+                <div className="p-8 border-t border-border bg-muted/10 flex items-center justify-between">
+                    <div>
                         {error && (
-                            <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight bg-rose-500/10 px-4 py-2 rounded-lg text-center sm:text-left">
+                            <p className="text-rose-500 text-[10px] font-black uppercase tracking-tight bg-rose-500/10 px-4 py-2 rounded-lg">
                                 {error}
                             </p>
                         )}
                     </div>
-                    <div className="flex gap-4 w-full sm:w-auto">
+                    <div className="flex gap-4">
                         <button
                             onClick={onClose}
-                            className="flex-1 sm:flex-none px-8 py-3 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-xl hover:bg-muted/80 transition-all"
+                            className="px-8 py-3 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-xl hover:bg-muted/80 transition-all font-black"
                         >
                             Back
                         </button>
                         <button
                             onClick={handleSave}
                             disabled={submitting}
-                            className="flex-[2] sm:flex-none px-8 py-3 bg-primary text-white font-black uppercase text-xs tracking-[0.2em] rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center gap-3"
+                            className="px-8 py-3 bg-primary text-white font-black uppercase text-xs tracking-[0.2em] rounded-xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 disabled:opacity-50 transition-all flex items-center gap-3"
                         >
                             {submitting ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-                            Finalize
+                            Finalize & Create
                         </button>
                     </div>
                 </div>

@@ -105,17 +105,17 @@ export default function SettingsPage() {
     return (
         <div className="p-4 md:p-8 space-y-12 max-w-4xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                <div className="space-y-1 text-center lg:text-left">
-                    <div className="flex items-center justify-center lg:justify-start gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <ShieldCheck size={14} /> System Core Settings
                     </div>
-                    <h1 className="text-3xl md:text-4xl tracking-tight uppercase">Access Control</h1>
-                    <p className="text-slate-400 font-medium tracking-tight text-sm">Manage user registration policies and system protocols.</p>
+                    <h1 className="text-4xl tracking-tight uppercase">Access Control</h1>
+                    <p className="text-slate-400 font-medium tracking-tight">Manage user registration policies and system protocols.</p>
                 </div>
                 <button
                     onClick={loadData}
-                    className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all whitespace-nowrap"
+                    className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10  rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all"
                 >
                     <RefreshCw size={14} className={actionLoading ? 'animate-spin' : ''} /> Refresh Settings
                 </button>

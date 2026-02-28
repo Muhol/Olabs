@@ -159,30 +159,32 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                 className="relative w-full max-w-4xl glass-card rounded-[2.5rem] border border-border bg-card shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
                 {/* Header Section */}
-                <div className="p-6 md:p-8 border-b border-border bg-muted/30 relative">
+                <div className="p-8 border-b border-border bg-muted/30 relative">
                     <button
                         onClick={onClose}
-                        className="absolute top-4 right-4 md:top-6 md:right-6 p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground"
+                        className="absolute top-6 right-6 p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground"
                     >
                         <X size={24} />
                     </button>
 
-                    <div className="flex flex-col md:flex-row gap-6 items-center md:items-center text-center md:text-left">
-                        <div className="w-16 h-16 md:w-20 md:h-20 rounded-3xl bg-secondary/20 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner shrink-0">
-                            <User size={32} />
+                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
+                        <div className="w-20 h-20 rounded-3xl bg-secondary/20 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner">
+                            <User size={40} />
                         </div>
                         <div className="space-y-1">
-                            <div className="flex flex-col md:flex-row items-center gap-3">
-                                <h2 className="text-2xl md:text-3xl font-black text-foreground uppercase tracking-tight">{localStudent.full_name}</h2>
-                                {localStudent.is_cleared && (
+                            <div className="flex items-center gap-3">
+                                <h2 className="text-3xl font-black text-foreground uppercase tracking-tight">{localStudent.full_name}</h2>
+                                {localStudent.is_cleared ? (
                                     <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full text-[10px] font-black uppercase tracking-widest">
                                         <BadgeCheck size={12} /> Cleared
                                     </div>
+                                ) : (
+                                    <BadgeCheck size={20} className="text-muted-foreground/30" />
                                 )}
                             </div>
-                            <div className="flex flex-wrap justify-center md:justify-start gap-4 text-[10px] md:text-xs font-black uppercase tracking-widest text-muted-foreground">
-                                <span className="flex items-center gap-1.5"><Building2 size={12} className="text-secondary" /> {localStudent.class_name || 'No Class'}</span>
-                                <span className="flex items-center gap-1.5"><Layers size={12} className="text-primary" /> {localStudent.stream || localStudent.full_class || 'No Stream'}</span>
+                            <div className="flex flex-wrap gap-4 text-sm font-black uppercase tracking-widest text-muted-foreground">
+                                <span className="flex items-center gap-1.5"><Building2 size={14} className="text-secondary" /> {localStudent.class_name || 'No Class'}</span>
+                                <span className="flex items-center gap-1.5"><Layers size={14} className="text-primary" /> {localStudent.stream || localStudent.full_class || 'No Stream'}</span>
                                 <span className="flex items-center gap-1.5 text-secondary">ADM: {localStudent.admission_number}</span>
                             </div>
                         </div>
@@ -220,17 +222,17 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
 
                     {/* History Table */}
                     <div className="space-y-4">
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                        <div className="flex items-center justify-between">
                             <h3 className="text-xl font-black text-foreground uppercase tracking-tight flex items-center gap-2">
                                 <History className="text-secondary" size={20} /> Borrowing History
                             </h3>
-                            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1.5 rounded-lg border border-border w-full sm:w-auto">
+                            <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1.5 rounded-lg border border-border">
                                 {history.length} RECORDS FOUND
                             </div>
                         </div>
 
-                        <div className="border border-border rounded-3xl overflow-hidden bg-muted/10 overflow-x-auto shadow-sm">
-                            <table className="w-full text-left min-w-[600px]">
+                        <div className="border border-border rounded-3xl overflow-hidden bg-muted/10">
+                            <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-muted/50 border-b border-border">
                                         <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-muted-foreground text-center">Status</th>
@@ -363,8 +365,8 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                                     </div>
                                 </div>
 
-                                <div className="bg-card border border-border rounded-2xl overflow-hidden overflow-x-auto shadow-sm">
-                                    <table className="w-full text-left min-w-[500px]">
+                                <div className="bg-card border border-border rounded-[2rem] overflow-hidden">
+                                    <table className="w-full text-left">
                                         <thead>
                                             <tr className="bg-muted/50 border-b border-border">
                                                 <th className="px-6 py-4 text-[10px] font-black text-muted-foreground uppercase tracking-widest">Session Date</th>
@@ -410,27 +412,32 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                     </div>
                 </div>
 
-                <div className="p-6 md:p-8 border-t border-border bg-muted/30 flex flex-col sm:flex-row justify-between items-center gap-6">
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                <div className="p-8 border-t border-border bg-muted/30 flex justify-between items-center">
+                    <div className="flex items-center gap-3">
                         {!localStudent.is_cleared && (
                             <button
                                 onClick={handleClearance}
                                 disabled={clearing || stats.currentlyHolding > 0}
-                                className="w-full sm:w-auto px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-emerald-500/20 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                                 {clearing ? <Loader2 size={14} className="animate-spin" /> : <BadgeCheck size={14} />}
                                 {stats.currentlyHolding > 0 ? 'Clearance Blocked' : 'Approve Clearance'}
                             </button>
                         )}
                         {userRole === 'SUPER_ADMIN' && (
-                            <button
-                                onClick={() => setIsConfirmingReset(true)}
-                                disabled={resetting}
-                                className="w-full sm:w-auto px-6 py-3 bg-secondary/10 hover:bg-secondary text-secondary hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-secondary/20 transition-all active:scale-95 flex items-center justify-center gap-2"
-                            >
-                                {resetting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                                Reset Account
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setIsConfirmingReset(true)}
+                                    disabled={resetting}
+                                    className="px-6 py-3 bg-secondary/10 hover:bg-secondary text-secondary hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-secondary/20 transition-all active:scale-95 flex items-start gap-2"
+                                >
+                                    {resetting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                                    Reset Account
+                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-500 uppercase tracking-widest px-2">
+                                        <TriangleAlert size={12} />
+                                    </div>
+                                </button>
+                            </div>
                         )}
                     </div>
                     {localStudent.is_cleared && (
@@ -440,7 +447,7 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                     )}
                     <button
                         onClick={onClose}
-                        className="w-full sm:w-auto px-8 py-3 md:py-4 bg-secondary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-secondary/20 transition-all hover:scale-105 active:scale-95"
+                        className="px-8 py-4 bg-secondary text-secondary-foreground font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-secondary/20 transition-all hover:scale-105 active:scale-95"
                     >
                         Close Profile
                     </button>

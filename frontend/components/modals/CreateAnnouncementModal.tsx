@@ -169,20 +169,20 @@ export default function CreateAnnouncementModal({
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-2xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
+                className="relative w-full max-w-2xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-y-auto max-h-[90vh]"
             >
-                <div className="p-8 border-b border-border bg-muted/20 flex items-center justify-between">
+                <div className="p-6 md:p-8 border-b border-border bg-muted/20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-                            <Bell size={24} />
+                        <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <Bell size={20} />
                         </div>
                         <div>
-                            <h3 className="text-xl font-black uppercase tracking-tight leading-none">New Announcement</h3>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">Central Dispatch Core</p>
+                            <h3 className="text-lg md:text-xl font-black uppercase tracking-tight leading-none">New Announcement</h3>
+                            <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mt-1">Central Dispatch Core</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
-                        <X size={24} />
+                    <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors shrink-0">
+                        <X size={20} />
                     </button>
                 </div>
 
@@ -222,23 +222,23 @@ export default function CreateAnnouncementModal({
                         {/* Category Selector */}
                         <div className="space-y-1.5">
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Dispatch Category</label>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
                                 {[
-                                    { id: 'SCHOOL', label: 'Whole School', icon: School, roles: ['admin', 'SUPER_ADMIN'] },
+                                    { id: 'SCHOOL', label: 'School', icon: School, roles: ['admin', 'SUPER_ADMIN'] },
                                     { id: 'STAFF', label: 'Staff Only', icon: Users, roles: ['admin', 'SUPER_ADMIN'] },
                                     {
                                         id: 'STREAM',
-                                        label: 'Specific Stream',
+                                        label: 'Stream',
                                         icon: Layers,
                                         roles: ['admin', 'SUPER_ADMIN', 'teacher'],
-                                        tag: userRole === 'teacher' && userDetails?.assigned_stream_id ? 'Class Teacher' : null
+                                        tag: userRole === 'teacher' && userDetails?.assigned_stream_id ? 'Class' : null
                                     },
                                     {
                                         id: 'SUBJECT',
-                                        label: 'Specific Subject',
+                                        label: 'Subject',
                                         icon: BookOpen,
                                         roles: ['admin', 'SUPER_ADMIN', 'teacher'],
-                                        tag: userRole === 'teacher' && (userDetails?.subject_assignments?.length > 0) ? 'Subject Teacher' : null
+                                        tag: userRole === 'teacher' && (userDetails?.subject_assignments?.length > 0) ? 'Subj' : null
                                     },
                                 ].filter(cat => cat.roles.includes(userRole || '')).map((cat) => (
                                     <button
@@ -251,12 +251,12 @@ export default function CreateAnnouncementModal({
                                             }`}
                                     >
                                         {cat.tag && (
-                                            <span className={`absolute -top-2 -right-1 px-1.5 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest border shadow-sm ${category === cat.id ? 'bg-white text-primary border-white' : 'bg-primary text-white border-primary'
+                                            <span className={`absolute -top-1 -right-1 px-1.5 py-0.5 rounded-full text-[6px] font-black uppercase tracking-widest border shadow-sm ${category === cat.id ? 'bg-white text-primary border-white' : 'bg-primary text-white border-primary'
                                                 }`}>
                                                 {cat.tag}
                                             </span>
                                         )}
-                                        <cat.icon size={18} className={category === cat.id ? 'text-primary-foreground' : 'text-primary transition-transform group-hover:scale-110'} />
+                                        <cat.icon size={16} className={category === cat.id ? 'text-primary-foreground' : 'text-primary transition-transform group-hover:scale-110'} />
                                         <span className="text-[9px] font-black uppercase tracking-tight text-center">{cat.label}</span>
                                     </button>
                                 ))}
@@ -276,7 +276,7 @@ export default function CreateAnnouncementModal({
                                             setSelectedClassId(e.target.value);
                                             setStreamId(''); // Reset stream when class changes
                                         }}
-                                        className="w-full bg-muted/50 border border-border rounded-2xl px-5 py-3 text-sm font-bold focus:border-primary outline-none transition-all appearance-none disabled:opacity-80"
+                                        className="w-full bg-muted/50 border border-border rounded-2xl px-4 md:px-5 py-3 text-xs md:text-sm font-bold focus:border-primary outline-none transition-all appearance-none disabled:opacity-80"
                                     >
                                         <option value="">Choose Class</option>
                                         {classes.map(cls => (
@@ -291,9 +291,9 @@ export default function CreateAnnouncementModal({
                                         disabled={!selectedClassId || (userRole === 'teacher' && !!userDetails?.assigned_stream_id)}
                                         value={streamId}
                                         onChange={e => setStreamId(e.target.value)}
-                                        className="w-full bg-muted/50 border border-border rounded-2xl px-5 py-3 text-sm font-bold focus:border-primary outline-none transition-all appearance-none disabled:opacity-80"
+                                        className="w-full bg-muted/50 border border-border rounded-2xl px-4 md:px-5 py-3 text-xs md:text-sm font-bold focus:border-primary outline-none transition-all appearance-none disabled:opacity-80"
                                     >
-                                        <option value="">{selectedClassId ? 'Choose Stream' : 'Select Class First'}</option>
+                                        <option value="">{selectedClassId ? 'Choose Stream' : 'Select Class'}</option>
                                         {streams.filter(s => s.class_id === selectedClassId).map(stream => (
                                             <option key={stream.id} value={stream.id}>
                                                 {stream.name}
@@ -431,10 +431,10 @@ export default function CreateAnnouncementModal({
                             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Dispatch Content</label>
                             <textarea
                                 required
-                                rows={6}
+                                rows={4}
                                 value={content}
                                 onChange={e => setContent(e.target.value)}
-                                className="w-full bg-muted/50 border border-border rounded-2xl px-5 py-4 text-sm font-medium focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 resize-none"
+                                className="w-full bg-muted/50 border border-border rounded-2xl px-5 py-4 text-xs md:text-sm font-medium focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30 resize-none"
                                 placeholder="Compose your announcement message..."
                             />
                         </div>

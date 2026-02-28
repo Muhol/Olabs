@@ -92,21 +92,21 @@ export default function LogsPage() {
     return (
         <div className="p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-1 text-center lg:text-left">
+                    <div className="flex items-center justify-center lg:justify-start gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Terminal size={14} /> System Audit Trail
                     </div>
-                    <h1 className="text-4xl tracking-tight  uppercase">System Audit</h1>
-                    <p className="text-slate-400 font-medium tracking-tight">Review school library operations, user actions, and security events.</p>
+                    <h1 className="text-3xl md:text-4xl tracking-tight uppercase">System Audit</h1>
+                    <p className="text-slate-400 font-medium tracking-tight text-sm">Review school library operations, user actions, and security events.</p>
                 </div>
-                <div className="flex gap-3">
-                    <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10  rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all">
+                <div className="flex items-center justify-center gap-3">
+                    <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all whitespace-nowrap">
                         <Download size={14} /> Export Logs
                     </button>
                     <button
                         onClick={loadData}
-                        className="p-3 bg-primary/10 text-primary border border-primary/20 rounded-xl hover:bg-primary/20 transition-all"
+                        className="p-3 bg-primary/10 text-primary border border-primary/20 rounded-xl hover:bg-primary/20 transition-all shrink-0 shadow-sm"
                     >
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                     </button>
@@ -114,38 +114,38 @@ export default function LogsPage() {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div className="glass-card p-6 rounded-3xl border border-white/10 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div className="glass-card p-5 md:p-6 rounded-3xl border border-white/10 flex items-center gap-4 shadow-sm group hover:border-primary/20 transition-colors">
+                    <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500 border border-blue-500/20 group-hover:scale-110 transition-transform">
                         <Activity size={24} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Total Events</p>
-                        <p className="text-2xl font-black ">{stats.total_events}</p>
+                        <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Total Events</p>
+                        <p className="text-xl md:text-2xl font-black">{stats.total_events}</p>
                     </div>
                 </div>
-                <div className="glass-card p-6 rounded-3xl border border-white/10 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20">
+                <div className="glass-card p-5 md:p-6 rounded-3xl border border-white/10 flex items-center gap-4 shadow-sm group hover:border-amber-500/20 transition-colors">
+                    <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500 border border-amber-500/20 group-hover:scale-110 transition-transform">
                         <AlertTriangle size={24} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Security Alerts</p>
-                        <p className="text-2xl font-black ">{stats.security_alerts}</p>
+                        <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Security Alerts</p>
+                        <p className="text-xl md:text-2xl font-black">{stats.security_alerts}</p>
                     </div>
                 </div>
-                <div className="glass-card p-6 rounded-3xl border border-white/10 flex items-center gap-4">
-                    <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-500/20">
+                <div className="glass-card p-5 md:p-6 rounded-3xl border border-white/10 flex items-center gap-4 shadow-sm group hover:border-rose-500/20 transition-colors sm:col-span-2 lg:col-span-1">
+                    <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-500/20 group-hover:scale-110 transition-transform">
                         <XCircle size={24} />
                     </div>
                     <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Critical Failures</p>
-                        <p className="text-2xl font-black ">{stats.critical_failures}</p>
+                        <p className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500">Critical Failures</p>
+                        <p className="text-xl md:text-2xl font-black">{stats.critical_failures}</p>
                     </div>
                 </div>
             </div>
 
             {/* Controls */}
-            <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1 group">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-primary transition-colors z-10" size={18} />
                     <input
@@ -153,17 +153,24 @@ export default function LogsPage() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && loadData()}
-                        placeholder="Search logs by action, user, or details..."
-                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-white/5 border border-white/10  font-bold text-sm focus:border-primary outline-none transition-all shadow-inner"
+                        placeholder="Search logs..."
+                        className="w-full pl-12 pr-4 sm:pr-32 py-4 rounded-2xl bg-white/5 border border-white/10 font-bold text-sm focus:border-primary outline-none transition-all shadow-inner"
                     />
                     <button
                         onClick={loadData}
-                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary  font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 hidden sm:flex items-center gap-2"
                     >
                         <Search size={14} /> Search
                     </button>
                 </div>
-                {/* <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
+                <button
+                    onClick={loadData}
+                    className="w-full sm:hidden py-4 bg-primary font-black uppercase text-[10px] tracking-widest rounded-2xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+                >
+                    <Search size={14} /> Search Logs
+                </button>
+            </div>
+            {/* <div className="flex gap-2 p-1 bg-white/5 border border-white/10 rounded-2xl">
                     {['ALL', 'INFO', 'WARNING', 'ERROR'].map((l) => (
                         <button
                             key={l}
@@ -175,78 +182,76 @@ export default function LogsPage() {
                         </button>
                     ))}
                 </div> */}
-            </div>
-
             {/* Logs Table */}
-            <div className="glass-card rounded-[2.5rem] border border-white/10 overflow-hidden">
+            <div className="glass-card rounded-[2.5rem] border border-white/10 overflow-hidden shadow-sm">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-white/5 border-b border-white/10">
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Severity</th>
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Action Type</th>
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Initiator</th>
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Target</th>
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Details</th>
-                                <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Timestamp</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5">
-                            {logs.map((log: any) => (
-                                <tr key={log.id} className="hover:bg-white/[0.02] transition-colors group">
-                                    <td className="px-6 py-4">
-                                        <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${log.level === 'INFO' ? 'bg-blue-500/10 text-blue-500' :
-                                                log.level === 'WARNING' ? 'bg-amber-500/10 text-amber-500' :
-                                                    'bg-rose-500/10 text-rose-500'
-                                            }`}>
-                                            {log.level === 'INFO' && <Info size={12} />}
-                                            {log.level === 'WARNING' && <AlertTriangle size={12} />}
-                                            {log.level === 'ERROR' && <XCircle size={12} />}
-                                            {log.level}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className=" font-black text-xs tracking-tight">{log.action}</span>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center">
-                                                <User size={12} className="text-slate-400" />
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Severity</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Action Type</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Initiator</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Target</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Details</th>
+                        <th className="px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-500">Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                    {logs.map((log: any) => (
+                        <tr key={log.id} className="hover:bg-white/[0.02] transition-colors group">
+                            <td className="px-6 py-4">
+                                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${log.level === 'INFO' ? 'bg-blue-500/10 text-blue-500' :
+                                    log.level === 'WARNING' ? 'bg-amber-500/10 text-amber-500' :
+                                        'bg-rose-500/10 text-rose-500'
+                                    }`}>
+                                    {log.level === 'INFO' && <Info size={12} />}
+                                    {log.level === 'WARNING' && <AlertTriangle size={12} />}
+                                    {log.level === 'ERROR' && <XCircle size={12} />}
+                                    {log.level}
+                                </div>
+                            </td>
+                            <td className="px-6 py-4">
+                                <span className=" font-black text-xs tracking-tight">{log.action}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center">
+                                        <User size={12} className="text-slate-400" />
+                                    </div>
+                                    <span className="text-slate-300 font-bold text-xs">{log.user_email}</span>
+                                </div>
+                            </td>
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                    {log.target_user ? (
+                                        <>
+                                            <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
+                                                <Activity size={10} className="text-primary" />
                                             </div>
-                                            <span className="text-slate-300 font-bold text-xs">{log.user_email}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            {log.target_user ? (
-                                                <>
-                                                    <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
-                                                        <Activity size={10} className="text-primary" />
-                                                    </div>
-                                                    <span className="text-primary font-black text-[10px] uppercase tracking-tighter">{log.target_user}</span>
-                                                </>
-                                            ) : (
-                                                <span className="text-slate-600 font-bold text-[10px] uppercase">—</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <p className="text-slate-400 font-medium text-xs max-w-md truncate group-hover:text-slate-200 transition-colors">
-                                            {log.details}
-                                        </p>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-tighter">
-                                            <Clock size={12} />
-                                            {new Date(log.timestamp).toLocaleString()}
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+                                            <span className="text-primary font-black text-[10px] uppercase tracking-tighter">{log.target_user}</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-slate-600 font-bold text-[10px] uppercase">—</span>
+                                    )}
+                                </div>
+                            </td>
+                            <td className="px-6 py-4">
+                                <p className="text-slate-400 font-medium text-xs max-w-md truncate group-hover:text-slate-200 transition-colors">
+                                    {log.details}
+                                </p>
+                            </td>
+                            <td className="px-6 py-4">
+                                <div className="flex items-center gap-2 text-slate-500 text-[10px] font-black uppercase tracking-tighter">
+                                    <Clock size={12} />
+                                    {new Date(log.timestamp).toLocaleString()}
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
+    </div>
+        </div >
     );
 }

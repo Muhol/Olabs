@@ -12,7 +12,7 @@ interface AdminInsightsProps {
 
 export function AdminInsights({ trends, topBooks, securityEvents, isSuperAdmin }: AdminInsightsProps) {
     return (
-        <div className={`grid grid-cols-1 ${isSuperAdmin ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-8 animate-in slide-in-from-bottom duration-1000`}>
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${isSuperAdmin ? 'xl:grid-cols-3' : 'xl:grid-cols-2'} gap-6 lg:gap-8 animate-in slide-in-from-bottom duration-1000`}>
             {/* Borrowing Trends Chart */}
             <div className="glass-card rounded-[3rem] border border-border bg-card p-8 flex flex-col shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-32 h-32 bg-primary/5 blur-2xl rounded-full -translate-x-16 -translate-y-16" />

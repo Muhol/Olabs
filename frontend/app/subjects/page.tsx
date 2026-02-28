@@ -646,47 +646,47 @@ export default function SubjectManagementPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <BookOpen size={14} /> Subject Management
                     </div>
-                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Curriculum</h1>
-                    <p className="text-muted-foreground font-medium tracking-tight">Configure school subjects and assign them to staff & students.</p>
+                    <h1 className="text-3xl md:text-4xl tracking-tight text-foreground uppercase">Curriculum</h1>
+                    <p className="text-muted-foreground font-medium tracking-tight text-sm">Configure school subjects and assign them to staff & students.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 md:gap-3">
                     <button
                         onClick={openBulkDeleteModal}
-                        className="flex items-center gap-2 px-6 py-4 bg-rose-500/10 text-rose-500 border border-border font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-rose-500/20 active:scale-95 transition-all"
+                        className="flex items-center gap-2 px-4 md:px-6 py-3 md:py-4 bg-rose-500/10 text-rose-500 border border-border font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl md:rounded-2xl hover:bg-rose-500/20 active:scale-95 transition-all"
                     >
-                        <Trash2 size={18} /> Bulk Delete
+                        <Trash2 size={18} /> <span className="hidden sm:inline">Bulk Delete</span>
                     </button>
                     {systemUser?.role === 'SUPER_ADMIN' && (
                         <button
                             onClick={openPurgeModal}
                             disabled={loading}
-                            className="flex items-center gap-2 px-6 py-4 bg-rose-600/20 text-rose-600 border border-rose-600/30 font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-rose-600 hover:text-white active:scale-95 transition-all disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 md:px-6 py-3 md:py-4 bg-rose-600/20 text-rose-600 border border-rose-600/30 font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl md:rounded-2xl hover:bg-rose-600 hover:text-white active:scale-95 transition-all disabled:opacity-50"
                         >
-                            <AlertTriangle size={18} /> Purge All
+                            <AlertTriangle size={18} /> <span className="hidden sm:inline">Purge All</span>
                         </button>
                     )}
-                    <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-6 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
-                        <Plus size={18} /> Create Subject
+                    <button onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2 px-4 md:px-6 py-3 md:py-4 bg-primary text-white font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl md:rounded-2xl shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                        <Plus size={18} /> <span>Create <span className="hidden sm:inline">Subject</span></span>
                     </button>
                 </div>
             </div>
 
             {/* Tabs */}
-            <div className="flex bg-muted p-1.5 rounded-[1.4rem] border border-border self-start">
-                <button onClick={() => setActiveTab('subjects')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'subjects' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
-                    Subjects List
+            <div className="flex flex-wrap gap-2 bg-muted p-1.5 rounded-[1.4rem] border border-border self-start">
+                <button onClick={() => setActiveTab('subjects')} className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'subjects' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                    Subjects<span className="hidden xs:inline"> List</span>
                 </button>
-                <button onClick={() => setActiveTab('teachers')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'teachers' ? 'bg-card text-foreground shadow-lg scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
-                    Teacher Assignments
+                <button onClick={() => setActiveTab('teachers')} className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'teachers' ? 'bg-card text-foreground shadow-lg scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                    Teachers<span className="hidden xs:inline"> Assignments</span>
                 </button>
-                <button onClick={() => setActiveTab('students')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'students' ? 'bg-card text-foreground shadow-lg scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
-                    Student Selection
+                <button onClick={() => setActiveTab('students')} className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'students' ? 'bg-card text-foreground shadow-lg scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                    Students<span className="hidden xs:inline"> Selection</span>
                 </button>
             </div>
 
@@ -700,13 +700,13 @@ export default function SubjectManagementPage() {
             <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card transition-colors">
                 {activeTab === 'subjects' ? (
                     <div className="flex flex-col h-full">
-                        <div className="p-8 border-b border-border bg-muted/20">
-                            <div className="flex items-center gap-4 max-w-2xl">
-                                <div className="relative group flex-1">
+                        <div className="p-4 md:p-8 border-b border-border bg-muted/20">
+                            <div className="flex flex-col md:flex-row items-center gap-4 max-w-4xl">
+                                <div className="relative group flex-1 w-full">
                                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
                                     <input
                                         type="text"
-                                        placeholder="Search by name, class, or stream..."
+                                        placeholder="Search subjects..."
                                         value={listSearch}
                                         onChange={(e) => setListSearch(e.target.value)}
                                         onKeyDown={handleSearchKeyDown}
@@ -715,7 +715,7 @@ export default function SubjectManagementPage() {
                                 </div>
                                 <button
                                     onClick={triggerSearch}
-                                    className="px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                    className="w-full md:w-auto px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
                                 >
                                     <Search size={18} /> Search
                                 </button>
@@ -723,15 +723,15 @@ export default function SubjectManagementPage() {
                         </div>
 
                         <div className="overflow-x-auto flex-1">
-                            <table className="w-full text-left min-w-[600px]">
+                            <table className="w-full text-left min-w-[700px]">
                                 <thead>
                                     <tr className="text-left border-b border-border">
-                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Name</th>
-                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Class</th>
-                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Stream</th>
-                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Students</th>
-                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Type</th>
-                                        <th className="px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest text-right">Actions</th>
+                                        <th className="px-4 md:px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Name</th>
+                                        <th className="px-4 md:px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Class</th>
+                                        <th className="px-4 md:px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Stream</th>
+                                        <th className="px-4 md:px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest whitespace-nowrap">Students</th>
+                                        <th className="px-4 md:px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest">Type</th>
+                                        <th className="px-4 md:px-8 py-6 text-xs font-black uppercase text-slate-500 tracking-widest text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -746,36 +746,36 @@ export default function SubjectManagementPage() {
                                         <tr><td colSpan={5} className="py-32 text-center text-slate-500 font-bold uppercase tracking-widest">No subjects defined yet</td></tr>
                                     ) : subjects.map((subj) => (
                                         <tr key={subj.id} className="border-b border-border hover:bg-muted/30 transition-colors group">
-                                            <td className="px-8 py-6">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-xl bg-orange-500/10 text-orange-500 flex items-center justify-center font-bold">
+                                            <td className="px-4 md:px-8 py-4 md:py-6">
+                                                <div className="flex items-center gap-2 md:gap-3">
+                                                    <div className="hidden xs:flex w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl bg-orange-500/10 text-orange-500 items-center justify-center font-bold text-xs">
                                                         {subj.name.charAt(0)}
                                                     </div>
-                                                    <span className="font-bold text-foreground text-sm">{subj.name}</span>
+                                                    <span className="font-bold text-foreground text-xs md:text-sm truncate max-w-[120px] md:max-w-none">{subj.name}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6">
-                                                <span className="font-bold text-xs uppercase text-slate-600 dark:text-slate-400">
-                                                    {subj.class_name || 'All Classes'}
+                                            <td className="px-4 md:px-8 py-4 md:py-6">
+                                                <span className="font-bold text-[10px] md:text-xs uppercase text-slate-600 dark:text-slate-400">
+                                                    {subj.class_name || 'All'}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-6">
-                                                <span className="font-bold text-xs uppercase text-slate-600 dark:text-slate-400">
-                                                    {subj.stream_name || 'All Streams'}
+                                            <td className="px-4 md:px-8 py-4 md:py-6">
+                                                <span className="font-bold text-[10px] md:text-xs uppercase text-slate-600 dark:text-slate-400">
+                                                    {subj.stream_name || 'All'}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-6">
+                                            <td className="px-4 md:px-8 py-4 md:py-6">
                                                 <div className="flex items-center gap-2">
-                                                    <Users size={14} className="text-muted-foreground" />
-                                                    <span className="font-black text-xs text-foreground">{subj.student_count}</span>
+                                                    <Users size={12} className="text-muted-foreground" />
+                                                    <span className="font-black text-[10px] md:text-xs text-foreground">{subj.student_count}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-8 py-6">
-                                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${subj.is_compulsory ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'}`}>
+                                            <td className="px-4 md:px-8 py-4 md:py-6">
+                                                <span className={`px-2 md:px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border ${subj.is_compulsory ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20'} whitespace-nowrap`}>
                                                     {subj.is_compulsory ? 'Compulsory' : 'Optional'}
                                                 </span>
                                             </td>
-                                            <td className="px-8 py-6 text-right flex justify-end gap-2">
+                                            <td className="px-4 md:px-8 py-4 md:py-6 text-right flex justify-end gap-1 md:gap-2">
                                                 <button
                                                     onClick={async () => {
                                                         setEditingSubject({ ...subj });
@@ -832,8 +832,8 @@ export default function SubjectManagementPage() {
                     </div>
                 ) : activeTab === 'teachers' ? (
                     <div className="p-8 space-y-6">
-                        <div className="flex items-center gap-4 max-w-2xl">
-                            <div className="relative group flex-1">
+                        <div className="flex flex-col md:flex-row items-center gap-4 max-w-4xl">
+                            <div className="relative group flex-1 w-full">
                                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
                                 <input
                                     type="text"
@@ -845,7 +845,7 @@ export default function SubjectManagementPage() {
                             </div>
                             <button
                                 onClick={teacherAssignmentViewMode === 'by_teacher' ? triggerStaffSearch : triggerSearch}
-                                className="px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                className="w-full md:w-auto px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
                             >
                                 <Search size={18} /> Search
                             </button>
@@ -916,7 +916,7 @@ export default function SubjectManagementPage() {
                             ) : staff.length === 0 ? (
                                 <div className="py-20 text-center text-muted-foreground italic">No teachers found.</div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {staff.map((user) => (
                                         <motion.div key={user.id} whileHover={{ y: -5 }} className="p-6 bg-muted/30 border border-border rounded-3xl space-y-4 hover:border-primary/30 transition-all flex flex-col justify-between">
                                             <div className="space-y-3">
@@ -1060,8 +1060,8 @@ export default function SubjectManagementPage() {
                             </div>
                         ) : (
                             <div className="space-y-8">
-                                <div className="flex items-center gap-4 max-w-2xl">
-                                    <div className="relative group flex-1">
+                                <div className="flex flex-col md:flex-row items-center gap-4 max-w-4xl">
+                                    <div className="relative group flex-1 w-full">
                                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
                                         <input
                                             type="text"
@@ -1074,7 +1074,7 @@ export default function SubjectManagementPage() {
                                     </div>
                                     <button
                                         onClick={triggerSearch}
-                                        className="px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                                        className="w-full md:w-auto px-8 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
                                     >
                                         <Search size={18} /> Search
                                     </button>
@@ -1100,7 +1100,7 @@ export default function SubjectManagementPage() {
                                                     <div className="h-px w-full bg-border"></div>
                                                 </div>
 
-                                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                                                     {Object.entries(streams).map(([streamName, streamSubjects]: [string, any]) => (
                                                         <div key={streamName} className="space-y-3">
                                                             <div className="flex items-center gap-2 px-2">

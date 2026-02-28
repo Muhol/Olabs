@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import {
     BarChart2,
@@ -30,7 +30,7 @@ import {
 } from 'recharts';
 import { motion } from 'framer-motion';
 
-const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4','#106981','#139284'];
+const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#06b6d4', '#106981', '#139284'];
 
 export default function ReportsPage() {
     const { getToken } = useAuth();
@@ -75,30 +75,30 @@ export default function ReportsPage() {
     return (
         <div className="space-y-10 animate-in fade-in duration-700">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-indigo-500 font-black uppercase tracking-[0.3em] text-[10px]">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-1 text-center lg:text-left">
+                    <div className="flex items-center justify-center lg:justify-start gap-2 text-indigo-500 font-black uppercase tracking-[0.3em] text-[10px]">
                         <BarChart2 size={14} /> Reports & Statistics
                     </div>
-                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Library Statistics</h1>
-                    <p className="text-muted-foreground font-medium tracking-tight">Overview of library usage and student engagement.</p>
+                    <h1 className="text-3xl md:text-4xl tracking-tight text-foreground uppercase">Library Statistics</h1>
+                    <p className="text-muted-foreground font-medium tracking-tight text-sm">Overview of library usage and student engagement.</p>
                 </div>
 
-                <div className="flex gap-3">
+                <div className="flex items-center justify-center gap-3">
                     <button
                         onClick={loadAnalytics}
-                        className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95"
+                        className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95 shadow-sm"
                     >
                         <RefreshCw size={20} />
                     </button>
-                    <button className="flex items-center gap-2 px-6 py-3 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-xs tracking-widest rounded-xl border border-border transition-all active:scale-95">
+                    <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl border border-border transition-all active:scale-95 shadow-sm whitespace-nowrap">
                         <Download size={18} /> Export Data
                     </button>
                 </div>
             </div>
 
             {/* Metrics Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <MetricCard icon={<BookOpen />} label="Total Books" value={stats.total_books} trend="+12% Increase" color="text-emerald-500" />
                 <MetricCard icon={<Users />} label="Total Students" value={stats.total_students} trend="+5% Growth" color="text-blue-500" />
                 <MetricCard icon={<TrendingUp />} label="Active Borrows" value={stats.active_borrows} trend="High Activity" color="text-indigo-500" />
@@ -108,13 +108,13 @@ export default function ReportsPage() {
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Category Distribution */}
-                <div className="glass-card p-6 md:p-10 rounded-[3rem] border border-border bg-card flex flex-col">
+                <div className="glass-card p-6 md:p-10 rounded-[3rem] border border-border bg-card flex flex-col shadow-sm">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Book Categories</h3>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Books by Category</p>
+                            <h3 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">Book Categories</h3>
+                            <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">Books share by Genre</p>
                         </div>
-                        <PieChartIcon className="text-primary opacity-50" size={24} />
+                        <PieChartIcon className="text-primary opacity-50 shrink-0" size={24} />
                     </div>
 
                     <div className="h-[350px] w-full">
@@ -156,13 +156,13 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Status Overview (Mock Bar Chart for UI) */}
-                <div className="glass-card p-6 md:p-10 rounded-[3rem] border border-border bg-card flex flex-col">
+                <div className="glass-card p-6 md:p-10 rounded-[3rem] border border-border bg-card flex flex-col shadow-sm">
                     <div className="flex items-center justify-between mb-8">
                         <div>
-                            <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Most Popular Categories</h3>
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Books borrowed by category</p>
+                            <h3 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">Popular Reads</h3>
+                            <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-widest">Borrowed by category</p>
                         </div>
-                        <BarChart2 className="text-secondary opacity-50" size={24} />
+                        <BarChart2 className="text-secondary opacity-50 shrink-0" size={24} />
                     </div>
 
                     <div className="h-[350px] w-full">
@@ -194,15 +194,15 @@ export default function ReportsPage() {
             </div>
 
             {/* Bottom Footer Info */}
-            <div className="p-8 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex flex-col md:flex-row items-center gap-6">
-                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-500">
+            <div className="p-6 md:p-8 rounded-[2rem] bg-indigo-500/10 border border-indigo-500/20 flex flex-col lg:flex-row lg:items-center gap-6">
+                <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-500 shrink-0">
                     <Clock size={24} />
                 </div>
-                <div className="flex-1 text-center md:text-left">
-                    <h4 className="text-lg font-black text-foreground uppercase tracking-tight">Real-time Data Sync Active</h4>
-                    <p className="text-muted-foreground text-sm font-medium">All visualizations are derived from the live PostgreSQL archival core. Last synchronization: Just now.</p>
+                <div className="flex-1 text-center lg:text-left">
+                    <h4 className="text-base md:text-lg font-black text-foreground uppercase tracking-tight">Real-time Data Sync Active</h4>
+                    <p className="text-muted-foreground text-xs md:text-sm font-medium">All visualizations are derived from the live PostgreSQL core. Last sync: Just now.</p>
                 </div>
-                <button className="px-6 py-3 bg-indigo-500 text-white font-black uppercase text-xs tracking-widest rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/20">
+                <button className="w-full lg:w-auto px-6 py-3 bg-indigo-500 text-white font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl hover:bg-indigo-600 transition-all shadow-lg shadow-indigo-500/20">
                     Schedule Report
                 </button>
             </div>
@@ -212,17 +212,17 @@ export default function ReportsPage() {
 
 function MetricCard({ icon, label, value, trend, color }: any) {
     return (
-        <div className="glass-card p-6 md:p-8 rounded-[2rem] border border-border bg-card hover:border-border/50 transition-all group overflow-hidden relative">
+        <div className="glass-card p-5 md:p-8 rounded-[2rem] border border-border bg-card hover:border-border/50 transition-all group overflow-hidden relative shadow-sm">
             <div className={`absolute top-0 right-0 w-24 h-24 blur-3xl rounded-full translate-x-12 -translate-y-12 opacity-10 group-hover:scale-150 transition-transform duration-1000 bg-current ${color}`} />
             <div className="relative space-y-4">
-                <div className={`w-12 h-12 rounded-xl bg-muted flex items-center justify-center border border-border group-hover:scale-110 transition-transform ${color}`}>
-                    {icon}
+                <div className={`w-10 h-10 md:w-12 md:h-12 rounded-xl bg-muted flex items-center justify-center border border-border group-hover:scale-110 transition-transform ${color}`}>
+                    {React.cloneElement(icon, { size: 20 })}
                 </div>
                 <div>
-                    <h4 className="text-3xl font-black text-foreground tracking-tighter">{value}</h4>
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">{label}</p>
+                    <h4 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter">{value}</h4>
+                    <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mt-1">{label}</p>
                 </div>
-                <div className={`text-[9px] font-black uppercase tracking-widest flex items-center gap-1 ${color}`}>
+                <div className={`text-[8px] md:text-[9px] font-black uppercase tracking-widest flex items-center gap-1 ${color}`}>
                     <TrendingUp size={10} /> {trend}
                 </div>
             </div>

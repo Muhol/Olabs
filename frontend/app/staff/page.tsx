@@ -154,7 +154,7 @@ export default function StaffPage() {
         setSelectedSubroles(user.subroles || []);
         setIsEditModalOpen(true);
         setRoleError('');
-        
+
         // Refresh metadata to ensure filtering shows latest assignments
         loadMetaData();
     };
@@ -191,24 +191,25 @@ export default function StaffPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Briefcase size={14} /> Staff Management
                     </div>
-                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Staff & Roles</h1>
-                    <p className="text-muted-foreground font-medium tracking-tight">Manage user roles and permissions.</p>
+                    <h1 className="text-3xl md:text-4xl tracking-tight text-foreground uppercase">Staff & Roles</h1>
+                    <p className="text-muted-foreground font-medium tracking-tight text-sm">Manage user roles and permissions.</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {isSuperAdmin && !directorExists && !loading && (
-                        <button 
-                            onClick={handleAppointDirector} 
+                        <button
+                            onClick={handleAppointDirector}
                             disabled={actionLoading}
-                            className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg flex items-center gap-2 border border-primary/20"
+                            className="bg-primary hover:bg-primary/90 text-white px-4 md:px-6 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all shadow-lg flex items-center gap-2 border border-primary/20"
                         >
                             {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <Crown size={14} />}
-                            Appoint Director
+                            <span className="hidden xs:inline">Appoint Director</span>
+                            <span className="xs:hidden">Director</span>
                         </button>
                     )}
                     <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
@@ -219,12 +220,12 @@ export default function StaffPage() {
 
             {/* Tabs & Search */}
             <div className="flex flex-col xl:flex-row gap-6">
-                <div className="flex bg-muted p-1.5 rounded-[1.4rem] border border-border self-start">
-                    <button onClick={() => setActiveTab('verified')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'verified' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
-                        Verified Staff
+                <div className="flex bg-muted p-1.5 rounded-[1.4rem] border border-border self-start w-full sm:w-auto">
+                    <button onClick={() => setActiveTab('verified')} className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'verified' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                        Verified
                     </button>
-                    <button onClick={() => setActiveTab('unapproved')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'unapproved' ? 'bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
-                        Unapproved Access
+                    <button onClick={() => setActiveTab('unapproved')} className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'unapproved' ? 'bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                        Unapproved
                     </button>
                 </div>
 
@@ -234,15 +235,15 @@ export default function StaffPage() {
                     </div>
                     <input
                         type="text"
-                        placeholder="Search staff via name or email..."
+                        placeholder="Search staff..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && loadData()}
-                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50"
+                        className="w-full pl-12 pr-12 md:pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all placeholder:text-muted-foreground/50"
                     />
                     <button
                         onClick={loadData}
-                        className="absolute right-2 top-2 bottom-2 px-6 bg-primary text-primary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 flex items-center gap-2"
+                        className="absolute hidden md:flex right-2 top-2 bottom-2 px-6 bg-primary text-primary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20 items-center gap-2"
                     >
                         <Search size={14} /> Search
                     </button>
@@ -257,13 +258,13 @@ export default function StaffPage() {
 
             <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card transition-colors">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-left min-w-[800px]">
+                    <table className="w-full text-left min-w-[700px]">
                         <thead>
                             <tr className="bg-white/5">
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Staff Member</th>
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Email</th>
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Role</th>
-                                <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right">Actions</th>
+                                <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Staff Member</th>
+                                <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Email</th>
+                                <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Role</th>
+                                <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 text-right whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -283,15 +284,15 @@ export default function StaffPage() {
                             ) : (
                                 filteredUsers.map((user) => (
                                     <tr key={user.id} className="hover:bg-muted/30 transition-colors group border-b border-border/50">
-                                        <td className="px-8 py-4">
+                                        <td className="px-4 md:px-8 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-all"><UserCircle2 size={24} /></div>
-                                                <div className="font-black text-foreground text-base leading-none">{user.full_name}</div>
+                                                <div className="hidden sm:flex w-10 h-10 rounded-xl bg-muted items-center justify-center text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary transition-all"><UserCircle2 size={24} /></div>
+                                                <div className="font-black text-foreground text-sm md:text-base leading-none truncate max-w-[120px] md:max-w-none">{user.full_name}</div>
                                             </div>
                                         </td>
-                                        <td className="px-8 py-4 text-sm font-bold text-muted-foreground">{user.email}</td>
-                                        <td className="px-8 py-4">
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border ${user.role === 'SUPER_ADMIN' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                        <td className="px-4 md:px-8 py-4 text-xs md:text-sm font-bold text-muted-foreground truncate max-w-[150px] md:max-w-none">{user.email}</td>
+                                        <td className="px-4 md:px-8 py-4">
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-widest border ${user.role === 'SUPER_ADMIN' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
                                                 user.role === 'admin' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' :
                                                     user.role === 'teacher' ? 'bg-blue-500/10 text-blue-500 border-blue-500/20' :
                                                         user.role === 'none' ? 'bg-slate-500/10 text-slate-500 border-slate-500/20' :
@@ -303,7 +304,7 @@ export default function StaffPage() {
                                             {user.subroles && user.subroles.length > 0 && (
                                                 <div className="flex flex-wrap gap-1 mt-2">
                                                     {user.subroles.map((sr: string) => (
-                                                        <span key={sr} className={`px-2 py-0.5 rounded-md text-[8px] font-black uppercase tracking-tighter border ${sr === 'director' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted text-slate-500 border-border'}`}>
+                                                        <span key={sr} className={`px-2 py-0.5 rounded-md text-[7px] md:text-[8px] font-black uppercase tracking-tighter border ${sr === 'director' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-muted text-slate-500 border-border'}`}>
                                                             {sr === 'director' && <Crown size={8} className="inline mr-1" />}
                                                             {sr.replace('_', ' ')}
                                                         </span>
@@ -311,7 +312,7 @@ export default function StaffPage() {
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="px-8 py-4 text-right">
+                                        <td className="px-4 md:px-8 py-4 text-right">
                                             {/* Tiered RBAC Logic: 
                                                 - Director role is IMMUTABLE (cannot manage them).
                                                 - Director can manage ANYONE ELSE.
@@ -319,14 +320,14 @@ export default function StaffPage() {
                                                 - Admin (all) can manage teachers, librarians, and other admins EXCEPT other Admin (all).
                                             */}
                                             {!(user.subroles?.includes('director')) && (
-                                               (isDirector) || 
-                                               (isSuperAdmin && user.role !== 'SUPER_ADMIN') || 
-                                               (isAdminAll && user.role !== 'SUPER_ADMIN' && !(user.role === 'admin' && user.subroles?.includes('all')))
+                                                (isDirector) ||
+                                                (isSuperAdmin && user.role !== 'SUPER_ADMIN') ||
+                                                (isAdminAll && user.role !== 'SUPER_ADMIN' && !(user.role === 'admin' && user.subroles?.includes('all')))
                                             ) && (
-                                                <button onClick={() => openEditModal(user)} className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 border border-border">
-                                                    Manage Role
-                                                </button>
-                                            )}
+                                                    <button onClick={() => openEditModal(user)} className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 border border-border">
+                                                        Manage Role
+                                                    </button>
+                                                )}
                                         </td>
                                     </tr>
                                 ))
@@ -409,32 +410,32 @@ export default function StaffPage() {
                                                         </select>
                                                     </div>
 
-                                            <div className="space-y-2">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
-                                                    Assigned Stream <span className="text-muted-foreground font-normal">(Optional)</span>
-                                                </label>
-                                                <select
-                                                    value={selectedStreamId}
-                                                    onChange={(e) => setSelectedStreamId(e.target.value)}
-                                                    className="w-full p-3 rounded-xl bg-card border border-border text-foreground font-bold text-sm"
-                                                    disabled={!selectedClassId}
-                                                >
-                                                    <option value="">No Specific Stream</option>
-                                                    {streams
-                                                        .filter(s => s.class_id === selectedClassId)
-                                                        .filter(s => {
-                                                            // Filter out streams already assigned to other teachers
-                                                            const assignedStaff = allStaff.find(staff => 
-                                                                staff.assigned_stream_id === s.id && 
-                                                                staff.id !== editingUser?.id
-                                                            );
-                                                            return !assignedStaff;
-                                                        })
-                                                        .map(s => (
-                                                            <option key={s.id} value={s.id}>{s.name}</option>
-                                                        ))
-                                                    }
-                                                </select>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">
+                                                            Assigned Stream <span className="text-muted-foreground font-normal">(Optional)</span>
+                                                        </label>
+                                                        <select
+                                                            value={selectedStreamId}
+                                                            onChange={(e) => setSelectedStreamId(e.target.value)}
+                                                            className="w-full p-3 rounded-xl bg-card border border-border text-foreground font-bold text-sm"
+                                                            disabled={!selectedClassId}
+                                                        >
+                                                            <option value="">No Specific Stream</option>
+                                                            {streams
+                                                                .filter(s => s.class_id === selectedClassId)
+                                                                .filter(s => {
+                                                                    // Filter out streams already assigned to other teachers
+                                                                    const assignedStaff = allStaff.find(staff =>
+                                                                        staff.assigned_stream_id === s.id &&
+                                                                        staff.id !== editingUser?.id
+                                                                    );
+                                                                    return !assignedStaff;
+                                                                })
+                                                                .map(s => (
+                                                                    <option key={s.id} value={s.id}>{s.name}</option>
+                                                                ))
+                                                            }
+                                                        </select>
                                                     </div>
                                                 </>
                                             )}

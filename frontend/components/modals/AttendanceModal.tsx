@@ -176,18 +176,18 @@ export default function AttendanceModal({
                 className="bg-card w-full max-w-4xl max-h-[90vh] rounded-[2rem] border border-border shadow-2xl flex flex-col overflow-hidden"
             >
                 {/* Header */}
-                <div className="p-6 border-b border-border flex items-start justify-between bg-muted/20">
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
+                <div className="p-6 border-b border-border flex flex-col sm:flex-row items-center sm:items-start justify-between bg-muted/20 gap-4">
+                    <div className="text-center sm:text-left">
+                        <div className="flex flex-col sm:flex-row items-center gap-2 mb-2">
                             <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest border border-primary/20">
                                 {className}
                             </span>
-                            <span className="text-muted-foreground text-xs font-bold">•</span>
+                            <span className="hidden sm:block text-muted-foreground text-xs font-bold">•</span>
                             <h2 className="text-xl font-black text-foreground uppercase tracking-tight">{subjectName}</h2>
                         </div>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center justify-center sm:justify-start gap-4">
                             <h3 className="text-sm font-bold text-muted-foreground uppercase flex items-center gap-2">
-                                <Calendar size={14} />
+                                <Calendar size={14} className="text-primary" />
                                 <input
                                     type="date"
                                     value={date}
@@ -197,37 +197,34 @@ export default function AttendanceModal({
                             </h3>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors order-first sm:order-last self-end sm:self-auto">
                         <X size={24} className="text-muted-foreground" />
                     </button>
                 </div>
 
                 {/* Stats Bar */}
-                <div className="px-6 py-4 bg-card border-b border-border flex flex-wrap gap-4 items-center justify-between">
-                    <div className="flex gap-4">
-                        <div className="flex items-center gap-2 text-xs font-bold text-emerald-500">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                <div className="px-6 py-4 bg-card border-b border-border flex flex-col lg:flex-row gap-4 items-center justify-between">
+                    <div className="flex flex-wrap justify-center gap-4">
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/5 px-3 py-1.5 rounded-full border border-emerald-500/10">
                             Present: {stats.present}
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-rose-500">
-                            <div className="w-2 h-2 rounded-full bg-rose-500" />
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-rose-500 bg-rose-500/5 px-3 py-1.5 rounded-full border border-rose-500/10">
                             Absent: {stats.absent}
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-bold text-amber-500">
-                            <div className="w-2 h-2 rounded-full bg-amber-500" />
+                        <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-amber-500 bg-amber-500/5 px-3 py-1.5 rounded-full border border-amber-500/10">
                             Late: {stats.late}
                         </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 w-full lg:w-auto">
                         <button
                             onClick={() => markAll('present')}
-                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                            className="flex-1 lg:flex-none px-4 py-2 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-xl border border-emerald-500/20 transition-all"
                         >
                             Mark All Present
                         </button>
                         <button
                             onClick={() => markAll('absent')}
-                            className="px-3 py-1.5 text-[10px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 rounded-lg transition-colors"
+                            className="flex-1 lg:flex-none px-4 py-2 text-[9px] font-black uppercase tracking-widest bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-xl border border-rose-500/20 transition-all"
                         >
                             Mark All Absent
                         </button>
@@ -252,45 +249,45 @@ export default function AttendanceModal({
                             {students.map((student) => {
                                 const status = attendanceData[student.id] || 'present';
                                 return (
-                                    <div key={student.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/30 hover:bg-muted/60 transition-colors border border-transparent hover:border-border">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-black text-xs">
+                                    <div key={student.id} className="flex flex-col sm:flex-row items-center justify-between p-4 rounded-2xl bg-muted/30 hover:bg-muted/60 transition-colors border border-transparent hover:border-border gap-4">
+                                        <div className="flex items-center gap-3 w-full sm:w-auto">
+                                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs shrink-0">
                                                 {student.admission_number.slice(-3)}
                                             </div>
-                                            <div>
-                                                <p className="font-bold text-foreground text-sm">{student.full_name}</p>
-                                                <p className="text-[10px] items-center text-muted-foreground uppercase tracking-wider">{student.admission_number}</p>
+                                            <div className="overflow-hidden">
+                                                <p className="font-bold text-foreground text-sm truncate">{student.full_name}</p>
+                                                <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{student.admission_number}</p>
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-1 bg-background p-1 rounded-lg border border-border">
+                                        <div className="flex gap-1 bg-background p-1.5 rounded-xl border border-border w-full sm:w-auto justify-center">
                                             <button
                                                 onClick={() => handleStatusChange(student.id, 'present')}
-                                                className={`p-2 rounded-md transition-all ${status === 'present' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-muted-foreground hover:bg-muted'}`}
+                                                className={`p-2.5 rounded-lg transition-all flex-1 sm:flex-none flex items-center justify-center ${status === 'present' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-muted-foreground hover:bg-muted'}`}
                                                 title="Present"
                                             >
-                                                <Check size={16} />
+                                                <Check size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(student.id, 'absent')}
-                                                className={`p-2 rounded-md transition-all ${status === 'absent' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-muted-foreground hover:bg-muted'}`}
+                                                className={`p-2.5 rounded-lg transition-all flex-1 sm:flex-none flex items-center justify-center ${status === 'absent' ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'text-muted-foreground hover:bg-muted'}`}
                                                 title="Absent"
                                             >
-                                                <XCircle size={16} />
+                                                <XCircle size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(student.id, 'late')}
-                                                className={`p-2 rounded-md transition-all ${status === 'late' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'text-muted-foreground hover:bg-muted'}`}
+                                                className={`p-2.5 rounded-lg transition-all flex-1 sm:flex-none flex items-center justify-center ${status === 'late' ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'text-muted-foreground hover:bg-muted'}`}
                                                 title="Late"
                                             >
-                                                <Clock size={16} />
+                                                <Clock size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleStatusChange(student.id, 'excused')}
-                                                className={`p-2 rounded-md transition-all ${status === 'excused' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-muted-foreground hover:bg-muted'}`}
+                                                className={`p-2.5 rounded-lg transition-all flex-1 sm:flex-none flex items-center justify-center ${status === 'excused' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'text-muted-foreground hover:bg-muted'}`}
                                                 title="Excused"
                                             >
-                                                <AlertCircle size={16} />
+                                                <AlertCircle size={18} />
                                             </button>
                                         </div>
                                     </div>

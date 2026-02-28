@@ -308,35 +308,35 @@ export default function StudentsPage() {
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header Area */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-secondary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Users size={14} /> Student Management
                     </div>
-                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Students</h1>
-                    <p className="text-muted-foreground font-medium tracking-tight">Manage student enrollment and class assignments.</p>
+                    <h1 className="text-3xl md:text-4xl tracking-tight text-foreground uppercase">Students</h1>
+                    <p className="text-muted-foreground font-medium tracking-tight text-sm">Manage student enrollment and class assignments.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
                     </button>
                     {canManage && (
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                                     <button
                                         onClick={() => setIsEditingClasses(!isEditingClasses)}
-                                        className={`px-5 py-3 font-black uppercase text-xs tracking-widest rounded-xl border transition-all active:scale-95 flex items-center gap-2 ${isEditingClasses ? 'bg-rose-500 text-white border-rose-600 shadow-lg shadow-rose-500/20' : 'bg-muted hover:bg-muted/80 text-foreground border-border'}`}
+                                        className={`px-4 md:px-5 py-3 font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl border transition-all active:scale-95 flex items-center gap-2 ${isEditingClasses ? 'bg-rose-500 text-white border-rose-600 shadow-lg shadow-rose-500/20' : 'bg-muted hover:bg-muted/80 text-foreground border-border'}`}
                                     >
                                         {isEditingClasses ? <XCircle size={16} /> : <Edit size={16} />}
                                         {isEditingClasses ? 'Done ' : 'Edit'}
                                     </button>
                                 {isEditingClasses && (
                                     <>
-                                        <button onClick={() => { setIsClassModalOpen(true); setClassError(''); }} className="px-5 py-3 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-xs tracking-widest rounded-xl border border-border transition-all active:scale-95">
-                                            New Class
+                                        <button onClick={() => { setIsClassModalOpen(true); setClassError(''); }} className="px-4 md:px-5 py-3 bg-muted hover:bg-muted/80 text-foreground font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl border border-border transition-all active:scale-95">
+                                            New
                                         </button>
-                                        <button onClick={() => { resetStudentForm(); setEditingStudent(null); setIsStudentModalOpen(true); setStudentError(''); }} className="flex items-center gap-2 px-6 py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase text-xs tracking-widest rounded-xl shadow-lg shadow-secondary/20 transition-all hover:scale-105 active:scale-95">
-                                            <Plus size={18} /> Add Student
+                                        <button onClick={() => { resetStudentForm(); setEditingStudent(null); setIsStudentModalOpen(true); setStudentError(''); }} className="flex items-center gap-2 px-4 md:px-6 py-3 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase text-[10px] md:text-xs tracking-widest rounded-xl shadow-lg shadow-secondary/20 transition-all hover:scale-105 active:scale-95">
+                                            <Plus size={18} /> Add
                                         </button>
                                     </>
                                 )}
@@ -346,7 +346,7 @@ export default function StudentsPage() {
             </div>
 
             {/* Quick Analytics Sector */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 scrollbar-hide overflow-x-auto pb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pb-4">
                 {classes.map((cls, idx) => (
                     <motion.div
                         key={cls.id}
@@ -354,7 +354,7 @@ export default function StudentsPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.1 }}
                         onClick={() => handleClassFilter(cls.id)}
-                        className={`min-w-[300px] p-6 rounded-[2.5rem] border backdrop-blur-2xl transition-all group relative overflow-hidden cursor-pointer ${selectedClassFilter === cls.id
+                        className={`p-6 rounded-[2.5rem] border backdrop-blur-2xl transition-all group relative overflow-hidden cursor-pointer ${selectedClassFilter === cls.id
                             ? 'bg-secondary/10 border-secondary ring-2 ring-secondary/20'
                             : 'border-white/10 bg-slate-200 dark:bg-slate-500/5 hover:border-secondary/30'
                             }`}
@@ -365,19 +365,19 @@ export default function StudentsPage() {
                                 <BarChart3 size={24} />
                             </div>
                             <div className="text-right">
-                                <div className="text-xs font-black text-muted-foreground uppercase tracking-widest">Total Students</div>
-                                <div className="text-3xl font-black text-foreground group-hover:text-secondary transition-colors">{cls.student_count}</div>
+                                <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Students</div>
+                                <div className="text-2xl font-black text-foreground group-hover:text-secondary transition-colors">{cls.student_count}</div>
                             </div>
                         </div>
 
                         <div className="space-y-4">
                             <div>
                                 <h3 className="text-lg font-black text-foreground uppercase tracking-tight flex items-center justify-between gap-2">
-                                    <span>{cls.name} <span className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">Enrollment</span></span>
+                                    <span className="truncate">{cls.name}</span>
                                     {canManage && (
                                         <button
                                             onClick={(e) => { e.stopPropagation(); setManagingClass(cls); setIsStreamsModalOpen(true); }}
-                                            className="p-1.5 bg-secondary/10 text-secondary hover:bg-secondary hover:text-white rounded-lg border border-secondary/20 transition-all active:scale-95"
+                                            className="p-1.5 bg-secondary/10 text-secondary hover:bg-secondary hover:text-white rounded-lg border border-secondary/20 transition-all active:scale-95 shrink-0"
                                             title="Add Stream"
                                         >
                                             <Plus size={14} />
@@ -394,17 +394,14 @@ export default function StudentsPage() {
                                     <div
                                         key={s.id}
                                         onClick={(e) => handleStreamFilter(e, cls.id, s.id)}
-                                        className={`p-3 rounded-xl border transition-colors cursor-pointer ${selectedStreamFilter === s.id
+                                        className={`p-2 rounded-xl border transition-colors cursor-pointer ${selectedStreamFilter === s.id
                                             ? 'bg-secondary text-secondary-foreground border-secondary'
                                             : 'bg-muted/50 border-border hover:border-secondary/30'
                                             }`}
                                     >
-                                        <div className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">{s.name}</div>
+                                        <div className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1 truncate">{s.name}</div>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-sm font-black text-foreground">{s.count}</span>
-                                            <span className="text-[8px] font-bold text-emerald-500 flex items-center gap-0.5">
-                                                <ArrowUpRight size={8} /> {Math.round((s.count / (cls.student_count || 1)) * 100)}%
-                                            </span>
+                                            <span className="text-xs font-black text-foreground">{s.count}</span>
                                         </div>
                                     </div>
                                 ))}
@@ -416,11 +413,11 @@ export default function StudentsPage() {
 
             {/* Tabs & Search */}
             <div className="flex flex-col xl:flex-row gap-6">
-                <div className="flex bg-muted p-1.5 rounded-[1.4rem] border border-border self-start">
-                    <button onClick={() => setActiveTab('students')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'students' ? 'bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
-                        Active Students
+                <div className="flex bg-muted p-1.5 rounded-[1.4rem] border border-border self-start w-full sm:w-auto">
+                    <button onClick={() => setActiveTab('students')} className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'students' ? 'bg-secondary text-secondary-foreground shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                        Students
                     </button>
-                    <button onClick={() => setActiveTab('classes')} className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'classes' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
+                    <button onClick={() => setActiveTab('classes')} className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'classes' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}>
                         Classes
                     </button>
                 </div>
@@ -432,7 +429,8 @@ export default function StudentsPage() {
                         className="flex items-center gap-2 px-6 py-3 bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500 hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl transition-all active:scale-95 disabled:opacity-50"
                     >
                         {actionLoading ? <Loader2 size={14} className="animate-spin" /> : <ArrowUpRight size={14} />}
-                        Promote All To Next Level
+                        <span className="hidden sm:inline">Promote All To Next Level</span>
+                        <span className="sm:hidden">Promote All</span>
                     </button>
                 )}
 
@@ -442,15 +440,15 @@ export default function StudentsPage() {
                     </div>
                     <input
                         type="text"
-                        placeholder="Search students by name or admission number..."
+                        placeholder="Search students..."
                         value={search}
                         onChange={(e: any) => setSearch(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && loadData()}
-                        className="w-full pl-12 pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none transition-all placeholder:text-muted-foreground/50"
+                        className="w-full pl-12 pr-12 md:pr-32 py-4 rounded-2xl bg-card border border-border text-foreground font-bold text-sm focus:border-secondary focus:ring-1 focus:ring-secondary/20 outline-none transition-all placeholder:text-muted-foreground/50"
                     />
                     <button
                         onClick={loadData}
-                        className="absolute right-2 top-2 bottom-2 px-6 bg-secondary text-secondary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-secondary/20 flex items-center gap-2"
+                        className="absolute hidden md:flex right-2 top-2 bottom-2 px-6 bg-secondary text-secondary-foreground font-black uppercase text-[10px] tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-lg shadow-secondary/20 items-center gap-2"
                     >
                         <Search size={14} /> Search
                     </button>
@@ -469,15 +467,15 @@ export default function StudentsPage() {
                     <div className="glass-card rounded-[2.5rem] border border-border overflow-hidden shadow-2xl bg-card transition-colors">
                         <AnimatePresence mode="wait">
                             <motion.div key={skip} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} transition={{ duration: 0.2 }} className="overflow-x-auto">
-                                <table className="w-full text-left min-w-[800px]">
+                                <table className="w-full text-left min-w-[700px]">
                                     <thead>
                                         <tr className="bg-white/5">
-                                            <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Admission No.</th>
-                                            <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Student Name</th>
-                                            <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Class</th>
-                                            <th className="px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Stream</th>
-                                            <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Status</th>
-                                            <th className="px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">Actions</th>
+                                            <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Admission No.</th>
+                                            <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Student Name</th>
+                                            <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Class</th>
+                                            <th className="px-4 md:px-8 py-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Stream</th>
+                                            <th className="px-4 md:px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Status</th>
+                                            <th className="px-4 md:px-8 py-6 text-right text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 whitespace-nowrap">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-white/5">
@@ -501,31 +499,33 @@ export default function StudentsPage() {
                                                     onClick={() => setViewingStudent(student)}
                                                     className="hover:bg-muted/30 transition-colors group border-b border-border/50 cursor-pointer"
                                                 >
-                                                    <td className="px-8 py-4"><span className="font-black text-xs text-secondary bg-secondary/10 px-3 py-1.5 rounded-lg border border-secondary/20">{student.admission_number}</span></td>
-                                                    <td className="px-8 py-4">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-muted-foreground group-hover:bg-secondary/20 group-hover:text-secondary transition-all"><UserCircle2 size={24} /></div>
-                                                            <div className="font-black text-foreground text-base leading-none">{student.full_name}</div>
+                                                    <td className="px-4 md:px-8 py-4"><span className="font-black text-[10px] text-secondary bg-secondary/10 px-2 md:px-3 py-1.5 rounded-lg border border-secondary/20 whitespace-nowrap">{student.admission_number}</span></td>
+                                                    <td className="px-4 md:px-8 py-4">
+                                                        <div className="flex items-center gap-3 text-sm">
+                                                            <div className="hidden sm:flex w-10 h-10 rounded-xl bg-muted items-center justify-center text-muted-foreground group-hover:bg-secondary/20 group-hover:text-secondary transition-all"><UserCircle2 size={24} /></div>
+                                                            <div className="font-black text-foreground leading-none truncate max-w-[120px] md:max-w-none">{student.full_name}</div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-8 py-4">
+                                                    <td className="px-4 md:px-8 py-4">
                                                         <div className="flex items-center gap-2">
-                                                            <Building2 size={14} className="text-muted-foreground" />
-                                                            <div className="text-sm font-bold text-foreground/80">{student.class_name || 'Unassigned'}</div>
+                                                            <Building2 size={14} className="text-muted-foreground hidden sm:block" />
+                                                            <div className="text-xs md:text-sm font-bold text-foreground/80">{student.class_name || 'Unassigned'}</div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-8 py-4">
-                                                        <div className="flex items-center gap-2 text-primary font-black text-xs"><Layers size={14} />{student.full_class || student.stream || 'N/A'}</div>
+                                                    <td className="px-4 md:px-8 py-4">
+                                                        <div className="flex items-center gap-2 text-primary font-black text-[10px] md:text-xs"><Layers size={14} className="hidden sm:block" />{student.full_class || student.stream || 'N/A'}</div>
                                                     </td>
-                                                    <td className="px-8 py-4 text-right">
-                                                        {student.is_cleared ? (
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">Cleared</span>
-                                                        ) : (
-                                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Active</span>
-                                                        )}
+                                                    <td className="px-4 md:px-8 py-4 text-right">
+                                                        <div className="flex justify-end">
+                                                            {student.is_cleared ? (
+                                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-500 text-white shadow-lg shadow-emerald-500/20">Cleared</span>
+                                                            ) : (
+                                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Active</span>
+                                                            )}
+                                                        </div>
                                                     </td>
-                                                    <td className="px-8 py-4 text-right">
-                                                        <div className="flex items-center justify-end gap-2">
+                                                    <td className="px-4 md:px-8 py-4 text-right">
+                                                        <div className="flex items-center justify-end gap-1 md:gap-2">
                                                             {canManage && (
                                                                 <>
                                                                     <button onClick={(e) => { e.stopPropagation(); setEditingStudent(student); setStudentFormData(student); handleClassChange(student.class_id); setIsStudentModalOpen(true); }} className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-all active:scale-90"><Edit size={16} /></button>
@@ -549,9 +549,9 @@ export default function StudentsPage() {
             )}
 
             {activeTab === 'classes' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {classes.map((cls) => (
-                        <div key={cls.id} className="glass-card p-8 rounded-[2rem] border border-border bg-card hover:border-primary/50 transition-all group overflow-hidden relative flex flex-col">
+                        <div key={cls.id} className="glass-card p-6 md:p-8 rounded-[2rem] border border-border bg-card hover:border-primary/50 transition-all group overflow-hidden relative flex flex-col">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full translate-x-16 -translate-y-16 group-hover:scale-150 transition-transform duration-1000" />
                             <div className="relative space-y-6 flex-1">
                                 <div className="flex items-start justify-between">

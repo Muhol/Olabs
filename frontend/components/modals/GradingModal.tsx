@@ -212,13 +212,13 @@ export default function GradingModal({
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-full max-w-xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
             >
                 {/* Compact Header */}
                 <div className="p-6 border-b border-border bg-muted/20 relative">
                     <button
                         onClick={onClose}
-                        className="absolute top-6 right-6 p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground"
+                        className="absolute top-4 right-4 p-2 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground md:top-6 md:right-6"
                     >
                         <X size={20} />
                     </button>
@@ -328,7 +328,7 @@ export default function GradingModal({
 
                             <div className="space-y-2">
                                 <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest px-1">Performance Level</label>
-                                <div className="grid grid-cols-4 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     {levels.map(lvl => (
                                         <button
                                             key={lvl.id}
@@ -395,7 +395,7 @@ export default function GradingModal({
 
                             <div className="space-y-2">
                                 <label className="text-[9px] font-black uppercase text-muted-foreground tracking-widest px-1">Equated performance</label>
-                                <div className="grid grid-cols-4 gap-2">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                     {levels.map(lvl => (
                                         <button
                                             key={lvl.id}

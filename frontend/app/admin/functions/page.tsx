@@ -64,27 +64,27 @@ export default function AdminFunctionsPage() {
 
     const allowedTabs = React.useMemo(() => {
         const tabs: ('timetabling' | 'account-management' | 'system-maintenance' | 'report-items')[] = [];
-        
+
         // Timetabling: SUPER_ADMIN or Admin with 'all' or 'timetable_manager'
         if (userRole === 'SUPER_ADMIN' || (userRole === 'admin' && (subroles.includes('all') || subroles.includes('timetable_manager')))) {
             tabs.push('timetabling');
         }
-        
+
         // Account Management: SUPER_ADMIN, Admin, or Teacher
         if (userRole === 'SUPER_ADMIN' || userRole === 'admin' || userRole === 'teacher') {
             tabs.push('account-management');
         }
-        
+
         // System Maintenance: SUPER_ADMIN or Admin with 'all'
         if (userRole === 'SUPER_ADMIN' || (userRole === 'admin' && subroles.includes('all'))) {
             tabs.push('system-maintenance');
         }
-        
+
         // Report Items: SUPER_ADMIN or Admin with 'all'
         if (userRole === 'SUPER_ADMIN' || (userRole === 'admin' && subroles.includes('all'))) {
             tabs.push('report-items');
         }
-        
+
         return tabs;
     }, [userRole, subroles]);
 
@@ -490,22 +490,22 @@ export default function AdminFunctionsPage() {
     return (
         <div className="space-y-10 animate-in fade-in duration-700">
             {/* Page Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
                         <Wrench size={14} /> System Operations
                     </div>
-                    <h1 className="text-4xl tracking-tight text-foreground uppercase">Admin Functions</h1>
-                    <p className="text-muted-foreground font-medium tracking-tight">Advanced tools for institutional management and automation.</p>
+                    <h1 className="text-3xl md:text-4xl tracking-tight text-foreground uppercase">Admin Functions</h1>
+                    <p className="text-muted-foreground font-medium tracking-tight text-sm">Advanced tools for institutional management and automation.</p>
                 </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex flex-wrap bg-muted p-1.5 rounded-[1.4rem] border border-border self-start gap-1">
+            <div className="flex flex-wrap bg-muted p-1 rounded-[1.4rem] border border-border self-start gap-1">
                 {allowedTabs.includes('timetabling') && (
                     <button
                         onClick={() => setActiveTab('timetabling')}
-                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'timetabling' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest transition-all ${activeTab === 'timetabling' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 sm:scale-105' : 'text-muted-foreground hover:text-foreground'}`}
                     >
                         Timetabling
                     </button>
@@ -513,25 +513,25 @@ export default function AdminFunctionsPage() {
                 {allowedTabs.includes('account-management') && (
                     <button
                         onClick={() => setActiveTab('account-management')}
-                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'account-management' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest transition-all ${activeTab === 'account-management' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 sm:scale-105' : 'text-muted-foreground hover:text-foreground'}`}
                     >
-                        Account Management
+                        Accounts
                     </button>
                 )}
                 {allowedTabs.includes('system-maintenance') && (
                     <button
                         onClick={() => setActiveTab('system-maintenance')}
-                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'system-maintenance' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest transition-all ${activeTab === 'system-maintenance' ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 sm:scale-105' : 'text-muted-foreground hover:text-foreground'}`}
                     >
-                        System Maintenance
+                        System
                     </button>
                 )}
                 {allowedTabs.includes('report-items') && (
                     <button
                         onClick={() => setActiveTab('report-items')}
-                        className={`px-8 py-3 rounded-xl font-black uppercase text-[10px] tracking-widest transition-all ${activeTab === 'report-items' ? 'bg-secondary text-white shadow-lg shadow-secondary/20 scale-105' : 'text-muted-foreground hover:text-foreground'}`}
+                        className={`flex-1 sm:flex-none px-4 md:px-8 py-3 rounded-xl font-black uppercase text-[9px] md:text-[10px] tracking-widest transition-all ${activeTab === 'report-items' ? 'bg-secondary text-white shadow-lg shadow-secondary/20 sm:scale-105' : 'text-muted-foreground hover:text-foreground'}`}
                     >
-                        Report Items
+                        Reports
                     </button>
                 )}
             </div>
@@ -540,17 +540,17 @@ export default function AdminFunctionsPage() {
             {activeTab === 'timetabling' && (
                 <div className="space-y-8">
                     {/* Action Bar */}
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 glass-card rounded-[2rem] border border-border bg-card/50">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 p-6 glass-card rounded-[2rem] border border-border bg-card/50">
                         <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                                 <Calendar size={20} />
                             </div>
                             <div>
-                                <h3 className="font-black text-sm uppercase tracking-tight">Global Schedule Control</h3>
-                                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Deploy slots across the entire institution</p>
+                                <h3 className="font-black text-sm md:text-base uppercase tracking-tight">Global Schedule Control</h3>
+                                <p className="text-[9px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Deploy slots institutional-wide</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center gap-3">
                             {(userRole === 'SUPER_ADMIN' || (userRole === 'admin' && (subroles.includes('all') || subroles.includes('timetable_manager')))) && (
                                 <>
                                     <button
@@ -558,18 +558,18 @@ export default function AdminFunctionsPage() {
                                             setStatus({ type: 'none', message: '' });
                                             setIsBulkModalOpen(true);
                                         }}
-                                        className="flex items-center gap-2 px-6 py-3 bg-primary text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white font-black uppercase text-[8px] md:text-[10px] tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
                                     >
-                                        <Plus size={16} /> Global Bulk Create
+                                        <Plus size={14} /> Global Bulk Create
                                     </button>
                                     <button
                                         onClick={() => {
                                             setStatus({ type: 'none', message: '' });
                                             setIsDeleteModalOpen(true);
                                         }}
-                                        className="flex items-center gap-2 px-6 py-3 bg-rose-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl shadow-lg shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all"
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-rose-500 text-white font-black uppercase text-[8px] md:text-[10px] tracking-widest rounded-xl shadow-lg shadow-rose-500/20 hover:scale-105 active:scale-95 transition-all whitespace-nowrap"
                                     >
-                                        <Filter size={16} /> Targeted Remove
+                                        <Filter size={14} /> Targeted Remove
                                     </button>
                                 </>
                             )}
@@ -577,9 +577,9 @@ export default function AdminFunctionsPage() {
                                 <button
                                     onClick={handleClearAllTimetables}
                                     disabled={isClearing}
-                                    className="flex items-center gap-2 px-6 py-3 bg-rose-500/10 text-rose-500 border border-rose-500/20 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50"
+                                    className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-rose-500/10 text-rose-500 border border-rose-500/20 font-black uppercase text-[8px] md:text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50 whitespace-nowrap"
                                 >
-                                    {isClearing ? <Loader2 size={16} className="animate-spin" /> : <Trash size={16} />}
+                                    {isClearing ? <Loader2 size={14} className="animate-spin" /> : <Trash size={14} />}
                                     Wipe All Data
                                 </button>
                             )}
@@ -595,13 +595,13 @@ export default function AdminFunctionsPage() {
                                     <div className="h-px w-full bg-border"></div>
                                 </div>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                                     {streams.filter(s => s.class_id === cls.id).map(stream => (
                                         <motion.div
                                             key={stream.id}
                                             whileHover={{ y: -5, scale: 1.02 }}
                                             onClick={() => setSelectedStream({ ...stream, class_name: cls.name })}
-                                            className="p-6 glass-card rounded-[2rem] border border-border bg-card hover:border-primary/50 transition-all cursor-pointer group flex flex-col justify-between min-h-[160px]"
+                                            className="p-5 md:p-6 glass-card rounded-[2rem] border border-border bg-card hover:border-primary/50 transition-all cursor-pointer group flex flex-col justify-between min-h-[140px] md:min-h-[160px]"
                                         >
                                             <div className="space-y-4">
                                                 <div className="flex items-center justify-between">
@@ -632,29 +632,29 @@ export default function AdminFunctionsPage() {
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="p-6 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] flex items-start gap-4"
+                        className="p-5 md:p-6 bg-amber-500/10 border border-amber-500/20 rounded-[2rem] flex items-start gap-4"
                     >
                         <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center text-amber-500 flex-shrink-0">
                             <TriangleAlert size={20} />
                         </div>
                         <div className="space-y-1">
-                            <h4 className="text-amber-500 font-black uppercase tracking-widest text-[10px]">Security Protocol Warning</h4>
-                            <p className="text-sm text-foreground/80 font-medium">
-                                Resetting an account is a destructive action. The student's current password will be <strong>deleted</strong> and they will be forced to complete the <strong>onboarding process</strong> again. Use this only for recovery purposes.
+                            <h4 className="text-amber-500 font-black uppercase tracking-widest text-[9px] md:text-[10px]">Security Protocol Warning</h4>
+                            <p className="text-xs md:text-sm text-foreground/80 font-medium">
+                                Resetting an account is a destructive action. The student's current password will be <strong>deleted</strong> and they will be forced to complete the <strong>onboarding process</strong> again.
                             </p>
                         </div>
                     </motion.div>
 
                     {/* Search Section */}
-                    <section className="p-8 glass-card rounded-[2.5rem] border border-border bg-card/50 space-y-8">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <section className="p-6 md:p-8 glass-card rounded-[2.5rem] border border-border bg-card/50 space-y-8">
+                        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center">
+                                <div className="w-12 h-12 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center flex-shrink-0">
                                     <UserCircle2 size={24} />
                                 </div>
                                 <div>
-                                    <h3 className="text-xl font-black uppercase tracking-tight">Student Account Recovery</h3>
-                                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Search and reset student credentials for re-onboarding</p>
+                                    <h3 className="text-lg md:text-xl font-black uppercase tracking-tight">Student Account Recovery</h3>
+                                    <p className="text-[9px] md:text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Search and reset student credentials</p>
                                 </div>
                             </div>
                         </div>
@@ -665,17 +665,24 @@ export default function AdminFunctionsPage() {
                             </div>
                             <input
                                 type="text"
-                                placeholder="Search by name or admission number..."
+                                placeholder="Search by name or admission..."
                                 value={studentSearch}
                                 onChange={(e) => setStudentSearch(e.target.value)}
-                                className="w-full bg-muted/50 border border-border rounded-2xl py-5 pl-14 pr-6 font-bold text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all"
+                                className="w-full bg-muted/50 border border-border rounded-2xl py-4 md:py-5 pl-14 pr-12 md:pr-32 font-bold text-sm outline-none focus:border-primary focus:ring-4 focus:ring-primary/5 transition-all shadow-sm"
                             />
                             <button
                                 type="submit"
                                 disabled={searching}
-                                className="absolute right-3 top-2 bottom-2 px-6 bg-primary text-primary-foreground rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+                                className="absolute hidden md:flex right-3 top-2 bottom-2 px-6 bg-primary text-primary-foreground rounded-xl font-black uppercase text-[10px] tracking-widest hover:scale-105 active:scale-95 transition-all disabled:opacity-50 items-center justify-center"
                             >
                                 {searching ? <Loader2 size={16} className="animate-spin" /> : 'Search'}
+                            </button>
+                            <button
+                                type="submit"
+                                disabled={searching}
+                                className="absolute md:hidden right-2 top-2 bottom-2 w-10 bg-primary text-primary-foreground rounded-xl flex items-center justify-center"
+                            >
+                                {searching ? <Loader2 size={16} className="animate-spin" /> : <Search size={18} />}
                             </button>
                         </form>
                     </section>
@@ -683,7 +690,7 @@ export default function AdminFunctionsPage() {
                     {/* Results Section */}
                     <div className="space-y-6">
                         {searchResults.length > 0 ? (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                                 {searchResults.map((student) => (
                                     <motion.div
                                         key={student.id}
@@ -772,18 +779,18 @@ export default function AdminFunctionsPage() {
                             </div>
                         ) : dbStatus ? (
                             <div className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="p-6 bg-card border border-border rounded-2xl">
-                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Total Tables</p>
-                                        <p className="text-2xl font-black">{dbStatus.db_tables.length}</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                                    <div className="p-5 md:p-6 bg-card border border-border rounded-2xl">
+                                        <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase mb-1">Total Tables</p>
+                                        <p className="text-xl md:text-2xl font-black">{dbStatus.db_tables.length}</p>
                                     </div>
-                                    <div className="p-6 bg-card border border-border rounded-2xl">
-                                        <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Defined in Models</p>
-                                        <p className="text-2xl font-black">{dbStatus.model_tables.length}</p>
+                                    <div className="p-5 md:p-6 bg-card border border-border rounded-2xl">
+                                        <p className="text-[9px] md:text-[10px] font-black text-muted-foreground uppercase mb-1">Defined in Models</p>
+                                        <p className="text-xl md:text-2xl font-black">{dbStatus.model_tables.length}</p>
                                     </div>
-                                    <div className={`p-6 rounded-2xl border ${dbStatus.redundant_tables.length > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'}`}>
-                                        <p className="text-[10px] font-black uppercase mb-1">Redundant Tables</p>
-                                        <p className="text-2xl font-black">{dbStatus.redundant_tables.length}</p>
+                                    <div className={`p-5 md:p-6 rounded-2xl border ${dbStatus.redundant_tables.length > 0 ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'}`}>
+                                        <p className="text-[9px] md:text-[10px] font-black uppercase mb-1">Redundant Tables</p>
+                                        <p className="text-xl md:text-2xl font-black">{dbStatus.redundant_tables.length}</p>
                                     </div>
                                 </div>
 
@@ -836,14 +843,14 @@ export default function AdminFunctionsPage() {
 
             {activeTab === 'report-items' && (
                 <div className="space-y-8 animate-in slide-in-from-bottom-4 duration-500">
-                    <div className="p-6 bg-secondary/5 border border-secondary/20 rounded-[2rem] flex items-start gap-4">
+                    <div className="p-5 md:p-6 bg-secondary/5 border border-secondary/20 rounded-[2rem] flex items-start gap-4">
                         <div className="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center text-secondary shrink-0">
                             <Settings2 size={20} />
                         </div>
                         <div>
-                            <h4 className="text-secondary font-black uppercase tracking-widest text-[10px]">Global Report Configuration</h4>
-                            <p className="text-sm text-foreground/80 font-medium mt-1">
-                                Define the <strong>Core Competencies</strong> and <strong>Values</strong> that teachers evaluate students against in every term report card. Changes here apply across all classes.
+                            <h4 className="text-secondary font-black uppercase tracking-widest text-[9px] md:text-[10px]">Global Report Configuration</h4>
+                            <p className="text-xs md:text-sm text-foreground/80 font-medium mt-1">
+                                Define the <strong>Core Competencies</strong> and <strong>Values</strong> for report cards. Changes apply institution-wide.
                             </p>
                         </div>
                     </div>
@@ -859,7 +866,7 @@ export default function AdminFunctionsPage() {
                                 const list = reportItems.filter(i => i.type === type);
 
                                 return (
-                                    <div key={type} className="p-8 glass-card rounded-[3rem] border border-border bg-card flex flex-col gap-6 shadow-xl">
+                                    <div key={type} className="p-6 md:p-8 glass-card rounded-[3rem] border border-border bg-card flex flex-col gap-6 shadow-xl">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
                                                 <div className={`w-12 h-12 rounded-2xl bg-${color}-500/10 text-${color}-500 flex items-center justify-center shadow-inner`}>
@@ -966,33 +973,33 @@ export default function AdminFunctionsPage() {
                         {htcLoading ? (
                             <div className="py-20 text-center"><Loader2 className="animate-spin text-orange-500 mx-auto" size={48} /></div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                                 {(['EE', 'ME', 'AE', 'BE'] as const).map(level => {
                                     const levelColors: Record<string, string> = { EE: 'emerald', ME: 'secondary', AE: 'amber', BE: 'rose' };
                                     const col = levelColors[level];
                                     const fullNames: Record<string, string> = { EE: 'Exceeding Expectation', ME: 'Meeting Expectation', AE: 'Approaching Expectation', BE: 'Below Expectation' };
 
                                     return (
-                                        <div key={level} className="p-6 bg-card border border-border rounded-3xl shadow-lg flex flex-col gap-4">
+                                        <div key={level} className="p-5 md:p-6 bg-card border border-border rounded-3xl shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-3">
-                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black text-white bg-${col}-500 shadow-md shadow-${col}-500/20`}>
+                                                <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black text-white bg-${col}-500 shadow-md shadow-${col}-500/20`}>
                                                     {level}
                                                 </span>
-                                                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{fullNames[level]}</span>
+                                                <span className="text-[10px] md:text-xs font-bold text-muted-foreground uppercase tracking-wider line-clamp-1">{fullNames[level]}</span>
                                             </div>
                                             <textarea
                                                 value={htcTemplates[level]}
                                                 onChange={e => setHtcTemplates(prev => ({ ...prev, [level]: e.target.value }))}
-                                                placeholder={`Enter comment for ${level} students...`}
-                                                className={`w-full h-24 p-4 bg-muted/30 border border-border rounded-2xl text-sm outline-none focus:border-${col}-500 transition-colors resize-none`}
+                                                placeholder={`Enter comment for ${level}...`}
+                                                className={`w-full h-24 p-4 bg-muted/30 border border-border rounded-2xl text-xs md:text-sm outline-none focus:border-${col}-500 transition-colors resize-none`}
                                             />
                                             <button
                                                 onClick={() => handleHtcSave(level)}
                                                 disabled={htcSaving[level] || !htcTemplates[level].trim()}
-                                                className={`self-end px-6 py-2.5 bg-${col}-500 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2`}
+                                                className={`self-end px-5 md:px-6 py-2.5 bg-${col}-500 text-white font-black uppercase tracking-widest text-[9px] md:text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2 whitespace-nowrap`}
                                             >
-                                                {htcSaving[level] ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                                                Save
+                                                {htcSaving[level] ? <Loader2 className="animate-spin" size={12} /> : <Save size={12} />}
+                                                Save Pattern
                                             </button>
                                         </div>
                                     );
@@ -1008,13 +1015,13 @@ export default function AdminFunctionsPage() {
                 {isBulkModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBulkModalOpen(false)} className="absolute inset-0 bg-black/80" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-6 md:p-10 shadow-2xl space-y-8 max-h-[90vh] overflow-y-auto">
                             <div className="text-center space-y-2">
-                                <div className="w-16 h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
-                                    <Plus size={32} />
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-4 border border-primary/20">
+                                    <Plus size={28} />
                                 </div>
-                                <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Global Bulk Setup</h3>
-                                <p className="text-muted-foreground font-medium text-sm">Create a timeslot for ALL streams (Monday - Saturday)</p>
+                                <h3 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">Global Bulk Setup</h3>
+                                <p className="text-muted-foreground font-medium text-xs md:text-sm">Create a timeslot for ALL streams (Mon-Sat)</p>
                             </div>
 
                             {status.type !== 'none' && (
@@ -1109,14 +1116,14 @@ export default function AdminFunctionsPage() {
                 {isDeleteModalOpen && (
                     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsDeleteModalOpen(false)} className="absolute inset-0 bg-black/80" />
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2.5rem] border border-border bg-card p-6 md:p-10 shadow-2xl space-y-8 max-h-[90vh] overflow-y-auto">
                             <div className="text-center space-y-2">
-                                <div className="w-16 h-16 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
-                                    <Trash size={32} />
+                                <div className="w-12 h-12 md:w-16 md:h-16 bg-rose-500/10 text-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
+                                    <Trash size={28} />
                                 </div>
-                                <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">Targeted Deletion</h3>
-                                <div className="flex items-center justify-center gap-2">
-                                    <p className="text-muted-foreground font-medium text-sm">Remove slots matching specific criteria</p>
+                                <h3 className="text-xl md:text-2xl font-black text-foreground uppercase tracking-tight">Targeted Deletion</h3>
+                                <div className="flex flex-col md:flex-row items-center justify-center gap-2">
+                                    <p className="text-muted-foreground font-medium text-xs md:text-sm text-center">Remove slots matching specific criteria</p>
                                     <button
                                         type="button"
                                         onClick={handleResetFilters}
@@ -1249,9 +1256,9 @@ export default function AdminFunctionsPage() {
                                     </p>
                                 </div>
 
-                                <div className="w-full space-y-4 bg-muted/30 p-6 rounded-2xl border border-border">
-                                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground block text-left">
-                                        Type <span className="text-foreground select-all">DELETE ALL TIMETABLES</span> to confirm
+                                <div className="w-full space-y-4 bg-muted/30 p-5 md:p-6 rounded-2xl border border-border">
+                                    <label className="text-[9px] md:text-[10px] font-black uppercase tracking-widest text-muted-foreground block text-left">
+                                        Type <span className="text-foreground select-all text-[8px] md:text-[10px]">DELETE ALL TIMETABLES</span> to confirm
                                     </label>
                                     <input
                                         type="text"
@@ -1300,7 +1307,7 @@ export default function AdminFunctionsPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-md bg-card border border-amber-500/30 rounded-[2.5rem] shadow-2xl p-8 overflow-hidden"
+                            className="relative w-full max-w-md bg-card border border-amber-500/30 rounded-[2.5rem] shadow-2xl p-6 md:p-8 overflow-y-auto max-h-[90vh]"
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500" />
 
@@ -1368,7 +1375,7 @@ export default function AdminFunctionsPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-md bg-card border border-rose-500/30 rounded-[2.5rem] shadow-2xl p-8 overflow-hidden"
+                            className="relative w-full max-w-md bg-card border border-rose-500/30 rounded-[2.5rem] shadow-2xl p-6 md:p-8 overflow-y-auto max-h-[90vh]"
                         >
                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-rose-500 via-orange-500 to-rose-500" />
 

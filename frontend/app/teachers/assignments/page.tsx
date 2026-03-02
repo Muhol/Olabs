@@ -299,13 +299,13 @@ export default function TeacherAssignmentsPage() {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-xl glass-card rounded-[2.5rem] border border-border bg-card p-0 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
+                            className="relative w-full mx-2 max-w-xl glass-card rounded-2xl border border-border bg-card p-0 shadow-2xl flex flex-col overflow-hidden max-h-[90vh]"
                         >
                             <form onSubmit={handleCreateAssignment} className="flex flex-col h-full">
                                 <div className="p-8 pb-4 border-b border-border bg-muted/20">
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-14 h-14 rounded-2xl bg-primary/30 border border-primary/50 text-primary flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">
+                                            <div className="w-10 h-10 rounded-2xl bg-primary/30 border border-primary/50 text-primary flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">
                                                 <Plus size={28} />
                                             </div>
                                             <div>
@@ -315,7 +315,7 @@ export default function TeacherAssignmentsPage() {
                                                 </p>
                                             </div>
                                         </div>
-                                        <button type="button" onClick={() => setIsCreateModalOpen(false)} className="p-4 bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 rounded-2xl transition-all">
+                                        <button type="button" onClick={() => setIsCreateModalOpen(false)} className="p-2 bg-muted hover:bg-rose-500/10 text-muted-foreground hover:text-rose-500 rounded-2xl transition-all">
                                             <X size={24} />
                                         </button>
                                     </div>
@@ -390,7 +390,7 @@ export default function TeacherAssignmentsPage() {
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full py-5 bg-primary text-white rounded-3xl font-black uppercase text-sm tracking-[.25em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                                        className="w-full py-4 bg-primary text-white rounded-full font-black uppercase text-sm tracking-[.25em] shadow-xl shadow-primary/20 hover:bg-primary/30 hover:text-primary active:bg-primary/30 active:text-primary active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50"
                                     >
                                         {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle2 size={20} />}
                                         {isSubmitting ? 'Uploading Assignment...' : 'Broadcast Assignment'}

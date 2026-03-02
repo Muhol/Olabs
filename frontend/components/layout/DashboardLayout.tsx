@@ -179,13 +179,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={() => setIsSidebarOpen(false)}
-                        className="fixed inset-0 z-[45] bg-black/50 backdrop-blur-sm lg:hidden"
+                        className="fixed inset-0 z-[45] bg-black/50 backdrop-blur- lg:hidden"
                     />
                 )}
             </AnimatePresence>
 
             {/* Sidebar */}
-            <aside className={`fixed lg:sticky top-0 lg:top-4 h-full lg:h-[calc(100vh-2rem)] z-50 transform ${isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'} transition-all duration-300 backdrop-blur lg:m-4 rounded-r-2xl lg:rounded-2xl bg-background/80 lg:bg-white/50 dark:lg:bg-slate-700/0 border-r border-border lg:border-none shadow-2xl lg:shadow-none flex flex-col`}>
+            <aside className={`fixed lg:sticky top-0 lg:top-4 h-screen max-h-screen overflow-y-auto lg:h-[calc(100vh-2rem)] z-50 transform ${isSidebarOpen ? 'translate-x-0 w-64' : '-translate-x-full lg:translate-x-0 lg:w-20'} transition-all duration-300 backdrop-blur lg:m-4 rounded-r-2xl lg:rounded-2xl bg-background/80 lg:bg-white/50 dark:lg:bg-slate-700/0 border-r border-border lg:border-none shadow-2xl lg:shadow-none flex flex-col`}>
                 <div className="p-6 flex items-center justify-between overflow-hidden">
                     <div className={`w-[100px] h-[55px] relative  ${!isSidebarOpen && 'hidden'}`}>
                         {/* <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-black">
@@ -199,9 +199,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         // className="rounded-lg object-cover"
                         /> */}
                     </div>
-                    <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg lg:hidden">
+                    {/* <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-1 sticky top-0 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg lg:hidden">
                         <X size={20} />
-                    </button>
+                    </button> */}
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 py-4">
@@ -224,6 +224,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     if (pathname !== item.href) {
                                         setIsNavigating(true);
                                         setTargetHref(item.href);
+                                        setIsSidebarOpen(false)
                                     }
                                 }}
                                 className={`flex items-center gap-4 p-3 rounded-xl transition-all group relative ${pathname === item.href

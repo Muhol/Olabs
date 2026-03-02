@@ -501,7 +501,7 @@ export default function AdminFunctionsPage() {
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex flex-wrap bg-muted p-1.5 rounded-[1.4rem] border border-border self-start gap-1">
+            <div className="flex overflow-x-auto bg-muted p-1.5 rounded-[1.4rem] border border-border self-start gap-1">
                 {allowedTabs.includes('timetabling') && (
                     <button
                         onClick={() => setActiveTab('timetabling')}
@@ -550,7 +550,7 @@ export default function AdminFunctionsPage() {
                                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Deploy slots across the entire institution</p>
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap justify-end items-center gap-3">
                             {(userRole === 'SUPER_ADMIN' || (userRole === 'admin' && (subroles.includes('all') || subroles.includes('timetable_manager')))) && (
                                 <>
                                     <button
@@ -855,14 +855,14 @@ export default function AdminFunctionsPage() {
                             {(['competency', 'value'] as const).map(type => {
                                 const isComp = type === 'competency';
                                 const Icon = isComp ? Brain : Heart;
-                                const color = isComp ? 'secondary' : 'rose';
+                                const color = isComp ? 'secondary' : 'rose-500';
                                 const list = reportItems.filter(i => i.type === type);
 
                                 return (
                                     <div key={type} className="p-8 glass-card rounded-[3rem] border border-border bg-card flex flex-col gap-6 shadow-xl">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-2xl bg-${color}-500/10 text-${color}-500 flex items-center justify-center shadow-inner`}>
+                                                <div className={`min-w-12 h-12 rounded-2xl bg-${color}/10 text-${color} flex items-center justify-center shadow-inner`}>
                                                     <Icon size={24} />
                                                 </div>
                                                 <div>
@@ -872,7 +872,7 @@ export default function AdminFunctionsPage() {
                                             </div>
                                             <button
                                                 onClick={() => { setRiEditingId(null); setRiFormName(''); setRiFormDescription(''); setRiFormType(type); setRiShowForm(type); }}
-                                                className={`p-3 rounded-2xl bg-${color}-500 text-white hover:scale-105 active:scale-95 transition-all shadow-lg`}
+                                                className={`p-3 rounded-2xl bg-${color}/20 border border-${color} text-${color} hover:scale-105 active:scale-95 transition-all shadow-lg`}
                                             >
                                                 <Plus size={20} />
                                             </button>
@@ -908,7 +908,7 @@ export default function AdminFunctionsPage() {
                                                     exit={{ opacity: 0, height: 0 }}
                                                     className="overflow-hidden"
                                                 >
-                                                    <div className={`p-6 rounded-2xl border-2 border-${color}-500/30 bg-${color}-500/5 space-y-4`}>
+                                                    <div className={`p-6 rounded-2xl border-2 border-${color}/30 bg-${color}/5 space-y-4`}>
                                                         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                                             {riEditingId ? 'Edit Item' : `New ${isComp ? 'Competency' : 'Value'}`}
                                                         </p>
@@ -933,7 +933,7 @@ export default function AdminFunctionsPage() {
                                                             <button
                                                                 onClick={riHandleSave}
                                                                 disabled={riSaving}
-                                                                className={`flex-1 py-3 bg-${color}-500 text-white font-black uppercase text-[10px] tracking-widest rounded-xl flex items-center justify-center gap-2 disabled:opacity-50`}
+                                                                className={`flex-1 py-3 bg-${color}/20 border border-${color} text-${color} hover:bg-${color} hover:text-background active:bg-${color} active:text-background font-black uppercase text-[10px] tracking-widest rounded-xl flex items-center justify-center gap-2 disabled:opacity-50`}
                                                             >
                                                                 {riSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
                                                                 {riEditingId ? 'Update' : 'Add'}
@@ -968,14 +968,14 @@ export default function AdminFunctionsPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {(['EE', 'ME', 'AE', 'BE'] as const).map(level => {
-                                    const levelColors: Record<string, string> = { EE: 'emerald', ME: 'secondary', AE: 'amber', BE: 'rose' };
+                                    const levelColors: Record<string, string> = { EE: 'emerald-500', ME: 'secondary', AE: 'amber-500', BE: 'rose-500' };
                                     const col = levelColors[level];
                                     const fullNames: Record<string, string> = { EE: 'Exceeding Expectation', ME: 'Meeting Expectation', AE: 'Approaching Expectation', BE: 'Below Expectation' };
 
                                     return (
                                         <div key={level} className="p-6 bg-card border border-border rounded-3xl shadow-lg flex flex-col gap-4">
                                             <div className="flex items-center gap-3">
-                                                <span className={`px-3 py-1 rounded-lg text-[10px] font-black text-white bg-${col}-500 shadow-md shadow-${col}-500/20`}>
+                                                <span className={`px-3 py-1 rounded-lg text-[13px] font-black text-foreground bg-${col} shadow-md shadow-${col}/20`}>
                                                     {level}
                                                 </span>
                                                 <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{fullNames[level]}</span>
@@ -984,12 +984,12 @@ export default function AdminFunctionsPage() {
                                                 value={htcTemplates[level]}
                                                 onChange={e => setHtcTemplates(prev => ({ ...prev, [level]: e.target.value }))}
                                                 placeholder={`Enter comment for ${level} students...`}
-                                                className={`w-full h-24 p-4 bg-muted/30 border border-border rounded-2xl text-sm outline-none focus:border-${col}-500 transition-colors resize-none`}
+                                                className={`w-full h-24 p-4 bg-muted/30 border border-border rounded-2xl text-sm outline-none focus:border-${col} transition-colors resize-none`}
                                             />
                                             <button
                                                 onClick={() => handleHtcSave(level)}
                                                 disabled={htcSaving[level] || !htcTemplates[level].trim()}
-                                                className={`self-end px-6 py-2.5 bg-${col}-500 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2`}
+                                                className={`self-end px-6 py-2.5 bg-${col} text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50 flex items-center gap-2`}
                                             >
                                                 {htcSaving[level] ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
                                                 Save

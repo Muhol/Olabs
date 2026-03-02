@@ -187,21 +187,24 @@ export default function SettingsPage() {
                         </p>
                     </div>
 
-                    <div className="p-6 border border-white/10 rounded-3xl space-y-6">
+                    <div className="p-6 border border-white/10 bg-primary/5 hover:bg-primary/10 rounded-3xl space-y-6">
                         <div className="flex items-center gap-2 text-primary">
                             <GraduationCap size={16} />
                             <span className="font-black uppercase tracking-widest text-[10px]">Advanced Grading Configuration</span>
                         </div>
                         <div className="space-y-4">
-                            <h4 className="font-bold text-sm text-white">Institutional Exam Templates</h4>
+                            <h4 className="font-bold text-sm text-foreground ">Institutional Exam Templates</h4>
                             <p className="text-[11px] text-slate-400 leading-relaxed">
                                 Define standard exam types (Mid-term, Final) that will be enforced across all subjects for uniform report card generation.
                             </p>
+
                             <Link
                                 href="/settings/exams"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all text-primary"
+                                className="inline-flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 font-black uppercase text-[10px] tracking-widest transition-all text-secondary"
                             >
-                                <GraduationCap size={14} /> Configure Uniform Exams
+                                <div className="rounded-xl gap-2 bg-secondary/30 hover:bg-secondary hover:text-background active:bg-secondary active:text-background p-2 flex">
+                                    <GraduationCap size={14} /> Configure Uniform Exams
+                                </div>
                             </Link>
                         </div>
                     </div>

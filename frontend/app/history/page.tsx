@@ -217,7 +217,7 @@ export default function HistoryPage() {
                                         <tr key={item.id} className="hover:bg-white/[0.02] transition-colors group">
                                             <td className="px-8 py-6">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-amber-500/50 group-hover:bg-amber-500 group-hover:text-amber-foreground transition-all"><Book size={20} /></div>
+                                                    <div className="min-w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-amber-500/50 group-hover:bg-amber-500 group-hover:text-background transition-all"><Book size={20} /></div>
                                                     <div className="font-black text-foreground text-base leading-none">{item.book}</div>
                                                 </div>
                                             </td>

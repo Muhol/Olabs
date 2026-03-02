@@ -619,7 +619,7 @@ export default function HolisticGradingModal({
                             <TrendingUp size={32} />
                         </div> */}
                         <div className="space-y-1">
-                            <h3 className="text-3xl font-black text-foreground tracking-tighter"> Grading</h3>
+                            <h3 className="text-3xl font-bold text-foreground tracking-tighter"> Grading</h3>
                             <p className="text-xs font-black uppercase tracking-[0.3em] text-primary">
                                 {subject?.subject_name} • {subject?.class_name} {subject?.stream_name}
                             </p>
@@ -676,7 +676,7 @@ export default function HolisticGradingModal({
 
                     <button
                         onClick={handleCloseAttempt}
-                        className=" top-8 right-8 p-2 h-10 w-10 ml-10 hover:bg-red-500 rounded-full transition-colors text-muted-foreground hover:text-foreground"
+                        className=" top-8 right-8 p-2 h-10 w-10 ml-10 rounded-xl transition-colors text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground"
                     >
                         <X size={24} />
                     </button>

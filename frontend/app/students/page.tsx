@@ -22,7 +22,8 @@ import {
     BarChart3,
     PieChart,
     ArrowUpRight,
-    AlertCircle
+    AlertCircle,
+    X
 } from 'lucide-react';
 import {
     fetchStudents,
@@ -603,9 +604,15 @@ export default function StudentsPage() {
             {isStudentModalOpen && (
                 <div className="fixed inset-0 h-screen z-[100] flex items-center justify-center p-4">
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsStudentModalOpen(false)} className="absolute inset-0 bg-black/80 " />
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-lg glass-card rounded-[2rem] md:rounded-3xl border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-lg glass-card rounded-2xl md:rounded-3xl border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                            <button
+                                onClick={() => setIsStudentModalOpen(false)}
+                                className="absolute top-4 right-4 p-2 h-10 w-10 ml-10 rounded-xl bg-muted border border-border transition-colors text-muted-foreground hover:bg-red-500/20 hover:border-red-500/20 hover:text-red-500 active:bg-muted active:text-foreground"
+                            >
+                                <X size={24} />
+                            </button>
 
-                        <div className="text-center mb-8">
+                        <div className="text-center mb-8"> 
                             <div className="w-16 h-16 bg-secondary/20 rounded-2xl flex items-center justify-center text-secondary border border-secondary/20 mx-auto mb-4"><GraduationCap size={30} /></div>
                             <h3 className="text-3xl font-black text-foreground uppercase">{editingStudent ? 'Edit Student' : 'Add New Student'}</h3>
                         </div>
@@ -767,7 +774,7 @@ function StreamsModal({ className_, classId, onClose, tokenGetter }: any) {
                 <div className="flex items-center justify-between mb-8">
                     <div>
                         <div className="text-[10px] font-black text-secondary uppercase tracking-[0.3em] mb-1">Manage Streams</div>
-                        <h3 className="text-3xl font-black text-foreground uppercase italic tracking-tighter">{className_} <span className="text-muted-foreground/30">/</span> Streams</h3>
+                        <h3 className="text-3xl font-bold text-foreground uppercase tracking-tighter">{className_} <span className="text-muted-foreground/30">/</span> Streams</h3>
                     </div>
                     <button onClick={onClose} className="p-3 hover:bg-muted rounded-full transition-colors text-muted-foreground hover:text-foreground"><XCircle size={24} /></button>
                 </div>

@@ -158,9 +158,9 @@ export default function ExamSettingsPage() {
                         <ChevronLeft size={14} /> Back to Settings
                     </Link>
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
-                        <GraduationCap size={14} /> Global Assessment Protocols
+                        <GraduationCap size={14} /> Global Assessment Exams
                     </div>
-                    <h1 className="text-4xl font-black tracking-tight uppercase">Uniform Exams</h1>
+                    <h1 className="text-4xl font-semibold tracking-tight uppercase">Uniform Exams</h1>
                     <p className="text-slate-400 font-medium tracking-tight">Define standard exam types for institutional uniformity.</p>
                 </div>
                 <button
@@ -184,7 +184,7 @@ export default function ExamSettingsPage() {
                 <div className="lg:col-span-1 ">
                     <div className="glass-card bg-foreground/5 rounded-3xl border border-foreground/15 overflow-hidden sticky top-8">
                         <div className="p-6 border-b border-white/5 bg-white/5">
-                            <h3 className="font-black uppercase tracking-widest text-xs text-primary">Deploy New Protocol</h3>
+                            <h3 className="font-black uppercase tracking-widest text-xs text-primary">Create New Exam</h3>
                         </div>
                         <form onSubmit={handleCreate} className="p-6 space-y-6">
                             <div className="space-y-2">

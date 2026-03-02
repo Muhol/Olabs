@@ -67,12 +67,15 @@ export default function GradingView({ teacherSubjects, loading, tokenGetter }: G
                         <GraduationCap className="w-8 h-8 text-primary" /> Grading Console
                     </h2>
                     <p className="text-xs text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2">
-                        Select a Subject to begin Assessment <span className="w-1 h-1 rounded-full bg-primary" /> {teacherSubjects.length} Total Assigned
+                        Select a Subject to begin Assessment 
+                    </p>
+                    <p className="text-xs text-muted-foreground font-black uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-primary" /> {teacherSubjects.length} Total Assigned
                     </p>
                 </div>
 
-                <div className="flex items-center gap-4 ml-auto">
-                    <div className="relative group min-w-[300px]">
+                <div className="flex items-center gap-4 w-full ml-auto">
+                    <div className="relative group w-full min-w-[300px]">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
                         <input
                             type="text"

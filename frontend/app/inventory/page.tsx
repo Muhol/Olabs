@@ -14,7 +14,8 @@ import {
     CheckCircle2,
     XCircle,
     Clock,
-    RefreshCw
+    RefreshCw,
+    X
 } from 'lucide-react';
 import { fetchBooks, createBook, updateBook, deleteBook, borrowBook, fetchStudents } from '@/lib/api';
 import { useUserContext } from '@/context/UserContext';
@@ -379,7 +380,10 @@ export default function InventoryPage() {
                 {isBorrowModalOpen && (
                     <div className="fixed inset-0 h-screen z-[110] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsBorrowModalOpen(false)} className="absolute inset-0 bg-black/80 " />
-                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-[2rem] md:rounded-[3rem] border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
+                        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="relative w-full max-w-md glass-card rounded-2xl border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl">
+                            <button onClick={() => setIsBorrowModalOpen(false)} className="absolute top-4 right-4 p-2 h-10 w-10 ml-10 rounded-xl transition-colors text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground">
+                                <X size={24} />
+                            </button>
                             <div className="text-center mb-10">
                                 <div className="w-20 h-20 bg-primary/20 rounded-3xl flex items-center justify-center text-primary border border-primary/20 mx-auto mb-6"><Clock size={40} className="animate-pulse" /></div>
                                 <h3 className="text-3xl font-black text-foreground uppercase tracking-tight">Borrow Book</h3>
@@ -396,7 +400,7 @@ export default function InventoryPage() {
                                 </div>
                                 <Input label="Book Copy Number / Barcode (Optional)" value={bookNumberInput} onChange={(e: any) => setBookNumberInput(e.target.value)} placeholder="Scan barcode or enter copy ID..." />
                                 <Input label="Admission Number" value={admissionNumberSearch} onChange={(e: any) => setAdmissionNumberSearch(e.target.value)} placeholder="ADM/2024/..." />
-                                <button onClick={handleSearchStudent} disabled={borrowLoading} className="w-full py-4 bg-muted border border-border text-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-30">
+                                <button onClick={handleSearchStudent} disabled={borrowLoading} className="w-full py-4 bg-primary/30 border border-primary/60 text-primary font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-primary hover:text-background transition-all flex items-center justify-center gap-2 active:scale-95 disabled:opacity-30">
                                     {borrowLoading && !foundStudent ? <Loader2 size={16} className="animate-spin" /> : null}
                                     Find Student
                                 </button>
@@ -419,8 +423,11 @@ export default function InventoryPage() {
                 {isModalOpen && (
                     <div className="fixed inset-0 h-screen z-[100] flex items-center justify-center p-4">
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsModalOpen(false)} className="absolute inset-0 bg-black/80" />
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-lg glass-card rounded-[2rem] md:rounded-[3rem] border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
-                            <h3 className="text-3xl font-black text-foreground uppercase text-center mb-10">{editingBook ? 'Edit Book' : 'Add New Book'}</h3>
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-lg glass-card rounded-2xl md:rounded-[3rem] border border-border bg-card p-6 md:p-10 max-h-[90vh] overflow-y-auto custom-scrollbar">
+                            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 p-2 h-10 w-10 ml-10 rounded-xl transition-colors text-muted-foreground hover:bg-muted hover:text-foreground active:bg-muted active:text-foreground">
+                                <X size={24} />
+                            </button>
+                            <h3 className="text-3xl font-bold text-foreground capitalize text-center mb-10">{editingBook ? 'Edit Book' : 'Add New Book'}</h3>
                             {modalError && (
                                 <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-2 text-rose-500 text-[10px] font-black uppercase tracking-wider">
                                     <XCircle size={14} /> {modalError}
@@ -435,8 +442,8 @@ export default function InventoryPage() {
                                 <Input label="ISBN" value={formData.isbn} onChange={(e: any) => setFormData({ ...formData, isbn: e.target.value })} />
                                 <Input type="number" label="Copies" value={formData.total_copies} onChange={(e: any) => setFormData({ ...formData, total_copies: parseInt(e.target.value) })} />
                                 <div className="md:col-span-2 pt-6 flex gap-4">
-                                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-4 bg-muted text-foreground font-black uppercase text-xs tracking-widest rounded-2xl transition-all active:scale-95 border border-border">Abort</button>
-                                    <button disabled={actionLoading} type="submit" className="flex-2 py-4 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
+                                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 py-3 bg-muted text-foreground font-black uppercase text-xs tracking-widest rounded-full transition-all active:scale-95 border border-border">Abort</button>
+                                    <button disabled={actionLoading} type="submit" className="flex-2 py-3 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-full shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2">
                                         {actionLoading ? <Loader2 size={16} className="animate-spin" /> : null}
                                         {editingBook ? 'Update Book' : 'Save Book'}
                                     </button>

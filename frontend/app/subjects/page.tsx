@@ -655,7 +655,7 @@ export default function SubjectManagementPage() {
                     <p className="text-muted-foreground font-medium tracking-tight">Configure school subjects and assign them to staff & students.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                     <button
                         onClick={openBulkDeleteModal}
                         className="flex items-center gap-2 px-6 py-4 bg-rose-500/10 text-rose-500 border border-border font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-rose-500/20 active:scale-95 transition-all"
@@ -2235,7 +2235,7 @@ export default function SubjectManagementPage() {
                             }}
                             className="px-6 py-3 bg-primary text-white font-black uppercase text-xs tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 shadow-lg shadow-primary/30 whitespace-nowrap"
                         >
-                            <ShieldCheck size={18} /> Review & Save
+                            <ShieldCheck size={18} />Save
                         </button>
 
                         <button

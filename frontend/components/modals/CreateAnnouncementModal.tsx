@@ -169,7 +169,7 @@ export default function CreateAnnouncementModal({
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-2xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
+                className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
             >
                 <div className="p-8 border-b border-border bg-muted/20 flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -428,7 +428,7 @@ export default function CreateAnnouncementModal({
 
                         {/* Content */}
                         <div className="space-y-1.5">
-                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Dispatch Content</label>
+                            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Content</label>
                             <textarea
                                 required
                                 rows={6}
@@ -444,14 +444,14 @@ export default function CreateAnnouncementModal({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="flex-1 py-4 px-6 rounded-2xl border border-border text-xs font-black uppercase tracking-widest hover:bg-muted transition-all"
+                            className="flex-1 py-3 px-6 rounded-full border border-border text-xs font-black uppercase tracking-widest hover:bg-muted active:bg-muted transition-all"
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
                             disabled={submitting}
-                            className="flex-[2] py-4 px-6 rounded-2xl bg-primary text-primary-foreground text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
+                            className="flex-[2] py-3 px-6 rounded-full bg-primary text-primary-foreground text-xs font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:bg-primary/30 hover:text-primary active:bg-primary/30 active:text-primary active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:scale-100"
                         >
                             {submitting ? (
                                 <>
@@ -461,7 +461,7 @@ export default function CreateAnnouncementModal({
                             ) : (
                                 <>
                                     <Send size={16} />
-                                    Dispatch Announcement
+                                    send
                                 </>
                             )}
                         </button>

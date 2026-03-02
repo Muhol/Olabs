@@ -168,12 +168,12 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                     </button>
 
                     <div className="flex flex-col md:flex-row gap-6 items-start md:items-center">
-                        <div className="w-20 h-20 rounded-3xl bg-secondary/20 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner">
+                        <div className="hidden md:block w-16 h-16 rounded-3xl bg-secondary/20 flex items-center justify-center text-secondary border border-secondary/20 shadow-inner">
                             <User size={40} />
                         </div>
                         <div className="space-y-1">
                             <div className="flex items-center gap-3">
-                                <h2 className="text-3xl font-black text-foreground uppercase tracking-tight">{localStudent.full_name}</h2>
+                                <h2 className="text-3xl font-bold text-foreground uppercase tracking-tight">{localStudent.full_name}</h2>
                                 {localStudent.is_cleared ? (
                                     <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full text-[10px] font-black uppercase tracking-widest">
                                         <BadgeCheck size={12} /> Cleared
@@ -191,9 +191,9 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                     </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar space-y-8">
+                <div className="flex-1 overflow-y-auto p-2 md:p-4 custom-scrollbar space-y-8">
                     {/* Stats Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-6">
                         <div className="p-6 rounded-[2rem] bg-secondary/10 border border-secondary/20 space-y-2">
                             <div className="flex justify-between items-center">
                                 <History size={20} className="text-secondary" />
@@ -223,15 +223,15 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                     {/* History Table */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <h3 className="text-xl font-black text-foreground uppercase tracking-tight flex items-center gap-2">
-                                <History className="text-secondary" size={20} /> Borrowing History
+                            <h3 className="text-xl pl-2 font-bold text-foreground uppercase tracking-tight flex items-center gap-2">
+                                <History className="text-secondary hidden md:block " size={20} /> Borrowing History
                             </h3>
                             <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest bg-muted px-3 py-1.5 rounded-lg border border-border">
                                 {history.length} RECORDS FOUND
                             </div>
                         </div>
 
-                        <div className="border border-border rounded-3xl overflow-hidden bg-muted/10">
+                        <div className="border border-border rounded-3xl overflow-auto bg-muted/10">
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-muted/50 border-b border-border">
@@ -412,30 +412,27 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                     </div>
                 </div>
 
-                <div className="p-8 border-t border-border bg-muted/30 flex justify-between items-center">
+                <div className="p-8 border-t border-border bg-muted/30 flex flex-wrap gap-2 justify-between items-center">
                     <div className="flex items-center gap-3">
                         {!localStudent.is_cleared && (
                             <button
                                 onClick={handleClearance}
                                 disabled={clearing || stats.currentlyHolding > 0}
-                                className="px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-emerald-500/20 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="px-6 py-3 h-10 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-emerald-500/20 transition-all active:scale-95 flex items-center gap-2 disabled:opacity-30 disabled:cursor-not-allowed"
                             >
                                 {clearing ? <Loader2 size={14} className="animate-spin" /> : <BadgeCheck size={14} />}
                                 {stats.currentlyHolding > 0 ? 'Clearance Blocked' : 'Approve Clearance'}
                             </button>
                         )}
                         {userRole === 'SUPER_ADMIN' && (
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => setIsConfirmingReset(true)}
                                     disabled={resetting}
-                                    className="px-6 py-3 bg-secondary/10 hover:bg-secondary text-secondary hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-secondary/20 transition-all active:scale-95 flex items-start gap-2"
+                                    className="px-6 py-3 h-10 bg-secondary/10 hover:bg-secondary text-secondary hover:text-white font-black uppercase text-[10px] tracking-widest rounded-xl border border-secondary/20 transition-all active:scale-95 flex items-center gap-2"
                                 >
                                     {resetting ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                                     Reset Account
-                                    <div className="flex items-center gap-1.5 text-[9px] font-black text-amber-500 uppercase tracking-widest px-2">
-                                        <TriangleAlert size={12} />
-                                    </div>
                                 </button>
                             </div>
                         )}
@@ -447,7 +444,7 @@ export default function StudentDetailsModal({ student, onClose, tokenGetter, onU
                     )}
                     <button
                         onClick={onClose}
-                        className="px-8 py-4 bg-secondary text-secondary-foreground font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-secondary/20 transition-all hover:scale-105 active:scale-95"
+                        className="px-8 py-3 h-10 bg-secondary text-secondary-foreground font-black uppercase text-xs tracking-widest rounded-2xl shadow-lg shadow-secondary/20 transition-all hover:scale-105 active:scale-95"
                     >
                         Close Profile
                     </button>

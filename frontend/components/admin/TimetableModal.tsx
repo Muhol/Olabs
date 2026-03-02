@@ -277,9 +277,9 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                 className="relative w-full max-w-6xl max-h-[90vh] glass-card rounded-[2.5rem] border border-border bg-card shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-6 border-b border-border flex items-center justify-between bg-muted/20">
+                <div className="p-6 border-b border-border flex flex-wrap items-center justify-between bg-muted/20">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+                        <div className="hidden md:flex w-10 h-10 rounded-xl bg-primary/10 text-primary items-center justify-center">
                             <Calendar size={20} />
                         </div>
                         <div>
@@ -326,7 +326,7 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                                 </button>
                             </>
                         )}
-                        <button onClick={onClose} className="p-2 hover:bg-muted rounded-xl transition-all ml-1">
+                        <button onClick={onClose} className="p-2 absolute md:relative top-2 right-2 md:top-0 md:right-0 hover:bg-red-500/30 hover:text-red-500 active:bg-red-500/30 active:text-red-500 rounded-xl transition-all ml-1">
                             <X size={20} />
                         </button>
                     </div>
@@ -389,9 +389,9 @@ export default function TimetableModal({ isOpen, onClose, stream }: TimetableMod
                                     .sort((a, b) => a.start_time.padStart(5, '0').localeCompare(b.start_time.padStart(5, '0')));
 
                                 return (
-                                    <div key={day.id} className="group relative flex flex-col md:flex-row gap-3 md:gap-4">
-                                        <div className="md:w-28 sticky top-0 left-0 z-20 flex flex-row md:flex-col items-center md:items-start shrink-0">
-                                            <div className="px-3 py-1 rounded-lg backdrop-blur-md bg-primary/30 border border-primary/60 text-primary w-full text-center md:text-left flex items-center justify-between shadow-sm">
+                                    <div key={day.id} className="group relative w-max flex flex-row gap-3 md:gap-4">
+                                        <div className="w-28  sticky top-0 left-0 z-20 flex flex-col items-center md:items-start shrink-0">
+                                            <div className="px-3 py-1 rounded-lg backdrop-blur-sm bg-primary/20 border border-primary/60 text-primary w-full max-w-[150px] text-center md:text-left flex items-center justify-between shadow-sm">
                                                 <span className="text-[9px] font-black uppercase tracking-[0.1em]">{day.name}</span>
                                                 {isEditing && daySlots.length > 0 && (
                                                     <button

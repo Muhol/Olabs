@@ -257,7 +257,7 @@ export default function MyClassPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.3em] text-[10px]">
-                        <Building2 size={14} /> My Assigned Class
+                        <Building2 size={14} />{classId ? "My Assigned Class" : "My Assigned Subjects"}
                     </div>
                     <h1 className="text-4xl tracking-tight text-foreground uppercase">
                         {classId ? (
@@ -265,7 +265,9 @@ export default function MyClassPage() {
                                 {assignmentInfo?.className} <span className="text-muted-foreground/30 font-normal">/</span> {assignmentInfo?.streamName}
                             </>
                         ) : (
-                            "No Assigned Class"
+                            <>
+                            <p className='capitalize flex items-center gap-2'><span className='bg-primary h-[6px] w-[6px] rounded-full'/>{teacherSubjects.length} assigned subjects</p>
+                            </>
                         )}
                     </h1>
                     <p className="text-muted-foreground font-medium tracking-tight">
@@ -287,9 +289,9 @@ export default function MyClassPage() {
                             Class Score Sheet
                         </button>
                     )}
-                    <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
+                    {/* <button onClick={loadData} className="p-3 bg-muted hover:bg-muted/80 text-foreground rounded-xl border border-border transition-all active:scale-95">
                         <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
-                    </button>
+                    </button> */}
                 </div>
             </div>
 
@@ -339,31 +341,31 @@ export default function MyClassPage() {
             </div>
 
             {/* Tab Switcher */}
-            <div className="flex gap-2 p-2 bg-muted/30 rounded-2xl border border-border w-fit">
+            <div className="flex gap-2 p-2 bg-muted/30 overflow-x-auto rounded-2xl border border-border">
                 <button
                     onClick={() => setActiveTab('students')}
-                    className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'students'
+                    className={`px-6 py-3 rounded-lg font-black uppercase text-xs tracking-widest transition-all flex flex-nowrap items-center gap-2 ${activeTab === 'students'
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
                         : 'text-muted-foreground hover:text-foreground'
                         }`}
                 >
                     <Users size={16} />
-                    Students {selectedSubject && `(Filtered)`}
+                    Students
                 </button>
                 <button
                     onClick={() => setActiveTab('subjects')}
-                    className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'subjects'
+                    className={`px-6 py-3 rounded-lg font-black uppercase text-xs tracking-widest transition-all flex flex-nowrap items-center gap-2 ${activeTab === 'subjects'
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
                         : 'text-muted-foreground hover:text-foreground'
                         }`}
                 >
                     <BookOpen size={16} />
-                    My Subjects
+                    Subjects
                 </button>
                 {streamId && (
                     <button
                         onClick={() => setActiveTab('timetable')}
-                        className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'timetable'
+                        className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex flex-nowrap items-center gap-2 ${activeTab === 'timetable'
                             ? 'bg-primary text-white shadow-lg shadow-primary/20'
                             : 'text-muted-foreground hover:text-foreground'
                             }`}
@@ -374,7 +376,7 @@ export default function MyClassPage() {
                 )}
                 <button
                     onClick={() => setActiveTab('grading')}
-                    className={`px-6 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all flex items-center gap-2 ${activeTab === 'grading'
+                    className={`px-6 py-3 rounded-lg font-black uppercase text-xs tracking-widest transition-all flex flex-nowrap items-center gap-2 ${activeTab === 'grading'
                         ? 'bg-primary text-white shadow-lg shadow-primary/20'
                         : 'text-muted-foreground hover:text-foreground'
                         }`}

@@ -511,16 +511,18 @@ export default function MyClassPage() {
                                                         <div className="flex items-center justify-center gap-2">
                                                             {classId && (
                                                                 <>
-                                                                    <button
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setManagingReportStudent(student);
-                                                                        }}
-                                                                        className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm border border-indigo-500/10"
-                                                                        title="Manage Term Assessment"
-                                                                    >
-                                                                        <Brain size={16} />
-                                                                    </button>
+                                                                    {!selectedSubject && (
+                                                                        <button
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setManagingReportStudent(student);
+                                                                            }}
+                                                                            className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500 hover:text-white transition-all shadow-sm border border-indigo-500/10"
+                                                                            title="Manage Term Assessment"
+                                                                        >
+                                                                            <Brain size={16} />
+                                                                        </button>
+                                                                    )}
                                                                     <button
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
@@ -528,11 +530,11 @@ export default function MyClassPage() {
                                                                         }}
                                                                         className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-sm border border-emerald-500/10"
                                                                         title="Generate Report Card"
-                                                                    >
-                                                                        <GraduationCap size={16} />
-                                                                    </button>
-                                                                </>
-                                                            )}
+                                                                        >
+                                                                            <GraduationCap size={16} />
+                                                                        </button>
+                                                                    </>
+                                                                )}
                                                         </div>
                                                     </td>
                                                     <td className="px-8 py-4 text-right">

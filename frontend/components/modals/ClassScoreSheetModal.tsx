@@ -152,20 +152,20 @@ export default function ClassScoreSheetModal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50"
             />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-7xl h-[90vh] bg-card border border-border rounded-[3rem] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-full max-w-7xl h-[90vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-8 flex flex-col border-b border-border bg-muted/20 relative">
+                <div className="md:p-8 p-4 flex flex-col border-b border-border bg-muted/20 relative">
                     <button
                         onClick={onClose}
-                        className="self-end p-1 hover:bg-red-500 rounded-full transition-colors text-muted-foreground hover:text-foreground"
+                        className="absolute self-end p-1 hover:bg-red-500/20 active:bg-red-500/20 rounded-full transition-colors text-muted-foreground hover:text-foreground"
                     >
                         <X size={24} />
                     </button>
@@ -175,13 +175,13 @@ export default function ClassScoreSheetModal({
                             <FileText size={32} />
                         </div> */}
                         <div className="space-y-1">
-                            <h3 className="text-3xl font-black text-foreground uppercase tracking-tighter">Class Score Sheet</h3>
+                            <h3 className="text-3xl font- text-foreground uppercase tracking-tighter">Class Score Sheet</h3>
                             <p className="text-xs font-black uppercase tracking-[0.3em] text-secondary">
                                 Consolidated Academic Records
                             </p>
                         </div>
 
-                        <div className="flex items-center flex-wrap gap-4 ml-auto">
+                        <div className="flex items-center flex-wrap gap-2 ml-auto">
                             <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-2xl border border-border">
                                 <Calendar size={14} className="text-secondary ml-2" />
                                 <select
@@ -231,7 +231,7 @@ export default function ClassScoreSheetModal({
                 </div>
 
                 {/* Table Content */}
-                <div className="flex-1 overflow-auto overflow-y-aut bg-card/50">
+                <div className="flex-1 overflow-auto overflow-y-auto bg-card/50">
                     {loading ? (
                         <div className="h-full flex flex-col items-center justify-center gap-4">
                             <Loader2 className="animate-spin text-secondary" size={48} />
@@ -262,9 +262,9 @@ export default function ClassScoreSheetModal({
                             </div>
                         </div>
                     ) : (
-                        <div className="p-8">
-                            <div className="border border-border rounded-[2rem] overflow-hidden bg-muted/10 shadow-sm overflow-x-auto">
-                                <table className="w-full border-collapse">
+                        <div className="md:p-8 p-2">
+                            <div className="border border-border rounded-2xl overflow-hidden bg-muted/10 shadow-sm overflow-x-auto">
+                                <table className="w-full border">
                                     <thead>
                                         <tr className="bg-muted/50 border-b border-border">
                                             <th className="px-6 py-5 text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground sticky left-0 bg-muted/50 z-10">
@@ -280,9 +280,9 @@ export default function ClassScoreSheetModal({
                                     <tbody className="divide-y divide-border/50">
                                         {filteredStudents.map((student) => (
                                             <tr key={student.id} className="hover:bg-secondary/[0.02] transition-colors group">
-                                                <td className="px-6 py-4 sticky left-0 bg-card group-hover:bg-secondary/[0.02] z-10">
+                                                <td className="px-6 py-4 sticky left-0 bg-card  z-40">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="w-10 h-10 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center font-black text-[10px] shadow-inner">
+                                                        <div className="hidden md:block w-10 h-10 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center font-black text-[10px] shadow-inner">
                                                             {student.full_name.split(' ').map((n: string) => n[0]).join('')}
                                                         </div>
                                                         <div className="flex flex-col">
@@ -311,8 +311,8 @@ export default function ClassScoreSheetModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-8 border-t border-border bg-muted/20 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
+                <div className="p-8 border-t border-border bg-muted/20 flex flex-wrap gap-4 items-center justify-between">
+                    <div className="flex overflow-x-auto items-center gap-6">
                         <div className="flex items-center gap-2">
                             <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/20" />
                             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Exceeding Expectation</span>
@@ -331,12 +331,12 @@ export default function ClassScoreSheetModal({
                         </div>
                     </div>
 
-                    <button
+                    {/* <button
                         onClick={onClose}
-                        className="px-10 py-4 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all shadow-lg"
+                        className=" px-10 py-3 bg-rose-500/30 border border-rose-500 text-rose-500 hover:bg-rose-500 hover:text-background active:bg-rose-500 active:text-background font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all shadow-lg"
                     >
-                        Close Portal
-                    </button>
+                        Close
+                    </button> */}
                 </div>
             </motion.div>
         </div>

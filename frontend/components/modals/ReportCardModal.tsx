@@ -227,28 +227,28 @@ export default function ReportCardModal({
             <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50"
             />
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-4xl h-[90vh] bg-card border border-border rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-full max-w-4xl h-[90vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-8 border-b border-border bg-emerald-500 text-white relative flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-6">
-                        <div className="w-16 h-16 rounded-[2rem] bg-white/20 text-white flex items-center justify-center backdrop-blur-md">
+                <div className="p-4 border-b border-border bg-emerald-500 text-white relative flex items-start md:items-center justify-between shrink-0">
+                    <div className="flex items-start md:items-center gap-6">
+                        <div className="hidden md:block w-16 h-16 rounded-[2rem] bg-background/20 text-background flex items-center justify-center backdrop-blur-md">
                             <Award size={32} />
                         </div>
                         <div className="space-y-1">
-                            <h3 className="text-3xl font-black uppercase tracking-tighter">Student Report Card</h3>
-                            <p className="text-xs font-black uppercase tracking-[0.3em] opacity-80">{studentName} • {term} {year}</p>
+                            <h3 className="text-3xl text-background uppercase tracking-tighter">Student Report Card</h3>
+                            <p className="text-xs text-background font-black uppercase tracking-[0.3em] opacity-80">{studentName} • {term} {year}</p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-white/10 rounded-full transition-colors"><X size={24} /></button>
+                    <button onClick={onClose} className="absolute top-2 right-2 md:relative md:top-0 md:right-0 p-2 hover:bg-rose-500/10 hover:text-rose-500 active:bg-rose-500/10 active:text-rose-500 rounded-full transition-colors"><X size={24} /></button>
                 </div>
 
                 {/* Preview */}
-                <div className="flex-1 overflow-auto p-12 bg-muted/10">
+                <div className="flex-1 overflow-auto p-2 md:p-12 bg-muted/10">
                     {loading ? (
                         <div className="h-full flex flex-col items-center justify-center gap-4">
                             <Loader2 className="animate-spin text-emerald-500" size={48} />
@@ -262,7 +262,7 @@ export default function ReportCardModal({
                     ) : (
                         <div className="max-w-3xl mx-auto space-y-10">
                             {/* Paper preview */}
-                            <div className="bg-card border border-border rounded-[2rem] shadow-xl p-12 space-y-10">
+                            <div className="bg-card border border-border rounded-2xl shadow-xl p-4 md:p-12 space-y-10">
                                 {/* Student details */}
                                 <div className="grid grid-cols-2 gap-8 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                                     {[
@@ -361,7 +361,7 @@ export default function ReportCardModal({
                             </div>
 
                             {/* Comments Section */}
-                            <div className="space-y-6 bg-card border border-border rounded-[2rem] shadow-lg p-10">
+                            <div className="space-y-6 bg-card border border-border rounded-2xl shadow-lg p-4 md:p-10">
                                 <div className="space-y-3">
                                     <h4 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Class Teacher's Insight</h4>
                                     <div className="p-4 bg-muted/30 rounded-2xl border border-border/50 text-sm font-medium leading-relaxed italic text-foreground/80">
@@ -387,17 +387,17 @@ export default function ReportCardModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-8 border-t border-border bg-card flex items-center justify-between shrink-0">
+                <div className="p-2 md:p-8 border-t border-border bg-card flex flex-col gap-2 md:flex-row items-center justify-between shrink-0">
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                        <FileText size={14} className="text-emerald-500" />
+                        <FileText size={14} className="text-primary" />
                         Export PDF for official print quality
                     </p>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
                         <button onClick={onClose} className="px-8 py-4 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-2xl">Close</button>
                         <button
                             onClick={exportToPDF}
                             disabled={loading || !data}
-                            className="px-12 py-4 bg-emerald-500 text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-3 disabled:opacity-50"
+                            className="px-5 py-4 bg-primary/30 border border-primary/50 text-primary font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-primary hover:text-background active:bg-primary active:text-background transition-all shadow-xl shadow-emerald-500/20 flex items-center gap-3 disabled:opacity-50"
                         >
                             <Download size={18} />
                             Export PDF Report

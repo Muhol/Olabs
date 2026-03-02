@@ -168,12 +168,12 @@ export default function AttendanceModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-card w-full max-w-4xl max-h-[90vh] rounded-[2rem] border border-border shadow-2xl flex flex-col overflow-hidden"
+                className="bg-card w-full max-w-4xl max-h-[90vh] rounded-2xl border border-border shadow-2xl flex flex-col overflow-hidden"
             >
                 {/* Header */}
                 <div className="p-6 border-b border-border flex items-start justify-between bg-muted/20">

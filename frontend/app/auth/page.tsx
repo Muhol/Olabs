@@ -172,7 +172,7 @@ export default function AuthPage() {
                     <div className="space-y-3">
                         <h1 className="text-5xl tracking-tight text-white leading-tight">
                             Academic<br />
-                            <span style={{ color: 'var(--primary-foreground)', textShadow: '0 0 40px rgba(255,255,255,0.4)' }}>
+                            <span style={{textShadow: '0 0 40px rgba(255,255,255,0.4)' }}>
                                 Management
                             </span>
                         </h1>

@@ -211,25 +211,25 @@ export default function TermReportEntryModal({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={onClose}
-                className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+                className="absolute inset-0 bg-black/50"
             />
             <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="relative w-full max-w-5xl h-[90vh] bg-card border border-border rounded-[3.5rem] shadow-2xl overflow-hidden flex flex-col"
+                className="relative w-full max-w-5xl h-[90vh] bg-card border border-border rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             >
                 {/* Header */}
-                <div className="p-8 border-b border-border bg-muted/20 relative shrink-0">
-                    <button onClick={onClose} className="absolute top-8 right-8 p-3 hover:bg-muted rounded-full transition-colors text-muted-foreground">
+                <div className="p-4 md:p-8 border-b border-border bg-muted/20 relative shrink-0">
+                    <button onClick={onClose} className="absolute top-2 right-2 p-3 hover:bg-muted rounded-full transition-colors text-muted-foreground">
                         <X size={24} />
                     </button>
                     <div className="flex flex-col md:flex-row md:items-center gap-6">
-                        <div className="w-16 h-16 rounded-[2rem] bg-secondary text-white flex items-center justify-center shadow-xl shadow-secondary/20">
+                        {/* <div className="w-16 h-16 rounded-[2rem] bg-secondary text-white flex items-center justify-center shadow-xl shadow-secondary/20">
                             <User size={32} />
-                        </div>
+                        </div> */}
                         <div className="space-y-1">
-                            <h3 className="text-3xl font-black text-foreground uppercase tracking-tighter">{studentName}</h3>
+                            <h3 className="text-3xl font-semibold text-foreground uppercase tracking-tighter">{studentName}</h3>
                             <div className="flex items-center gap-3">
                                 <p className="text-xs font-black uppercase tracking-[0.3em] text-secondary">
                                     Term Report Entry
@@ -243,7 +243,7 @@ export default function TermReportEntryModal({
                         </div>
 
                         {/* Filters */}
-                        <div className="flex items-center gap-4 ml-auto mr-12">
+                        <div className="flex items-center gap-4 ml-auto md:mr-12">
                             <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-2xl border border-border">
                                 <Calendar size={14} className="text-secondary ml-2" />
                                 <select
@@ -273,7 +273,7 @@ export default function TermReportEntryModal({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-auto p-12 space-y-12">
+                <div className="flex-1 overflow-auto p-4 md:p-12 space-y-4 md:space-y-8">
                     {loading ? (
                         <div className="h-full flex flex-col items-center justify-center gap-4">
                             <Loader2 className="animate-spin text-secondary" size={48} />
@@ -295,14 +295,14 @@ export default function TermReportEntryModal({
                         <>
                             {/* Section B – Competencies */}
                             {competencies.length > 0 && (
-                                <section className="space-y-8">
+                                <section className="space-y-3 md:space-y-8">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-2xl bg-secondary/10 text-secondary flex items-center justify-center shadow-inner">
                                             <Brain size={20} />
                                         </div>
                                         <h4 className="text-xl font-black uppercase tracking-tight">Core Competencies Development</h4>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                                         {competencies.map(renderLevelButtons)}
                                     </div>
                                 </section>
@@ -317,15 +317,15 @@ export default function TermReportEntryModal({
                                         </div>
                                         <h4 className="text-xl font-black uppercase tracking-tight">Values & Social Development</h4>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8">
                                         {values.map(renderLevelButtons)}
                                     </div>
                                 </section>
                             )}
 
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-6">
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-8 pt-3 md:pt-6">
                                 {/* Section D – Attendance */}
-                                <section className="space-y-8">
+                                <section className="space-y-3 md:space-y-8">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shadow-inner">
                                             <Calendar size={20} />
@@ -358,7 +358,7 @@ export default function TermReportEntryModal({
 
                                 {/* Teacher's Comment */}
                                 <section className="space-y-8">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3 pt-3 md:pt-0">
                                         <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center shadow-inner">
                                             <MessageSquare size={20} />
                                         </div>
@@ -379,7 +379,7 @@ export default function TermReportEntryModal({
                 </div>
 
                 {/* Footer */}
-                <div className="p-8 border-t border-border bg-muted/20 flex items-center justify-between shrink-0">
+                <div className="p-8 border-t border-border bg-muted/20 flex flex-col md:flex-row gap-4 items-center justify-between shrink-0">
                     {error ? (
                         <div className="flex items-center gap-2 text-rose-500">
                             <AlertCircle size={16} />
@@ -392,14 +392,14 @@ export default function TermReportEntryModal({
                         </div>
                     )}
                     <div className="flex items-center gap-4">
-                        <button onClick={onClose} className="px-8 py-4 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all">
+                        <button onClick={onClose} className="px-4 py-4 bg-muted text-muted-foreground font-black uppercase text-xs tracking-widest rounded-2xl hover:bg-muted/80 transition-all">
                             Cancel
                         </button>
                         {isEditable && (
                             <button
                                 onClick={handleSave}
                                 disabled={saving || loading || noItemsConfigured}
-                                className="px-12 py-4 bg-secondary text-white font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-secondary/20 flex items-center gap-3 disabled:opacity-50"
+                                className="px-5 py-4 bg-secondary/30 border border-secondary text-secondary hover:bg-secondary hover:text-background active:bg-secondary active:text-background font-black uppercase text-xs tracking-widest rounded-2xl hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-secondary/20 flex items-center gap-3 disabled:opacity-50"
                             >
                                 {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
                                 Save Term Report

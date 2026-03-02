@@ -238,14 +238,14 @@ export default function ReportCardDownloadModal({ isOpen, onClose }: ReportCardD
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="absolute inset-0 bg-slate-200/80 dark:bg-black/80 backdrop-blur-sm"
+                        className="absolute inset-0 bg-black/50 "
                     />
 
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-lg glass-card rounded-[2.5rem] border border-border bg-card p-10 shadow-2xl space-y-8"
+                        className="relative w-full max-w-lg glass-card rounded-2xl border border-border bg-card p-10 shadow-2xl space-y-8"
                     >
                         {/* Header */}
                         <div className="text-center space-y-2">
@@ -336,7 +336,7 @@ export default function ReportCardDownloadModal({ isOpen, onClose }: ReportCardD
                             <button
                                 onClick={onClose}
                                 disabled={downloading}
-                                className="w-full py-4 text-muted-foreground font-black uppercase text-[10px] tracking-widest hover:text-foreground transition-all"
+                                className="w-full py-4 bg-muted/50 rounded-2xl border border-border text-muted-foreground font-black uppercase text-[10px] tracking-widest hover:text-foreground transition-all"
                             >
                                 Close
                             </button>

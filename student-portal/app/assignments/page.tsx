@@ -62,7 +62,7 @@ export default function StudentAssignments() {
                 <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
                     <FileText size={14} /> My Coursework
                 </div>
-                <h1 className="text-4xl font-black text-foreground uppercase tracking-tighter">Active Assignments</h1>
+                <h1 className="text-4xl text-foreground uppercase tracking-tighter">Active Assignments</h1>
                 {/* <p className="text-muted-foreground font-medium max-w-md">Track your project deadlines, submission requirements, and task status.</p> */}
             </div>
 
@@ -74,7 +74,7 @@ export default function StudentAssignments() {
 
                             <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
                                 <div className="flex items-start gap-6">
-                                    <div className="w-16 h-16 bg-muted rounded-[1.5rem] flex items-center justify-center text-muted-foreground border border-border group-hover:bg-secondary/10 group-hover:text-secondary group-hover:scale-110 transition-all duration-500 shrink-0">
+                                    <div className="hidden md:block w-16 h-16 bg-muted rounded-[1.5rem] flex items-center justify-center text-muted-foreground border border-border group-hover:bg-secondary/10 group-hover:text-secondary group-hover:scale-110 transition-all duration-500 shrink-0">
                                         <FileText className="w-8 h-8" />
                                     </div>
                                     <div className="space-y-3">
@@ -94,7 +94,7 @@ export default function StudentAssignments() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4 lg:self-center">
+                                <div className="flex flex-wrap items-center gap-4 lg:self-center">
                                     {assignment.file_url && (
                                         <a
                                             href={assignment.file_url}
@@ -104,7 +104,7 @@ export default function StudentAssignments() {
                                             <Download className="w-4 h-4" /> Resources
                                         </a>
                                     )}
-                                    <button className="px-10 py-5 bg-secondary hover:bg-secondary/90 text-secondary-foreground font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-secondary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
+                                    <button className="px-10 py-5 bg-secondary/20 border border-secondary text-secondary hover:bg-secondary  hover:text-background active:bg-secondary  active:text-background font-black uppercase text-xs tracking-[0.2em] rounded-2xl shadow-xl shadow-secondary/20 transition-all hover:scale-105 active:scale-95 flex items-center gap-3">
                                         Submit Task <ChevronRight className="w-5 h-5" />
                                     </button>
                                 </div>

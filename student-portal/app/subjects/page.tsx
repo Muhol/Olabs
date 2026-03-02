@@ -70,7 +70,7 @@ export default function StudentSubjects() {
         <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
           <BookOpen size={14} /> My Subjects
         </div>
-        <h1 className="text-4xl font-black text-foreground uppercase tracking-tighter">Enrolled Subjects</h1>
+        <h1 className="text-4xl text-foreground uppercase tracking-tighter">Enrolled Subjects</h1>
         {/* <p className="text-muted-foreground font-medium max-w-md">Access your curriculum, performance metrics, and learning resources.</p> */}
       </div>
 
@@ -110,7 +110,7 @@ export default function StudentSubjects() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+              className="absolute inset-0 bg-black/40"
             />
             <motion.div
               initial={{ opacity: 0, y: 50, scale: 0.9 }}
@@ -128,9 +128,9 @@ export default function StudentSubjects() {
                 </button>
 
                 <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-secondary-foreground shadow-lg shadow-secondary/20">
+                  {/* <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center text-secondary-foreground shadow-lg shadow-secondary/20">
                     <BookOpen size={24} />
-                  </div>
+                  </div> */}
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2">
                       <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">

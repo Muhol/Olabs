@@ -336,11 +336,11 @@ export default function StudentDashboard() {
               .sort((a: any, b: any) => a.start_time.padStart(5, '0').localeCompare(b.start_time.padStart(5, '0')));
 
             return (
-              <div key={day.id} className="group relative flex flex-col md:flex-row gap-3 md:gap-6">
+              <div key={day.id} className="group relative w-fit flex flex-row gap-3 md:gap-6">
                 {/* Vertical Day Indicator */}
-                <div className="md:w-24 sticky top-0 left-0 flex flex-row md:flex-col items-center md:items-start shrink-0">
-                  <div className="px-3 py-1 rounded-lg bg-primary/10 backdrop-blur-sm border border-primary/20 text-primary w-full text-center md:text-left">
-                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">{day.name.substring(0, 3)}</span>
+                <div className="w-28 sticky top-0 left-0 flex flex-col items-center md:items-start shrink-0">
+                  <div className="px-3 py-1 rounded-lg bg-primary/10 backdrop-blur-sm border border-primary/20 text-primary w-full text-left md:text-left">
+                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">{day.name}</span>
                   </div>
                   <div className="hidden md:block h-full w-px bg-gradient-to-b from-primary/20 to-transparent ml-5 mt-1" />
                 </div>

@@ -745,9 +745,9 @@ export default function MyClassPage() {
                                     .sort((a: any, b: any) => a.start_time.padStart(5, '0').localeCompare(b.start_time.padStart(5, '0')));
 
                                 return (
-                                    <div key={day.id} className="group relative flex flex-col md:flex-row gap-4 md:gap-8">
-                                        <div className="md:w-32 sticky top-0 left-0 flex flex-row md:flex-col items-center md:items-start shrink-0">
-                                            <div className="px-4 py-1.5 rounded-xl backdrop-blur-sm bg-primary/10 border border-primary/20 text-primary w-full text-center md:text-left">
+                                    <div key={day.id} className="group relative flex w-fit flex-row gap-4 md:gap-8">
+                                        <div className="w-28 sticky top-0 left-0 flex flex-col items-center md:items-start shrink-0">
+                                            <div className="px-4 py-1.5 rounded-xl backdrop-blur-sm bg-primary/10 border border-primary/20 text-primary w-full text-left md:text-left">
                                                 <span className="text-[10px] font-black uppercase tracking-[0.2em]">{day.name}</span>
                                             </div>
                                             <div className="hidden md:block h-full w-px bg-gradient-to-b from-primary/20 to-transparent ml-6 mt-2" />

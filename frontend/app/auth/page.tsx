@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useSignIn, useSignUp } from '@clerk/nextjs';
+import { useState, useEffect } from 'react';
+import { useSignIn, useSignUp, useAuth } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
@@ -20,7 +20,14 @@ import { checkAuthPolicy } from '@/lib/api';
 export default function AuthPage() {
     const { isLoaded: isSignInLoaded, signIn, setActive: setSignInActive } = useSignIn();
     const { isLoaded: isSignUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
+    const { isSignedIn } = useAuth();
     const router = useRouter();
+
+    useEffect(() => {
+        if (isSignedIn) {
+            router.push('/');
+        }
+    }, [isSignedIn, router]);
 
     const [isLogin, setIsLogin] = useState(true);
     const [email, setEmail] = useState('');
